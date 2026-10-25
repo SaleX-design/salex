@@ -1133,7 +1133,7 @@ function admSales(el){
       <div class="fld" style="margin:0"><label>หมายเหตุ (ถ้ามี)</label><input id="sN" maxlength="120"></div>
       <button class="btn primary" id="sGo">บันทึก</button></div>
     <div id="sErr" class="err" style="margin-top:8px"></div></div>
-    <div class="panel"><h3>🧾 รายการที่บันทึกล่าสุด</h3>${rows.length?`<div class="tblwrap"><table class="atbl"><thead><tr><th>แถว</th><th>พนักงาน</th><th>ช่วงเวลา</th><th class="r">ยอดขาย (฿)</th><th class="r">POINT</th><th class="r">SUB</th><th>หมายเหตุ</th><th></th></tr></thead><tbody>${rows.slice(0,60).map(r=>`<tr><td class="num">${r.row}</td><td>${esc(memName(r.m))}</td><td class="num">${esc(r.period)}</td><td class="r num">${nv(r.amount)}</td><td class="r num">${nv(r.point,2)}</td><td class="r num">${nv(r.sub)}</td><td>${esc(r.note)}</td><td><button class="btn sm danger" data-del="${r.row}">ลบ</button></td></tr>`).join('')}</tbody></table></div>${rows.length>60?`<div class="hint">แสดง 60 รายการล่าสุด จากทั้งหมด ${rows.length} — ดู/แก้ทั้งหมดได้ที่แท็บ Sales ใน Google Sheets</div>`:''}`:'<div class="empty">ยังไม่มีรายการ</div>'}</div>`;
+    <div class="panel"><h3>🧾 รายการที่บันทึกล่าสุด</h3>${rows.length?`<div class="tblwrap"><table class="atbl"><thead><tr><th>แถว</th><th>พนักงาน</th><th>ช่วงเวลา</th><th class="r">ยอดขาย (฿)</th><th class="r">POINT</th><th class="r">SUB</th><th>หมายเหตุ</th><th></th></tr></thead><tbody>${rows.slice(0,60).map(r=>`<tr><td class="num">${r.sh==='SalesDaily'?'<span class="role">รายวัน</span> ':'<span class="role">เดือน/ปี</span> '}${r.row}</td><td>${esc(memName(r.m))}</td><td class="num">${esc(r.period)}</td><td class="r num">${nv(r.amount)}</td><td class="r num">${nv(r.point,2)}</td><td class="r num">${nv(r.sub)}</td><td>${esc(r.note)}</td><td><button class="btn sm danger" data-del="${r.sh||'Sales'}:${r.row}">ลบ</button></td></tr>`).join('')}</tbody></table></div>${rows.length>60?`<div class="hint">แสดง 60 รายการล่าสุด จากทั้งหมด ${rows.length} — ดู/แก้ทั้งหมดได้ที่แท็บ Sales ใน Google Sheets</div>`:''}`:'<div class="empty">ยังไม่มีรายการ</div>'}</div>`;
   $('#sT').value=SALE_TYPE;
   $('#sT').onchange=e=>{SALE_TYPE=e.target.value;$('#sPw').innerHTML=periodInput(SALE_TYPE)};
   $('#sGo').onclick=async()=>{
@@ -1147,8 +1147,8 @@ function admSales(el){
     catch(e){$('#sErr').textContent=e.message;b.disabled=false}
   };
   $$('[data-del]').forEach(b=>b.onclick=async()=>{
-    const r=rows.find(x=>String(x.row)===b.dataset.del);if(!r||!confirm(`ลบรายการนี้?\n${memName(r.m)} · ${r.period}\nยอดขาย ${nt(r.amount)} · POINT ${nt(r.point,2)} · SUB ${nt(r.sub)}`))return;
-    try{await api('deleteSale',{row:r.row,m:r.m,period:r.period,amount:r.amount,point:r.point,sub:r.sub});toast('🗑 ลบแล้ว');ADM.sales=null;ADM.audit=null;await load();render()}catch(e){toast('⚠️ '+esc(e.message))}
+    const r=rows.find(x=>((x.sh||'Sales')+':'+x.row)===b.dataset.del);if(!r||!confirm(`ลบรายการนี้?\n${memName(r.m)} · ${r.period}\nยอดขาย ${nt(r.amount)} · POINT ${nt(r.point,2)} · SUB ${nt(r.sub)}`))return;
+    try{await api('deleteSale',{sh:r.sh,row:r.row,m:r.m,period:r.period,amount:r.amount,point:r.point,sub:r.sub});toast('🗑 ลบแล้ว');ADM.sales=null;ADM.audit=null;await load();render()}catch(e){toast('⚠️ '+esc(e.message))}
   });
 }
 function admReds(el){
@@ -1175,6 +1175,7 @@ function admSettings(el){
       <div class="fld" style="margin:0"><label>พนักงานมองเห็นข้อมูล</label><select id="cV"><option value="self">เฉพาะของตัวเอง (แนะนำ)</option><option value="team">ภายในทีมเดียวกัน</option><option value="all">ทุกคน</option></select></div>
       <div class="fld" style="margin:0"><label>Hold (% ของ Com Before)</label><input type="number" id="cH" min="0" max="100" step="any" value="${D.hold}"></div>
       <div class="fld" style="margin:0"><label>แหล่ง POINT สำหรับคอม</label><select id="cPS"><option value="product">ยอดรายสินค้า × Factor (แนะนำ)</option><option value="sales">POINT จากแท็บ Sales</option></select></div>
+      <div class="fld" style="margin:0"><label>Factor คูณกับอะไร (เมื่อใช้ยอดรายสินค้า)</label><select id="cFB"><option value="amount">ยอดเงินรายสินค้า (amount) × Factor</option><option value="qty">จำนวนชิ้น (qty) × Factor</option></select></div>
       <button class="btn primary" id="cSave">บันทึก</button></div>
     <div class="hint" style="margin-top:8px">การเปลี่ยนอัตรา TOKEN มีผลย้อนหลังกับทั้ง Season ทันที · การเปลี่ยน Hold/แหล่ง POINT มีผลกับการคำนวณคอมทุกเดือนทันที</div></div>
     <div class="panel sec"><h3>🪜 ตาราง Tier ค่าคอมมิชชั่น</h3>
@@ -1190,8 +1191,8 @@ function admSettings(el){
       <button class="btn" id="cRS">รีเซ็ต</button></div>
     <div class="hint" style="margin-top:8px">พนักงานต้องตั้งรหัสใหม่เองตอนเข้าสู่ระบบครั้งถัดไป · เพิ่มพนักงานใหม่ที่แท็บ Members แล้วใช้เมนู “SALE X” ใน Google Sheets เพื่อตั้งรหัสเริ่มต้น · ตั้งตำแหน่งที่คอลัมน์ role (leader / senior)</div>
     <div id="cErr" class="err"></div></div>`;
-  $('#cV').value=D.visibility;$('#cPS').value=D.pointSource;
-  $('#cSave').onclick=async()=>{try{await api('setConfig',{baht:+$('#cB').value,visibility:$('#cV').value,hold:+$('#cH').value,pointSource:$('#cPS').value});await load();render();toast('✅ บันทึกการตั้งค่าแล้ว')}catch(e){$('#cErr').textContent=e.message}};
+  $('#cV').value=D.visibility;$('#cPS').value=D.pointSource;$('#cFB').value=D.factorBasis||'amount';
+  $('#cSave').onclick=async()=>{try{await api('setConfig',{baht:+$('#cB').value,visibility:$('#cV').value,hold:+$('#cH').value,pointSource:$('#cPS').value,factorBasis:$('#cFB').value});await load();render();toast('✅ บันทึกการตั้งค่าแล้ว')}catch(e){$('#cErr').textContent=e.message}};
   $('#cRS').onclick=async()=>{try{await api('resetPassword',{m:$('#cRM').value,newPassword:$('#cRP').value});$('#cRP').value='';$('#cErr').textContent='';toast('✅ รีเซ็ตรหัสผ่านแล้ว แจ้งรหัสชั่วคราวให้พนักงาน')}catch(e){$('#cErr').textContent=e.message}};
   const grab=()=>{const T=tiers.map(t=>({upTo:t.upTo,rate:t.rate}));$$('[data-tu]').forEach(i=>T[+i.dataset.tu].upTo=i.value===''?'':+i.value);$$('[data-tr]').forEach(i=>T[+i.dataset.tr].rate=i.value===''?'':+i.value);return T};
   $('#tAdd').onclick=()=>{const T=grab(),last=T.pop(),prev=T.length?+T[T.length-1].upTo:0;T.push({upTo:prev+15000,rate:last.rate});T.push(last);ADM.editTiers=T;render()};
@@ -1237,7 +1238,7 @@ function tierOf(pt){const T=D.tiers;for(let i=0;i<T.length;i++)if(T[i].upTo===nu
 function monthPoint(id,ym){
   const pen=((D.pen||{})[id]||{})[ym]||0;
   if(D.pointSource==='sales'){const v=val([id],'m',ym,'point');return Math.max(0,(v==null?0:v)-pen)}
-  let s=0;(PSBY[id]||[]).forEach(r=>{if(r.per.startsWith(ym))s+=r.a*FAC(r.p)});return Math.max(0,s-pen)}
+  let s=0;(PSBY[id]||[]).forEach(r=>{if(r.per.startsWith(ym))s+=PTV(r)});return Math.max(0,s-pen)}
 function autoElapsed(ym){
   const dim=monthDays(ym),cur=today.slice(0,7);
   if(ym<cur)return dim;if(ym>cur)return 1;
@@ -1309,8 +1310,12 @@ function renderCom(){
   // Team table
   if(MEM.length>1){
     const rows=MEM.map(m=>{const p=monthPoint(m.id,ym),ef=effDays(m.id,ym,elC),cc=comCalc(p,ef.elapsed,ef.total,null);return {m,p,cc}}).sort((a,b)=>b.cc.run-a.cc.run);
+    const TK={name:r=>(r.m.nick||r.m.name||'')+'',team:r=>teamOf(r.m.team).name+'',point:r=>r.p,avg:r=>r.cc.avg,run:r=>r.cc.run,tier:r=>r.cc.tier.rate,before:r=>r.cc.before,net:r=>r.cc.net};
+    const sk=C.ts||'run',sd=C.td||'desc',kf=TK[sk]||TK.run;
+    rows.sort((a,b)=>{const x=kf(a),y=kf(b);const c=typeof x==='string'?x.localeCompare(y,'th'):x-y;return sd==='asc'?c:-c});
+    const TH=(k,l,cls)=>`<th class="${cls||''} sortable" data-ts="${k}" title="คลิกเพื่อเรียง มาก↔น้อย">${l}${sk===k?(sd==='asc'?' ▲':' ▼'):' <span style="opacity:.35">⇅</span>'}</th>`;
     const tot=rows.reduce((a,r)=>({p:a.p+r.p,run:a.run+r.cc.run,b:a.b+r.cc.before,n:a.n+r.cc.net}),{p:0,run:0,b:0,n:0});
-    h+=`<div class="panel sec"><h3>👥 ภาพรวมทีม — POINT, Runrate และคอม (ไม่รวมเงินเดือน)</h3><div class="tblwrap"><table class="atbl"><thead><tr><th>ชื่อ</th><th>ทีม</th><th class="r">POINT</th><th class="r">เฉลี่ย/วัน</th><th class="r">Runrate</th><th class="r">Tier</th><th class="r">Com Before</th><th class="r">Total Com</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.m.id===C.who?'hl':''}" data-cw="${esc(r.m.id)}" style="cursor:pointer"><td><span class="dot" style="background:${tcol(r.m.team)}"></span>${esc(r.m.nick||r.m.name)}${r.m.role?` <span class="role">${ROLE[r.m.role]}</span>`:''}</td><td class="hint">${esc(teamOf(r.m.team).name)}</td><td class="r num">${f2(r.p)}</td><td class="r num">${f2(r.cc.avg)}</td><td class="r num">${fp(r.cc.run)}</td><td class="r num"><b>${r.cc.tier.rate}%</b></td><td class="r num">฿${fp(r.cc.before)}</td><td class="r num up"><b>฿${fp(r.cc.net)}</b></td></tr>`).join('')}
+    h+=`<div class="panel sec"><h3>👥 ภาพรวมทีม — POINT, Runrate และคอม (ไม่รวมเงินเดือน)</h3><div class="tblwrap"><table class="atbl"><thead><tr>${TH('name','ชื่อ')}${TH('team','ทีม')}${TH('point','POINT','r')}${TH('avg','เฉลี่ย/วัน','r')}${TH('run','Runrate','r')}${TH('tier','Tier','r')}${TH('before','Com Before','r')}${TH('net','Total Com','r')}</tr></thead><tbody>${rows.map(r=>`<tr class="${r.m.id===C.who?'hl':''}" data-cw="${esc(r.m.id)}" style="cursor:pointer"><td><span class="dot" style="background:${tcol(r.m.team)}"></span>${esc(r.m.nick||r.m.name)}${r.m.role?` <span class="role">${ROLE[r.m.role]}</span>`:''}</td><td class="hint">${esc(teamOf(r.m.team).name)}</td><td class="r num">${f2(r.p)}</td><td class="r num">${f2(r.cc.avg)}</td><td class="r num">${fp(r.cc.run)}</td><td class="r num"><b>${r.cc.tier.rate}%</b></td><td class="r num">฿${fp(r.cc.before)}</td><td class="r num up"><b>฿${fp(r.cc.net)}</b></td></tr>`).join('')}
       <tr><td colspan="2"><b>รวม ${rows.length} คน</b></td><td class="r num"><b>${f2(tot.p)}</b></td><td class="r num">–</td><td class="r num"><b>${fp(tot.run)}</b></td><td class="r">–</td><td class="r num"><b>฿${fp(tot.b)}</b></td><td class="r num up"><b>฿${fp(tot.n)}</b></td></tr></tbody></table></div>
       <div class="hint" style="margin-top:6px">แต่ละคนคิด Tier ของตัวเอง แล้วรวมค่าคอมเป็นยอดทีม · แตะแถวเพื่อดูรายละเอียดรายคนด้านบน</div></div>`;
   }
@@ -1321,6 +1326,7 @@ function renderCom(){
   if($('#cmEA'))$('#cmEA').onclick=()=>{C.el=null;renderCom()};
   $('#cmT').onchange=e=>{C.target=e.target.value===''?null:Math.max(0,+e.target.value);renderCom()};
   if($('#cmTC'))$('#cmTC').onclick=()=>{C.target=null;renderCom()};
+  $$('th[data-ts]').forEach(th=>th.onclick=()=>{const k=th.dataset.ts;if((C.ts||'run')===k)C.td=(C.td||'desc')==='desc'?'asc':'desc';else{C.ts=k;C.td=(k==='name'||k==='team')?'asc':'desc'}renderCom()});
   $$('[data-cw]').forEach(r=>r.onclick=()=>{C.who=r.dataset.cw;renderCom();scrollTo(0,0)});
 }
 
@@ -1336,7 +1342,7 @@ const rkFull=k=>RK().mode==='day'?k:RK().mode==='month'?k+'-01':k+'-01-01';
 const inGrp=m=>{const g=RK().grp;return g==='all'||(g==='member'?!m.role:m.role===g)};
 const skillOf=p=>{const x=PRODS.find(q=>q.id===p);return x?x.skill:'อื่นๆ'};
 const prodName=p=>{const x=PRODS.find(q=>q.id===p);return x?x.name:p};
-function psum(key,fn){const o={};PS.forEach(r=>{if(!r.per.startsWith(key)||(fn&&!fn(r)))return;const x=o[r.p]||(o[r.p]={q:0,a:0,pt:0});x.q+=r.q;x.a+=r.a;x.pt+=r.a*FAC(r.p)});return o}
+function psum(key,fn){const o={};PS.forEach(r=>{if(!r.per.startsWith(key)||(fn&&!fn(r)))return;const x=o[r.p]||(o[r.p]={q:0,a:0,pt:0});x.q+=r.q;x.a+=r.a;x.pt+=PTV(r)});return o}
 const medal=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
 
 function skillTableHTML(R,key,by,pv,bl,cur){
@@ -1530,7 +1536,7 @@ function admProducts(el){
 let LASTTAB='';
 function prodWhoHTML(key,by){
   const val1=x=>by==='amount'?x.a:by==='point'?x.pt:x.q,fm=x=>by==='amount'?'฿'+fmt(x):by==='point'?fmt(x)+' Point':fmt(x)+' ชิ้น';
-  const P={};PS.forEach(r=>{if(!r.per.startsWith(key))return;const pr=P[r.p]||(P[r.p]={}),m=pr[r.m]||(pr[r.m]={q:0,a:0,pt:0});m.q+=r.q;m.a+=r.a;m.pt+=r.a*FAC(r.p)});
+  const P={};PS.forEach(r=>{if(!r.per.startsWith(key))return;const pr=P[r.p]||(P[r.p]={}),m=pr[r.m]||(pr[r.m]={q:0,a:0,pt:0});m.q+=r.q;m.a+=r.a;m.pt+=PTV(r)});
   const SK={};Object.keys(P).forEach(pid=>{const mem=Object.keys(P[pid]).map(id=>({id,v:val1(P[pid][id])})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);if(!mem.length)return;
     const tot=mem.reduce((t,x)=>t+x.v,0),sk=skillOf(pid);(SK[sk]||(SK[sk]={tot:0,items:[]})).tot+=tot;SK[sk].items.push({pid,tot,mem})});
   const sks=Object.keys(SK).sort((a,b)=>SK[b].tot-SK[a].tot);
@@ -1546,7 +1552,7 @@ function prodTitle(){const f=S.pf||'all';return f==='all'?'ทุกสินค
 function prodMatch(pid){const f=S.pf||'all';return f==='all'||(f.startsWith('k:')?skillOf(pid)===f.slice(2):pid===f)}
 function rebuildProd(){
   if(S.metric!=='prod')return;
-  const q=S.pmeas||'q',vals=r=>q==='q'?r.q:q==='a'?r.a:r.a*FAC(r.p);
+  const q=S.pmeas||'q',vals=r=>q==='q'?r.q:q==='a'?r.a:PTV(r);
   MEM.forEach(m=>{const o={D:{},dm:{},MO:{},YR:{}};
     (PSBY[m.id]||[]).forEach(r=>{if(!prodMatch(r.p))return;const v=+vals(r)||0,k=String(r.per),L=k.length;
       if(L>=10){o.D[k.slice(0,10)]=(o.D[k.slice(0,10)]||0)+v;o.dm[k.slice(0,7)]=1}
@@ -1613,6 +1619,7 @@ let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(D&&
    SALE X v5 — เกรด A–F · Talk Time · ลา · ร้องเรียน+SLA · มินิเกม · แจ้งเตือน
    (สคริปต์นี้ทำงานต่อจากสคริปต์หลักด้านบน ใช้ฟังก์ชัน/ตัวแปรร่วมกัน)
    ===================================================================== */
+const PTV=r=>(D.factorBasis==='qty'?r.q:r.a)*FAC(r.p);   // POINT ของแถวสินค้า: (ยอดเงิน หรือ จำนวนชิ้น) × Factor
 const GN=['A','B','C','D','E','F'];
 const GLBL={A:'≥ 150%',B:'120–149%',C:'90–119%',D:'70–89%',E:'50–69%',F:'< 50%'};
 const SEVL={low:'Low',medium:'Medium',high:'High',critical:'Critical'};
@@ -1798,7 +1805,8 @@ let LV_REQ=null,CM_REQ=null,SLA_T=null;
 function renderSvc(){
   const V=S.svc||(S.svc={view:'leave',st:'act',sev:'all',rng:'90'}),mgr=D.canManage;
   if(V.view==='ana'&&!mgr)V.view='leave';
-  $('#svcSeg').innerHTML=`<button data-v="leave" class="${V.view==='leave'?'on':''}">🙋 การลา${(D.inbox||[]).some(i=>i.k==='pend')?' <span class="bdg">'+(D.inbox||[]).filter(i=>i.k==='pend').length+'</span>':''}</button><button data-v="cmp" class="${V.view==='cmp'?'on':''}">🗂 เรื่องร้องเรียน</button>${mgr?`<button data-v="ana" class="${V.view==='ana'?'on':''}">📊 วิเคราะห์ (RCA)</button>`:''}`;
+  if(V.view==='cmp'&&!D.canCmp)V.view='leave';
+  $('#svcSeg').innerHTML=`<button data-v="leave" class="${V.view==='leave'?'on':''}">🙋 การลา${(D.inbox||[]).some(i=>i.k==='pend')?' <span class="bdg">'+(D.inbox||[]).filter(i=>i.k==='pend').length+'</span>':''}</button>${D.canCmp?`<button data-v="cmp" class="${V.view==='cmp'?'on':''}">🗂 เรื่องร้องเรียน</button>`:''}${mgr?`<button data-v="ana" class="${V.view==='ana'?'on':''}">📊 วิเคราะห์ (RCA)</button>`:''}`;
   $$('#svcSeg button').forEach(b=>b.onclick=()=>{V.view=b.dataset.v;renderSvc()});
   if(V.view==='leave')svcLeave();else if(V.view==='cmp')svcComplaints();else svcAnalytics();
 }
