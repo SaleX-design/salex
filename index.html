@@ -981,7 +981,7 @@ function renderRoad(){
    <div class="panel"><h3>⭐ TOKEN คงเหลือ (ใช้แลกได้)</h3><div class="big flat">${fmt(w.balance)}</div>
      <div class="hint">สะสมทั้งหมด ${fmt(w.earned)} − ใช้ไปแล้ว ${fmt(w.spent)}</div></div>
    <div class="panel"><h3>🛒 + 🔑 ที่มาของ TOKEN</h3><div class="num" style="font-size:18px">ยอดขาย <b class="up">${fmt(w.salesPts)}</b> · LOGIN <b class="up">${fmt(w.loginPts)}</b></div>
-     <div class="hint">ยอดขายสะสมปีนี้ ฿${fmt(w.seasonSales)} (ทุก ฿${fmt(D.baht)} = 1 TOKEN)</div></div>
+     <div class="hint">ยอดขายสะสมตั้งแต่ ${dShort(D.tokenStart)} ฿${fmt(w.seasonSales)} (ทุก ฿${fmt(D.baht)} = 1 TOKEN)</div></div>
    <div class="panel"><h3>🎯 รางวัลถัดไปบนเส้นทาง</h3>${nxt?`<div style="font-size:19px;font-weight:700">${esc(nxt.emoji)} ${esc(nxt.name)}</div>
      <div class="bar"><i style="width:${pct}%"></i></div><div class="hint">อีก <b class="num flat">${fmt(need)}</b> TOKEN (ยอดขายอีกประมาณ <b class="num up">฿${fmt(Math.max(0,need*D.baht-(w.seasonSales%D.baht)))}</b>)</div>`:`<div style="font-size:19px;font-weight:700">🏆 ถึงปลายทางแล้ว!</div>`}</div>`;
   // road
@@ -1174,6 +1174,7 @@ function admSettings(el){
     <div class="row2"><div class="fld" style="margin:0"><label>ขายทุกกี่บาท ได้ 1 TOKEN</label><input type="number" id="cB" min="1" value="${D.baht}"></div>
       <div class="fld" style="margin:0"><label>พนักงานมองเห็นข้อมูล</label><select id="cV"><option value="self">เฉพาะของตัวเอง (แนะนำ)</option><option value="team">ภายในทีมเดียวกัน</option><option value="all">ทุกคน</option></select></div>
       <div class="fld" style="margin:0"><label>Hold (% ของ Com Before)</label><input type="number" id="cH" min="0" max="100" step="any" value="${D.hold}"></div>
+      <div class="fld" style="margin:0"><label>หัก DIFF POINT (% ของ POINT)</label><input type="number" id="cDF" min="0" max="100" step="any" value="${D.diffPct==null?5:D.diffPct}"></div>
       <div class="fld" style="margin:0"><label>แหล่ง POINT สำหรับคอม</label><select id="cPS"><option value="product">ยอดรายสินค้า × Factor (แนะนำ)</option><option value="sales">POINT จากแท็บ Sales</option></select></div>
       <div class="fld" style="margin:0"><label>Factor คูณกับอะไร (เมื่อใช้ยอดรายสินค้า)</label><select id="cFB"><option value="amount">ยอดเงินรายสินค้า (amount) × Factor</option><option value="qty">จำนวนชิ้น (qty) × Factor</option></select></div>
       <button class="btn primary" id="cSave">บันทึก</button></div>
@@ -1192,7 +1193,7 @@ function admSettings(el){
     <div class="hint" style="margin-top:8px">พนักงานต้องตั้งรหัสใหม่เองตอนเข้าสู่ระบบครั้งถัดไป · เพิ่มพนักงานใหม่ที่แท็บ Members แล้วใช้เมนู “SALE X” ใน Google Sheets เพื่อตั้งรหัสเริ่มต้น · ตั้งตำแหน่งที่คอลัมน์ role (leader / senior)</div>
     <div id="cErr" class="err"></div></div>`;
   $('#cV').value=D.visibility;$('#cPS').value=D.pointSource;$('#cFB').value=D.factorBasis||'amount';
-  $('#cSave').onclick=async()=>{try{await api('setConfig',{baht:+$('#cB').value,visibility:$('#cV').value,hold:+$('#cH').value,pointSource:$('#cPS').value,factorBasis:$('#cFB').value});await load();render();toast('✅ บันทึกการตั้งค่าแล้ว')}catch(e){$('#cErr').textContent=e.message}};
+  $('#cSave').onclick=async()=>{try{await api('setConfig',{baht:+$('#cB').value,visibility:$('#cV').value,hold:+$('#cH').value,diffPct:+$('#cDF').value,pointSource:$('#cPS').value,factorBasis:$('#cFB').value});await load();render();toast('✅ บันทึกการตั้งค่าแล้ว')}catch(e){$('#cErr').textContent=e.message}};
   $('#cRS').onclick=async()=>{try{await api('resetPassword',{m:$('#cRM').value,newPassword:$('#cRP').value});$('#cRP').value='';$('#cErr').textContent='';toast('✅ รีเซ็ตรหัสผ่านแล้ว แจ้งรหัสชั่วคราวให้พนักงาน')}catch(e){$('#cErr').textContent=e.message}};
   const grab=()=>{const T=tiers.map(t=>({upTo:t.upTo,rate:t.rate}));$$('[data-tu]').forEach(i=>T[+i.dataset.tu].upTo=i.value===''?'':+i.value);$$('[data-tr]').forEach(i=>T[+i.dataset.tr].rate=i.value===''?'':+i.value);return T};
   $('#tAdd').onclick=()=>{const T=grab(),last=T.pop(),prev=T.length?+T[T.length-1].upTo:0;T.push({upTo:prev+15000,rate:last.rate});T.push(last);ADM.editTiers=T;render()};
@@ -1236,9 +1237,9 @@ const FAC=p=>{const x=PRODS.find(q=>q.id===p);return x?x.factor:1};
 const monthDays=ym=>{const [y,m]=ym.split('-').map(Number);return new Date(Date.UTC(y,m,0)).getUTCDate()};
 function tierOf(pt){const T=D.tiers;for(let i=0;i<T.length;i++)if(T[i].upTo===null||pt<=T[i].upTo)return Object.assign({i},T[i]);const i=T.length-1;return Object.assign({i},T[i])}
 function monthPoint(id,ym){
-  const pen=((D.pen||{})[id]||{})[ym]||0;
-  if(D.pointSource==='sales'){const v=val([id],'m',ym,'point');return Math.max(0,(v==null?0:v)-pen)}
-  let s=0;(PSBY[id]||[]).forEach(r=>{if(r.per.startsWith(ym))s+=PTV(r)});return Math.max(0,s-pen)}
+  const pen=((D.pen||{})[id]||{})[ym]||0,k=1-(D.diffPct==null?5:D.diffPct)/100;   // หัก DIFF POINT ก่อนคิดคอม
+  if(D.pointSource==='sales'){const v=val([id],'m',ym,'point');return Math.max(0,(v==null?0:v)*k-pen)}
+  let s=0;(PSBY[id]||[]).forEach(r=>{if(r.per.startsWith(ym))s+=PTV(r)});return Math.max(0,s*k-pen)}
 function autoElapsed(ym){
   const dim=monthDays(ym),cur=today.slice(0,7);
   if(ym<cur)return dim;if(ym>cur)return 1;
@@ -1264,22 +1265,59 @@ function renderComStrip(){
    <div class="tcell tok" data-gocom><small>💰 ค่าคอมคาดการณ์ (สุทธิ)</small><div class="tv">฿${fp(c.net)}</div><div class="ts">ก่อนหัก ฿${fp(c.before)} · Hold ${D.hold}% · แตะเพื่อดูรายละเอียด →</div></div>`;
   $$('[data-gocom]').forEach(x=>x.onclick=()=>{S.tab='com';render();scrollTo(0,0)});
 }
+/* ---------- คอม Senior (N-5): คิดจาก POINT ของลูกทีม + Runrate ---------- */
+function brk(list,x){x=+x||0;let pay=0;(list||[]).forEach(b=>{if(x>=b[0])pay=b[2]});return pay}   // ถึงขั้นไหนได้ค่าคอมขั้นนั้น (เกิน 80,000 = ขั้นสูงสุด)
+function seniorCalc(sid,ym,elC){
+  const K=D.kpi,sc=K.scheme,sen=K.seniors.find(x=>x.id===sid);if(!sen)return null;
+  const agents=MEM.filter(m=>sen.teams.includes(String(m.team))&&m.role!=='admin'&&m.role!=='senior');
+  const kr=K.rows.find(r=>r.m===sid&&r.ym===ym)||{};
+  let sumP=0,sumRun=0;
+  const per=agents.map(m=>{const p=monthPoint(m.id,ym),ef=effDays(m.id,ym,elC),cc=comCalc(p,ef.elapsed,ef.total,null);sumP+=p;sumRun+=cc.run;return {m,p,cc}});
+  const newS=kr.newStaff||0,resign=kr.resignHC||0,actual=Math.max(1,agents.length-newS+resign),plan=Math.max(1,kr.planHC!=null?kr.planHC:agents.length);
+  const mk=tot=>{const aqv=tot/actual,tmv=tot/plan,aq=brk(sc.aq,aqv),tm=brk(sc.tm,tmv),co=kr.collab?sc.collab:0,bz=kr.biz?sc.biz:0;return {aqv,tmv,aq,tm,co,bz,total:aq+tm+co+bz}};
+  return {sen,agents,per,sumP,sumRun,actual,plan,newS,resign,kr,now:mk(sumP),run:mk(sumRun)};
+}
+function seniorComHTML(C,ym,elC){
+  const K=D.kpi,ids=K.seniors.map(x=>x.id);
+  if(!C.sn||!ids.includes(C.sn))C.sn=ids.includes(D.me.id)?D.me.id:ids[0];
+  const r=seniorCalc(C.sn,ym,elC);if(!r)return'';
+  const nm=id=>{const m=memOf(id);return m?(m.nick||m.name):id},sc=K.scheme;
+  const tn=r.sen.teams.map(t=>teamOf(t).name).join(', ');
+  const row=(lab,w,val,pay,pay2,hint)=>`<tr><td><b>${lab}</b><div class="hint">${hint}</div></td><td class="r num">${w}</td><td class="r num">${val}</td><td class="r num">฿${fp(pay)}</td><td class="r num up"><b>฿${fp(pay2)}</b></td></tr>`;
+  return `<div class="panel sec"><h3>🏅 คอมมิชชั่น Senior (N-5) — คิดจาก POINT ของสมาชิกในทีม</h3>
+   <div class="ctl" style="margin-bottom:8px"><select id="snW">${ids.map(i=>`<option value="${esc(i)}" ${i===C.sn?'selected':''}>${esc(nm(i))}</option>`).join('')}</select><span class="hint">ทีมที่ดูแล: ${esc(tn)} · ${r.agents.length} คน · ผู้ใช้ Senior/Admin เท่านั้นที่เห็นส่วนนี้</span></div>
+   <div class="cgrid">
+    <div class="tcell com"><small>🎯 POINT รวมทีม (ตอนนี้)</small><div class="tv">${f2(r.sumP)}</div><div class="ts">หัก DIFF ${D.diffPct==null?5:D.diffPct}% แล้ว</div></div>
+    <div class="tcell com"><small>📈 RUNRATE รวมทีมสิ้นเดือน</small><div class="tv">${fp(r.sumRun)}</div><div class="ts">รวม Runrate ของสมาชิกแต่ละคน (หักวันลา)</div></div>
+    <div class="tcell com"><small>💰 คอม Senior ตาม Runrate</small><div class="tv up">฿${fp(r.run.total)}</div><div class="ts">ตอนนี้ (ตามยอดจริง): ฿${fp(r.now.total)}</div></div>
+   </div>
+   <div class="tblwrap" style="margin-top:10px"><table class="atbl"><thead><tr><th>KPI</th><th class="r">Weight</th><th class="r">ค่าที่คำนวณ (Runrate)</th><th class="r">คอมตอนนี้</th><th class="r">คอมตาม Runrate</th></tr></thead><tbody>
+    ${row('Agent Quality','50%',fp(r.run.aqv)+' P/คน',r.now.aq,r.run.aq,`POINT รวมทีม ÷ Actual Agent ${r.actual} คน (Active ${r.agents.length}${r.newS?` − New staff ${r.newS}`:''}${r.resign?` + ลาออกกลางเดือน ${r.resign}`:''}) · ตอนนี้ ${fp(r.now.aqv)}`)}
+    ${row('Team Management (N-5)','25%',fp(r.run.tmv)+' P/HC',r.now.tm,r.run.tm,`POINT รวมทีม ÷ Plan HC ${r.plan} · ตอนนี้ ${fp(r.now.tmv)}`)}
+    ${row('Team Collaboration (N-4)','12.5%',r.kr.collab?'✓ ผ่าน':'ยังไม่ผ่าน',r.now.co,r.run.co,'ผ่านเป้าหมายรวมของทีมระดับ N-4 → ได้ ฿'+fp(sc.collab)+' (แอดมินบันทึกในชีต SeniorKpi)')}
+    ${row('Business Objective','12.5%',r.kr.biz?'✓ ผ่าน':'ยังไม่ผ่าน',r.now.bz,r.run.bz,'ผ่านเป้า Subs ของหน่วยงาน → ได้ ฿'+fp(sc.biz)+' (แอดมินบันทึกในชีต SeniorKpi)')}
+    <tr><td colspan="3"><b>รวม</b></td><td class="r num"><b>฿${fp(r.now.total)}</b></td><td class="r num up"><b>฿${fp(r.run.total)}</b></td></tr></tbody></table></div>
+   <div class="hint" style="margin:8px 0">เกณฑ์ Agent Quality: ${sc.aq.map(b=>fp(b[0])+'–'+fp(b[1])+' = ฿'+fp(b[2])).join(' · ')}<br>เกณฑ์ Team Management: ${sc.tm.map(b=>fp(b[0])+'–'+fp(b[1])+' = ฿'+fp(b[2])).join(' · ')}</div>
+   <details><summary class="hint" style="cursor:pointer">ดู POINT ของสมาชิกแต่ละคนในทีม (${r.per.length} คน)</summary><div class="tblwrap"><table class="atbl"><thead><tr><th>ชื่อ</th><th class="r">POINT</th><th class="r">Runrate</th></tr></thead><tbody>${r.per.sort((a,b)=>b.p-a.p).map(x=>`<tr><td>${esc(x.m.nick||x.m.name)}</td><td class="r num">${f2(x.p)}</td><td class="r num">${fp(x.cc.run)}</td></tr>`).join('')}</tbody></table></div></details>
+  </div>`;
+}
 function renderCom(){
   const C=S.com;if(!C.ym)C.ym=today.slice(0,7);
-  if(!C.who||!MEM.some(m=>m.id===C.who))C.who=D.me.id;
+  const PRIV=!!D.canSeeAll;   // Admin / Senior เห็นคอมทุกคน · Agent เห็นเฉพาะของตัวเอง
+  if(!PRIV||!C.who||!MEM.some(m=>m.id===C.who))C.who=D.me.id;
   const ym=C.ym,dimC=monthDays(ym),auto=autoElapsed(ym),elC=C.el!=null?Math.max(1,Math.min(dimC,C.el)):auto,isCur=ym===today.slice(0,7);
   const EF=effDays(C.who,ym,elC),el=EF.elapsed,dim=EF.total;
   const w=memOf(C.who)||D.me,sal=C.who===D.me.id?D.me.salary:null;
   const pt=monthPoint(C.who,ym),over=C.target!=null&&C.target>=0?C.target:null,c=comCalc(pt,el,dim,sal,over);
   $('#comCtl').innerHTML=`<input type="month" id="cmM" max="${today.slice(0,7)}" value="${ym}">
-    ${MEM.length>1?`<select id="cmW">${MEM.map(m=>`<option value="${esc(m.id)}" ${m.id===C.who?'selected':''}>${esc(m.name)} (${esc(m.tick)})</option>`).join('')}</select>`:''}
+    ${PRIV&&MEM.length>1?`<select id="cmW">${MEM.map(m=>`<option value="${esc(m.id)}" ${m.id===C.who?'selected':''}>${esc(m.name)} (${esc(m.tick)})</option>`).join('')}</select>`:''}
     <label class="chk">นับถึงวันที่ <input type="number" class="cin" id="cmE" min="1" max="${dim}" value="${el}" style="width:70px;appearance:auto;-webkit-appearance:auto;height:auto"> / ${dim} ${C.el!=null?'<button class="btn sm" id="cmEA">ใช้ค่าอัตโนมัติ ('+auto+')</button>':'<span class="hint">(อัตโนมัติจากวันที่มีข้อมูลล่าสุด)</span>'}</label>
     <label class="chk">ลองกำหนด Point สิ้นเดือน <input type="number" class="cin" id="cmT" min="0" step="any" placeholder="ใช้ Runrate" style="width:130px;appearance:auto;-webkit-appearance:auto;height:auto" value="${over==null?'':over}"></label>${over!=null?'<button class="btn sm" id="cmTC">ล้าง</button>':''}`;
   const T=D.tiers,cur=c.tier.i,next=cur<T.length-1?T[cur+1]:null,thr=T[cur].upTo===null?null:T[cur].upTo+1;
   const remDays=dim-el,basis=over!=null?'ตามที่กำหนด':'ตาม Runrate';
   let h=`<div class="hint" style="margin-bottom:10px">${w.name}${w.role?` · ${ROLE[w.role]}`:''} · ${THMON[+ym.slice(5)-1]} ${+ym.slice(0,4)+543} · POINT ${D.pointSource==='sales'?'จากแท็บ Sales (ที่แอดมินบันทึก)':'= ยอดเงินรายสินค้า × Factor'}${isCur?'':' · เดือนที่ผ่านมาแล้ว (ตัวเลขจริง)'}</div>
    <div class="cgrid">
-    <div class="tcell com"><small>🎯 POINT ปัจจุบัน</small><div class="tv">${f2(c.point)}</div><div class="ts">ผ่านมา ${el}/${dim} วัน</div></div>
+    <div class="tcell com"><small>🎯 POINT ปัจจุบัน (หัก DIFF ${D.diffPct==null?5:D.diffPct}%)</small><div class="tv">${f2(c.point)}</div><div class="ts">ผ่านมา ${el}/${dim} วัน</div></div>
     <div class="tcell com"><small>⚡ เฉลี่ย POINT/วัน</small><div class="tv">${f2(c.avg)}</div><div class="ts">${f2(c.point)} ÷ ${el} วัน</div></div>
     <div class="tcell com"><small>📈 RUNRATE สิ้นเดือน</small><div class="tv">${fp(c.run)}</div><div class="ts">${over!=null?'ค่าที่คุณกำหนด':`${f2(c.avg)} × ${dim} วัน`}</div></div>
     <div class="tcell tok"><small>🏷 % X คาดการณ์</small><div class="tv">${c.tier.rate}%</div><div class="ts">Tier: ${tierRange(c.tier.i)}</div></div></div>
@@ -1315,11 +1353,13 @@ function renderCom(){
     rows.sort((a,b)=>{const x=kf(a),y=kf(b);const c=typeof x==='string'?x.localeCompare(y,'th'):x-y;return sd==='asc'?c:-c});
     const TH=(k,l,cls)=>`<th class="${cls||''} sortable" data-ts="${k}" title="คลิกเพื่อเรียง มาก↔น้อย">${l}${sk===k?(sd==='asc'?' ▲':' ▼'):' <span style="opacity:.35">⇅</span>'}</th>`;
     const tot=rows.reduce((a,r)=>({p:a.p+r.p,run:a.run+r.cc.run,b:a.b+r.cc.before,n:a.n+r.cc.net}),{p:0,run:0,b:0,n:0});
-    h+=`<div class="panel sec"><h3>👥 ภาพรวมทีม — POINT, Runrate และคอม (ไม่รวมเงินเดือน)</h3><div class="tblwrap"><table class="atbl"><thead><tr>${TH('name','ชื่อ')}${TH('team','ทีม')}${TH('point','POINT','r')}${TH('avg','เฉลี่ย/วัน','r')}${TH('run','Runrate','r')}${TH('tier','Tier','r')}${TH('before','Com Before','r')}${TH('net','Total Com','r')}</tr></thead><tbody>${rows.map(r=>`<tr class="${r.m.id===C.who?'hl':''}" data-cw="${esc(r.m.id)}" style="cursor:pointer"><td><span class="dot" style="background:${tcol(r.m.team)}"></span>${esc(r.m.nick||r.m.name)}${r.m.role?` <span class="role">${ROLE[r.m.role]}</span>`:''}</td><td class="hint">${esc(teamOf(r.m.team).name)}</td><td class="r num">${f2(r.p)}</td><td class="r num">${f2(r.cc.avg)}</td><td class="r num">${fp(r.cc.run)}</td><td class="r num"><b>${r.cc.tier.rate}%</b></td><td class="r num">฿${fp(r.cc.before)}</td><td class="r num up"><b>฿${fp(r.cc.net)}</b></td></tr>`).join('')}
-      <tr><td colspan="2"><b>รวม ${rows.length} คน</b></td><td class="r num"><b>${f2(tot.p)}</b></td><td class="r num">–</td><td class="r num"><b>${fp(tot.run)}</b></td><td class="r">–</td><td class="r num"><b>฿${fp(tot.b)}</b></td><td class="r num up"><b>฿${fp(tot.n)}</b></td></tr></tbody></table></div>
+    h+=`<div class="panel sec"><h3>👥 ภาพรวมทีม — POINT, Runrate และคอม (ไม่รวมเงินเดือน)</h3><div class="tblwrap"><table class="atbl"><thead><tr>${TH('name','ชื่อ')}${TH('team','ทีม')}${TH('point','POINT','r')}${TH('avg','เฉลี่ย/วัน','r')}${TH('run','Runrate','r')}${PRIV?TH('tier','Tier','r')+TH('before','Com Before','r')+TH('net','Total Com','r'):''}</tr></thead><tbody>${rows.map(r=>`<tr class="${r.m.id===C.who?'hl':''}" data-cw="${esc(r.m.id)}" style="cursor:pointer"><td><span class="dot" style="background:${tcol(r.m.team)}"></span>${esc(r.m.nick||r.m.name)}${r.m.role?` <span class="role">${ROLE[r.m.role]}</span>`:''}</td><td class="hint">${esc(teamOf(r.m.team).name)}</td><td class="r num">${f2(r.p)}</td><td class="r num">${f2(r.cc.avg)}</td><td class="r num">${fp(r.cc.run)}</td>${PRIV?`<td class="r num"><b>${r.cc.tier.rate}%</b></td><td class="r num">฿${fp(r.cc.before)}</td><td class="r num up"><b>฿${fp(r.cc.net)}</b></td>`:''}</tr>`).join('')}
+      <tr><td colspan="2"><b>รวม ${rows.length} คน</b></td><td class="r num"><b>${f2(tot.p)}</b></td><td class="r num">–</td><td class="r num"><b>${fp(tot.run)}</b></td>${PRIV?`<td class="r">–</td><td class="r num"><b>฿${fp(tot.b)}</b></td><td class="r num up"><b>฿${fp(tot.n)}</b></td>`:''}</tr></tbody></table></div>
       <div class="hint" style="margin-top:6px">แต่ละคนคิด Tier ของตัวเอง แล้วรวมค่าคอมเป็นยอดทีม · แตะแถวเพื่อดูรายละเอียดรายคนด้านบน</div></div>`;
   }
+  if(PRIV&&D.kpi&&D.kpi.seniors.length)h+=seniorComHTML(C,ym,elC);
   $('#comBody').innerHTML=h;
+  if($('#snW'))$('#snW').onchange=e=>{C.sn=e.target.value;renderCom()};
   $('#cmM').onchange=e=>{if(e.target.value){C.ym=e.target.value>today.slice(0,7)?today.slice(0,7):e.target.value;C.el=null;C.target=null;renderCom()}};
   if($('#cmW'))$('#cmW').onchange=e=>{C.who=e.target.value;renderCom()};
   $('#cmE').onchange=e=>{const v=+e.target.value;C.el=v>=1?Math.round(v):null;renderCom()};
@@ -1630,6 +1670,7 @@ const WDN=['อา','จ','อ','พ','พฤ','ศ','ส'];
 const nowMs=()=>Date.now();
 const curYM=()=>today.slice(0,7);
 const durTxt=ms=>{ms=Math.abs(ms);const m=Math.floor(ms/60000),h=Math.floor(m/60),d=Math.floor(h/24);return d>=2?`${d} วัน ${h%24} ชม.`:h>=1?`${h} ชม. ${m%60} น.`:`${m} น.`};
+const hm=x=>{x=Math.round(+x||0);return Math.floor(x/60)+':'+String(x%60).padStart(2,'0')};
 const mn2=x=>(+x||0).toLocaleString('en-US',{maximumFractionDigits:1});
 
 /* ---------- เกรด ---------- */
@@ -1738,7 +1779,7 @@ function renderSvcStrip(){
    <div class="tcell ${gi?(gi[0]<='B'?'up':gi[0]<='D'?'flat':'down'):''}" data-go="rank" style="cursor:pointer"><small>🏅 เกรดเดือนนี้</small><div class="tv">${gradeBadge(gi?gi[0]:null).replace('gb ','gb xl ')}<span style="font-size:18px;margin-left:10px">${gi?gi[1]+'%':''}${trend}</span></div><div class="ts">${gi?'เทียบค่าเฉลี่ยทุกคน'+(prev?' · เดือนก่อน '+prev[0]:''):'ยังไม่มีข้อมูลพอคิดเกรด'}</div></div>
    <div class="tcell ${(mgr?crit.length||overdue.length:mineOpen.some(c=>c.sev==='critical'))?'down':(mgr?openC.length:mineOpen.length)?'flat':'up'}" data-go="svc:cmp" style="cursor:pointer"><small>🗂 เรื่องร้องเรียน${mgr?' (สายงานที่ดูแล)':''}</small><div class="tv">${mgr?openC.length:mineOpen.length} <span style="font-size:14px;color:var(--mute)">เปิดอยู่</span></div><div class="ts">${mgr?`เกิน SLA ${overdue.length} · Critical ${crit.length}`:(mineOpen.length?'มีเคสที่ยังไม่ปิด':'ไม่มีเรื่องร้องเรียนค้าง')}</div></div>
    <div class="tcell ${pend.length||toApprove?'flat':'up'}" data-go="svc:leave" style="cursor:pointer"><small>🙋 การลา</small><div class="tv">${mgr&&toApprove?toApprove+' <span style="font-size:14px;color:var(--mute)">รออนุมัติ</span>':pend.length?pend.length+' <span style="font-size:14px;color:var(--mute)">รออนุมัติ</span>':next?dShort(next.start):'–'}</div><div class="ts">${mgr?`ลาวันนี้ ${onToday} คน`:next?'ลาครั้งถัดไป '+dShort(next.start)+(next.end!==next.start?' – '+dShort(next.end):''):'ไม่มีใบลาที่รออยู่'}</div></div>
-   <div class="tcell ${ts.avg==null?'':ts.avg>=D.v5.cfg.talkMin?'up':'down'}" data-go="talk" style="cursor:pointer"><small>⏱ Talk Time เดือนนี้</small><div class="tv">${ts.avg==null?'–':mn2(ts.avg)} <span style="font-size:14px;color:var(--mute)">นาที/วัน</span></div><div class="ts">ผ่านเกณฑ์ ${ts.pass} · ต่ำกว่า ${ts.fail} · ลา ${ts.leave} วัน (เกณฑ์ ${D.v5.cfg.talkMin})</div></div>`;
+   <div class="tcell ${ts.avg==null?'':ts.avg>=D.v5.cfg.talkMin?'up':'down'}" data-go="talk" style="cursor:pointer"><small>⏱ Talk Time เดือนนี้</small><div class="tv">${ts.avg==null?'–':hm(ts.avg)} <span style="font-size:14px;color:var(--mute)">ชม:นาที/วัน</span></div><div class="ts">ผ่านเกณฑ์ ${ts.pass} · ต่ำกว่า ${ts.fail} · ลา ${ts.leave} วัน (เกณฑ์ ${D.v5.cfg.talkMin})</div></div>`;
   $$('#svcStrip [data-go]').forEach(x=>x.onclick=()=>goTab(x.dataset.go));
 }
 function goTab(spec){const [t,v]=spec.split(':');S.tab=t;if(t==='svc'&&v)(S.svc||(S.svc={})).view=v;render();scrollTo(0,0)}
@@ -1756,11 +1797,11 @@ function parseTalkLines(txt){
 }
 function renderTalk(){
   const T=S.tk||(S.tk={ym:curYM()}),ym=T.ym,dim=monthDays(ym),cfg=D.v5.cfg,mgr=D.canManage,minYM=addMonths(curYM(),-2);
-  $('#tkCtl').innerHTML=`<input type="month" id="tkM" min="${minYM}" max="${curYM()}" value="${ym}"><span class="hint">เกณฑ์ผ่าน ≥ <b>${cfg.talkMin}</b> นาที/วัน · ข้อมูลย้อนหลังได้ 3 เดือน</span>`;
+  $('#tkCtl').innerHTML=`<input type="month" id="tkM" min="${minYM}" max="${curYM()}" value="${ym}"><span class="hint">เกณฑ์ผ่าน ≥ <b>${hm(cfg.talkMin)}</b> ชม.:นาที/วัน (${cfg.talkMin} นาที) · ข้อมูลย้อนหลังได้ 3 เดือน</span>`;
   $('#tkM').onchange=e=>{if(e.target.value&&e.target.value>=minYM&&e.target.value<=curYM()){T.ym=e.target.value;renderTalk()}};
   const ids=MEM.slice().sort((a,b)=>(a.team>b.team?1:a.team<b.team?-1:0)||(a.nick||a.name).localeCompare(b.nick||b.name,'th')).map(m=>m.id);
   const my=talkSum(D.me.id,ym);
-  let h=`<div class="topstats c3" style="margin-bottom:14px"><div class="tcell ${my.avg==null?'':my.avg>=cfg.talkMin?'up':'down'}"><small>⏱ ค่าเฉลี่ยของคุณ</small><div class="tv">${my.avg==null?'–':mn2(my.avg)} <span style="font-size:14px;color:var(--mute)">นาที/วัน</span></div><div class="ts">นับเฉพาะวันที่มีข้อมูล ไม่รวมวันลา</div></div>
+  let h=`<div class="topstats c3" style="margin-bottom:14px"><div class="tcell ${my.avg==null?'':my.avg>=cfg.talkMin?'up':'down'}"><small>⏱ ค่าเฉลี่ยของคุณ</small><div class="tv">${my.avg==null?'–':hm(my.avg)} <span style="font-size:14px;color:var(--mute)">ชม:นาที/วัน</span></div><div class="ts">นับเฉพาะวันที่มีข้อมูล ไม่รวมวันลา</div></div>
     <div class="tcell up"><small>✅ ผ่านเกณฑ์</small><div class="tv">${my.pass} <span style="font-size:14px;color:var(--mute)">วัน</span></div><div class="ts">ต่ำกว่าเกณฑ์ ${my.fail} วัน</div></div>
     <div class="tcell" style="--acc:var(--purple)"><small>🏖 วันลา (ไม่นับเป็นวันขาด)</small><div class="tv" style="color:var(--purple)">${my.leave} <span style="font-size:14px;color:var(--mute)">วัน</span></div><div class="ts">ลาที่อนุมัติแล้วจะแสดงเป็น “ลา” อัตโนมัติ</div></div></div>`;
   if(mgr)h+=`<div class="panel sec"><h3>✏️ บันทึก Talk Time (Leader / แอดมิน)</h3>
@@ -1778,14 +1819,14 @@ function renderTalk(){
   teamsShown.forEach(t=>{
     const tids=ids.filter(id=>memOf(id).team===t.id);
     if(MEM.length>1){
-      let tsum=0,tn=0;const cells=Array.from({length:dim},(_,i)=>{const k=ym+'-'+pad(i+1);let s=0,n=0;tids.forEach(id=>{const c=talkCell(id,k);if(c.m!=null){s+=c.m;n++}});if(n){tsum+=s;tn+=n}return n?`<td class="${s/n>=cfg.talkMin?'PASS':'FAIL'}" title="เฉลี่ยทีม ${mn2(s/n)} นาที (${n} คน)">${Math.round(s/n)}</td>`:'<td class="NA">·</td>'}).join('');
-      h+=`<tr class="tm"><td class="n"><span class="dot" style="background:${t.color}"></span>${esc(t.name)} (เฉลี่ย)</td>${cells}<td class="a ${tn&&tsum/tn>=cfg.talkMin?'PASS':tn?'FAIL':''}">${tn?mn2(tsum/tn):'–'}</td><td class="a">–</td></tr>`;
+      let tsum=0,tn=0;const cells=Array.from({length:dim},(_,i)=>{const k=ym+'-'+pad(i+1);let s=0,n=0;tids.forEach(id=>{const c=talkCell(id,k);if(c.m!=null){s+=c.m;n++}});if(n){tsum+=s;tn+=n}return n?`<td class="${s/n>=cfg.talkMin?'PASS':'FAIL'}" title="เฉลี่ยทีม ${hm(s/n)} นาที (${n} คน)">${hm(s/n)}</td>`:'<td class="NA">·</td>'}).join('');
+      h+=`<tr class="tm"><td class="n"><span class="dot" style="background:${t.color}"></span>${esc(t.name)} (เฉลี่ย)</td>${cells}<td class="a ${tn&&tsum/tn>=cfg.talkMin?'PASS':tn?'FAIL':''}">${tn?hm(tsum/tn):'–'}</td><td class="a">–</td></tr>`;
     }
     tids.forEach(id=>{
       const m=memOf(id),sm=talkSum(id,ym);
       h+=`<tr class="${id===D.me.id?'me':''}"><td class="n" title="${esc(m.name)}">${esc(m.nick||m.name)}${gradeFor(id,ym)}</td>${Array.from({length:dim},(_,i)=>{const k=ym+'-'+pad(i+1),c=talkCell(id,k);
         const txt=c.s==='LEAVE'?'ลา':c.m!=null?Math.round(c.m):c.s==='NA'?'·':'';
-        return `<td class="${c.s}${mgr&&c.s!=='FUT'?' cl':''}" ${mgr&&c.s!=='FUT'?`data-tc="${esc(id)}|${k}"`:''} title="${dayTxt(k)}${c.m!=null?' · '+c.m+' นาที':''}${c.s==='LEAVE'?' · ลา':''}">${txt}</td>`}).join('')}<td class="a ${sm.avg==null?'':sm.avg>=cfg.talkMin?'PASS':'FAIL'}">${sm.avg==null?'–':mn2(sm.avg)}</td><td class="a">${sm.pass}/${sm.n}</td></tr>`;
+        return `<td class="${c.s}${mgr&&c.s!=='FUT'?' cl':''}" ${mgr&&c.s!=='FUT'?`data-tc="${esc(id)}|${k}"`:''} title="${dayTxt(k)}${c.m!=null?' · '+hm(c.m)+' ชม. ('+Math.round(c.m)+' นาที)':''}${c.s==='LEAVE'?' · ลา':''}">${txt}</td>`}).join('')}<td class="a ${sm.avg==null?'':sm.avg>=cfg.talkMin?'PASS':'FAIL'}">${sm.avg==null?'–':hm(sm.avg)}</td><td class="a">${sm.pass}/${sm.n}</td></tr>`;
     });
   });
   h+=`</tbody></table></div><div class="hint" style="margin-top:8px">เฉลี่ย = ค่าเฉลี่ยนาทีของวันที่มีข้อมูล (ไม่รวมวันลาและ NA) · แถว “(เฉลี่ย)” คือค่าเฉลี่ยของทั้งทีมในแต่ละวัน</div></div>`;
