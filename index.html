@@ -858,20 +858,28 @@ function renderDashMix(){
   const P=S.periods,p0=P[0],p1=P[P.length-1];
   const a=p0.lv==='d'?p0.key:p0.lv==='m'?p0.key+'-01':p0.key+'-01-01',b=p1.end;
   const inR=per=>{if(per.length>=10)return per>=a&&per<=b;if(per.length===7)return per>=a.slice(0,7)&&per<=b.slice(0,7);return per>=a.slice(0,4)&&per<=b.slice(0,4)};
-  const si=scopeInfo(),ids=new Set(si.ids),o={};
-  PS.forEach(r=>{if(!ids.has(r.m)||!inR(r.per))return;const x=o[r.p]||(o[r.p]={a:0,pt:0,q:0});x.a+=r.a;x.q+=r.q;x.pt+=PTV(r)});
-  const rows0=Object.keys(o).map(id=>({id,...o[id]})).filter(r=>r.a||r.q||r.pt);
+  const si=scopeInfo();
+  if(S.dmWho2&&(!memOf(S.dmWho2)||(S.scope.type==='member'&&S.scope.id===S.dmWho2)))S.dmWho2='';
+  const two=!!S.dmWho2,m2=two?memOf(S.dmWho2):null;
+  const agg=ids=>{const set=new Set(ids),o={};PS.forEach(r=>{if(!set.has(r.m)||!inR(r.per))return;const x=o[r.p]||(o[r.p]={a:0,pt:0,q:0});x.a+=r.a;x.q+=r.q;x.pt+=PTV(r)});return o};
+  const oa=agg(si.ids),ob=two?agg([S.dmWho2]):{},z0={a:0,pt:0,q:0},g=(o,id)=>o[id]||z0;
+  const has=o=>id=>o[id]&&(o[id].a||o[id].q||o[id].pt);
+  const ids=[...new Set([...Object.keys(oa).filter(has(oa)),...Object.keys(ob).filter(has(ob))])];
   const MX=[['a','💰 ยอดขาย (฿)','#f0b90b'],['pt','🎯 POINT','#0ecb81'],['q','📦 จำนวนชิ้น (SUB)','#5b9cf6']];
-  const sk=S.dmSort||'a',rows=rows0.sort((x,y)=>y[sk]-x[sk]),tot={},mx={};
-  MX.forEach(([k])=>{tot[k]=rows.reduce((t,r)=>t+r[k],0);mx[k]=Math.max(1,...rows.map(r=>r[k]))});
+  const sk=S.dmSort||'a',rows=ids.map(id=>({id,A:g(oa,id),B:g(ob,id)})).sort((x,y)=>(y.A[sk]+y.B[sk])-(x.A[sk]+x.B[sk])),tA={},tB={},mx={};
+  MX.forEach(([k])=>{tA[k]=rows.reduce((t,r)=>t+r.A[k],0);tB[k]=rows.reduce((t,r)=>t+r.B[k],0);mx[k]=Math.max(1,...rows.map(r=>Math.max(r.A[k],r.B[k])))});
   const fv=(k,x)=>k==='a'?'฿'+fmt(x):k==='pt'?(+x).toLocaleString('en-US',{maximumFractionDigits:2}):fmt(x);
-  const bar=(k,c,r)=>`<div style="display:flex;align-items:center;gap:6px;margin:2px 0"><div style="flex:1;background:var(--bg3,#1b2230);border-radius:3px;height:12px;overflow:hidden"><div style="width:${(r[k]/mx[k]*100).toFixed(1)}%;height:100%;background:${c}"></div></div><span class="num" style="min-width:110px;text-align:right;font-size:12px">${fv(k,r[k])} <span class="hint">(${tot[k]?(r[k]/tot[k]*100).toFixed(0):0}%)</span></span></div>`;
-  el.innerHTML=`<h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>📦 สินค้าที่ขาย · ${esc(si.name)}</span><span class="hint">${dShort(a)} – ${dShort(b>today?today:b)}</span></h3>`+
-   (rows.length?`<div class="hint" style="margin-bottom:6px">เรียงตาม: ${MX.map(([k,l])=>`<button class="btn sm ${sk===k?'on':''}" data-dms="${k}">${l}</button>`).join(' ')}</div>
-   <div class="tblwrap"><table class="tbl"><thead><tr><th>#</th><th>สินค้า</th>${MX.map(([k,l,c])=>`<th style="color:${c};min-width:190px">${l}</th>`).join('')}</tr></thead><tbody>${rows.map((r,i)=>`<tr class="row"><td class="rk">${medal(i)}</td><td><b>${esc(prodName(r.id))}</b><div class="hint">${esc(skillOf(r.id))}</div></td>${MX.map(([k,l,c])=>`<td>${bar(k,c,r)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
-   <div class="hint" style="margin-top:6px">เปลี่ยนคน/ทีมที่ช่องเลือกด้านบน และเปลี่ยนช่วงเวลาที่ปุ่ม 1W/1M/3M/1Y/ALL · จำนวนชิ้น = SUB ของสินค้านั้น</div>`
-   :`<div class="empty">ยังไม่มียอดขายรายสินค้าในช่วงนี้ของ ${esc(si.name)}</div>`);
-  el.querySelectorAll('[data-dms]').forEach(b=>b.onclick=()=>{S.dmSort=b.dataset.dms;renderDashMix()});
+  const CA='#4f8ef7',CB='#f59e0b',nB=m2?(m2.nick||m2.name):'';
+  const bar=(k,c,v,tot,col)=>`<div style="display:flex;align-items:center;gap:6px;margin:2px 0"><div style="flex:1;background:var(--bg3,#1b2230);border-radius:3px;height:12px;overflow:hidden"><div style="width:${(v/mx[k]*100).toFixed(1)}%;height:100%;background:${col||c}"></div></div><span class="num" style="min-width:${two?96:110}px;text-align:right;font-size:12px">${fv(k,v)} <span class="hint">(${tot?(v/tot*100).toFixed(0):0}%)</span></span></div>`;
+  const opts=MEM.filter(m=>!(S.scope.type==='member'&&S.scope.id===m.id)).map(m=>`<option value="${esc(m.id)}" ${m.id===S.dmWho2?'selected':''}>${esc(m.name)}${m.nick?' ('+esc(m.nick)+')':''}</option>`).join('');
+  el.innerHTML=`<h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>📦 สินค้าที่ขาย · ${two?`<b style="color:${CA}">■ ${esc(si.name)}</b> เทียบ <b style="color:${CB}">■ ${esc(nB)}</b>`:esc(si.name)}</span><span style="display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="hint">เทียบกับ</span><select id="dmWho2"><option value="">— ไม่เทียบ —</option>${opts}</select></span></h3><div class="hint" style="margin-bottom:6px">${dShort(a)} – ${dShort(b>today?today:b)} · เลือกคนแรกที่ช่อง "เลือกดู" ด้านบนกราฟ แล้วเลือกคนที่สองที่ช่อง "เทียบกับ"</div>`+
+   (rows.length?`${two?`<div class="topstats c3" style="margin-bottom:10px">${MX.map(([k,l,c])=>`<div class="tcell"><small style="color:${c}">${l}</small><div class="tv" style="color:${CA}">${fv(k,tA[k])}</div><div class="ts" style="color:${CB}">${esc(nB)}: <b>${fv(k,tB[k])}</b></div></div>`).join('')}</div>`:''}
+   <div class="hint" style="margin-bottom:6px">เรียงตาม: ${MX.map(([k,l])=>`<button class="btn sm ${sk===k?'on':''}" data-dms="${k}">${l}</button>`).join(' ')}</div>
+   <div class="tblwrap"><table class="tbl"><thead><tr><th>#</th><th>สินค้า</th>${MX.map(([k,l,c])=>`<th style="color:${c};min-width:${two?210:190}px">${l}</th>`).join('')}</tr></thead><tbody>${rows.map((r,i)=>`<tr class="row"><td class="rk">${medal(i)}</td><td><b>${esc(prodName(r.id))}</b><div class="hint">${esc(skillOf(r.id))}</div></td>${MX.map(([k,l,c])=>`<td>${two?bar(k,c,r.A[k],tA[k],CA)+bar(k,c,r.B[k],tB[k],CB):bar(k,c,r.A[k],tA[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+   <div class="hint" style="margin-top:6px">${two?`ฟ้า = ${esc(si.name)} · ส้ม = ${esc(nB)} · แท่งในคอลัมน์เดียวกันใช้สเกลเดียวกัน · `:''}เปลี่ยนช่วงเวลาที่ปุ่ม 1W/1M/3M/1Y/ALL · จำนวนชิ้น = SUB ของสินค้านั้น</div>`
+   :`<div class="empty">ยังไม่มียอดขายรายสินค้าในช่วงนี้</div>`);
+  el.querySelectorAll('[data-dms]').forEach(x=>x.onclick=()=>{S.dmSort=x.dataset.dms;renderDashMix()});
+  if($('#dmWho2'))$('#dmWho2').onchange=e=>{S.dmWho2=e.target.value;renderDashMix()};
 }
 function renderChart(){
   const si=scopeInfo(),P=S.periods;let sers;
