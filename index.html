@@ -1415,6 +1415,25 @@ function metricTableHTML(R,key){
     <div class="hint" style="margin-top:6px">แตะหัวคอลัมน์เพื่อเรียง · แตะซ้ำเพื่อสลับ <b>มาก→น้อย (▼)</b> / <b>น้อย→มาก (▲)</b> · “–” = ยังไม่มีข้อมูลช่วงนี้ (อยู่ท้ายตารางเสมอ) · เปลี่ยนรายวัน/เดือน/ปี และตำแหน่ง ที่แถบด้านบน</div></div>`;
 }
 function bindMetricTable(R){$$('[data-mk]').forEach(t=>t.onclick=()=>{const k=t.dataset.mk;if((R.mk||'amount')===k)R.md=R.md==='asc'?'desc':'asc';else{R.mk=k;R.md='desc'}renderRank()})}
+/* ---------- กราฟเทียบสินค้าของ Agent 1 คน: ยอดขาย · POINT · จำนวนชิ้น ---------- */
+function agentMixHTML(R,key){
+  const people=MEM.filter(inGrp);if(!people.length)return '';
+  if(!R.mixWho||!people.some(m=>m.id===R.mixWho))R.mixWho=people.some(m=>m.id===D.me.id)?D.me.id:people[0].id;
+  const o=psum(key,r=>r.m===R.mixWho),ids=Object.keys(o).filter(id=>o[id].a||o[id].q||o[id].pt);
+  const MX=[['a','💰 ยอดขาย (฿)','#f0b90b'],['pt','🎯 POINT','#0ecb81'],['q','📦 จำนวนชิ้น (SUB)','#5b9cf6']];
+  const tot={};MX.forEach(([k])=>tot[k]=ids.reduce((t,id)=>t+o[id][k],0));
+  const sk=R.mixSort||'a',rows=ids.map(id=>({id,...o[id]})).sort((a,b)=>b[sk]-a[sk]);
+  const mx={};MX.forEach(([k])=>mx[k]=Math.max(1,...rows.map(r=>r[k])));
+  const fv=(k,x)=>k==='a'?'฿'+fmt(x):k==='pt'?(+x).toLocaleString('en-US',{maximumFractionDigits:2}):fmt(x);
+  const m0=memOf(R.mixWho)||{};
+  const bar=(k,col,r)=>`<div style="display:flex;align-items:center;gap:6px;margin:2px 0"><div style="flex:1;background:var(--bg3,#1b2230);border-radius:3px;height:12px;overflow:hidden"><div style="width:${(r[k]/mx[k]*100).toFixed(1)}%;height:100%;background:${col}"></div></div><span class="num" style="min-width:110px;text-align:right;font-size:12px">${fv(k,r[k])} <span class="hint">(${tot[k]?(r[k]/tot[k]*100).toFixed(0):0}%)</span></span></div>`;
+  return `<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>🧑‍💼 สินค้าที่ Agent ขาย · ${rkLabel(key)}</span><select id="mixWho">${people.map(m=>`<option value="${esc(m.id)}" ${m.id===R.mixWho?'selected':''}>${esc(m.name)}${m.nick?' ('+esc(m.nick)+')':''}</option>`).join('')}</select></h3>
+    ${rows.length?`<div class="topstats c3" style="margin-bottom:10px">${MX.map(([k,l,c])=>`<div class="tcell"><small style="color:${c}">${l}</small><div class="tv">${fv(k,tot[k])}</div><div class="ts">${rows.length} ชนิดสินค้า</div></div>`).join('')}</div>
+    <div class="hint" style="margin-bottom:6px">เรียงตาม: ${MX.map(([k,l])=>`<button class="btn sm ${sk===k?'on':''}" data-mxs="${k}">${l}</button>`).join(' ')}</div>
+    <div class="tblwrap"><table class="tbl"><thead><tr><th>#</th><th>สินค้า</th>${MX.map(([k,l,c])=>`<th style="color:${c};min-width:190px">${l}</th>`).join('')}</tr></thead><tbody>${rows.map((r,i)=>`<tr class="row"><td class="rk">${medal(i)}</td><td><b>${esc(prodName(r.id))}</b><div class="hint">${esc(skillOf(r.id))}</div></td>${MX.map(([k,l,c])=>`<td>${bar(k,c,r)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <div class="hint" style="margin-top:6px">แท่งแต่ละคอลัมน์เทียบกับสินค้าที่ขายได้มากที่สุดของคนนี้ · ตัวเลขในวงเล็บ = สัดส่วนของยอดรวมคนนี้ · จำนวนชิ้นคือ SUB ของสินค้านั้น · เปลี่ยนช่วงเวลา (วัน/เดือน/ปี) ที่แถบด้านบน</div>`
+    :`<div class="empty">${esc(m0.nick||m0.name||'คนนี้')} ยังไม่มียอดขายรายสินค้าของ${rkLabel(key)}</div>`}</div>`;
+}
 function prodSections(R,key,pk){
   let h='';
   /* --- สินค้าขายดี + Skill --- */
@@ -1429,6 +1448,7 @@ function prodSections(R,key,pk){
     :`<div class="empty">ยังไม่มียอดขายรายสินค้าของ${rkLabel(key)} (แอดมินบันทึกที่ แอดมิน → สินค้า/Skill หรือแท็บ ProductSales ในชีต)</div>`;
   h+=`<div class="hint" style="margin-top:6px">นับเฉพาะข้อมูลของคนที่คุณมีสิทธิ์เห็น · ไม่เกี่ยวกับยอดในแท็บ Sales และไม่ทำให้ TOKEN เพิ่ม</div></div>`;
   h+=prodWhoHTML(key,by);
+  h+=agentMixHTML(R,key);
   h+=skillTableHTML(R,key,by,pv,bl,cur);
   return h;
 }
@@ -1450,6 +1470,8 @@ function renderProdPg(){
     $('#prDate').onchange=e=>{if(e.target.value){R.anchor=e.target.value>today?today:e.target.value;renderProdPg()}};
     $('#prBody').innerHTML=prodSections(R,key,pk);
     $$('#rkBy button').forEach(b=>b.onclick=()=>{R.pby=b.dataset.v;renderProdPg()});
+    if($('#mixWho'))$('#mixWho').onchange=e=>{R.mixWho=e.target.value;renderProdPg()};
+    $$('[data-mxs]').forEach(b=>b.onclick=()=>{R.mixSort=b.dataset.mxs;renderProdPg()});
     $$('[data-sk]').forEach(t=>t.onclick=()=>{const k=t.dataset.sk;if(R.sort===k)R.dir=R.dir==='asc'?'desc':'asc';else{R.sort=k;R.dir='desc'}renderProdPg()});
     $$('[data-tv]').forEach(t=>t.onclick=()=>{R.tv=t.dataset.tv;R.sort='_t';R.dir='desc';renderProdPg()});
   }finally{S.rank=keep}
