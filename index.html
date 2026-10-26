@@ -277,6 +277,9 @@ th.sortable{cursor:pointer}th.sortable:hover{color:var(--text)}
 textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;resize:vertical}
 .mlist{max-height:60vh;overflow:auto;text-align:left}
 .topstats.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.topstats.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:700px){.topstats.c2{grid-template-columns:1fr}}
+.tkm td{font-size:10px}
 @media(max-width:700px){.topstats.c3{grid-template-columns:1fr}}
 .tcell.com{--acc:var(--blue);cursor:pointer}.tcell.com .tv{color:var(--text)}
 .cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}
@@ -406,6 +409,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
     <button class="tabbtn" data-tab="login">🔥 LOGIN</button>
     <button class="tabbtn" data-tab="prod">🛍 สินค้า</button>
     <button class="tabbtn" data-tab="talk">⏱ Talk Time</button>
+    <button class="tabbtn" data-tab="run" id="runTab" hidden>🚀 Run Rate</button>
     <button class="tabbtn" data-tab="svc">🗂 ลา/ร้องเรียน</button>
     <button class="tabbtn" data-tab="game">🎮 เกม</button>
     <button class="tabbtn" data-tab="admin" id="adminTab" hidden>🛠 แอดมิน</button>
@@ -425,7 +429,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 <section id="tab-dash">
   <div class="topstats" id="topStats"></div>
   <div class="topstats c3" id="comStrip"></div>
-  <div class="topstats c4" id="svcStrip"></div>
+  <div class="topstats c2" id="svcStrip"></div>
   <div class="controls">
     <div class="seg" id="modeSeg">
       <button data-m="day" class="on">รายวัน</button>
@@ -527,6 +531,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 <!-- PRODUCTS -->
 <section id="tab-prod" hidden><div class="rkctl" id="prCtl"></div><div id="prBody"></div></section>
 <!-- TALK TIME -->
+<section id="tab-run" hidden><div class="rkctl" id="runCtl"></div><div id="runBody"></div></section>
 <section id="tab-talk" hidden><div class="rkctl" id="tkCtl"></div><div id="tkBody"></div></section>
 <!-- LEAVE / COMPLAINTS -->
 <section id="tab-svc" hidden><div class="seg" id="svcSeg" style="margin-bottom:10px"></div><div id="svcBody"></div></section>
@@ -1340,6 +1345,7 @@ function renderCom(){
   const w=memOf(C.who)||D.me,sal=C.who===D.me.id?D.me.salary:null;
   const pt=monthPoint(C.who,ym),over=C.target!=null&&C.target>=0?C.target:null,c=comCalc(pt,el,dim,sal,over);
   $('#comCtl').innerHTML=`<input type="month" id="cmM" max="${today.slice(0,7)}" value="${ym}">
+    ${PRIV?teamSelHTML('cmTeam'):''}
     ${PRIV&&MEM.length>1?`<select id="cmW">${MEM.map(m=>`<option value="${esc(m.id)}" ${m.id===C.who?'selected':''}>${esc(m.name)} (${esc(m.tick)})</option>`).join('')}</select>`:''}
     <label class="chk">นับถึงวันที่ <input type="number" class="cin" id="cmE" min="1" max="${dim}" value="${el}" style="width:70px;appearance:auto;-webkit-appearance:auto;height:auto"> / ${dim} ${C.el!=null?'<button class="btn sm" id="cmEA">ใช้ค่าอัตโนมัติ ('+auto+')</button>':'<span class="hint">(อัตโนมัติจากวันที่มีข้อมูลล่าสุด)</span>'}</label>
     <label class="chk">ลองกำหนด Point สิ้นเดือน <input type="number" class="cin" id="cmT" min="0" step="any" placeholder="ใช้ Runrate" style="width:130px;appearance:auto;-webkit-appearance:auto;height:auto" value="${over==null?'':over}"></label>${over!=null?'<button class="btn sm" id="cmTC">ล้าง</button>':''}`;
@@ -1377,7 +1383,7 @@ function renderCom(){
     <div class="hint" style="margin-top:6px">คอม = POINT สิ้นเดือน × % ของ Tier ที่ POINT นั้นตกอยู่ (คิดทั้งก้อน ไม่ใช่เฉพาะส่วนที่เกิน) · “ต้องทำเพิ่ม” นับจาก POINT ที่ทำได้จริงตอนนี้ · ตัวเลขนี้เป็นการประมาณการ ไม่ใช่ยอดจ่ายจริง</div></div>`;
   // Team table
   if(MEM.length>1){
-    const rows=MEM.map(m=>{const p=monthPoint(m.id,ym),ef=effDays(m.id,ym,elC),cc=comCalc(p,ef.elapsed,ef.total,null);return {m,p,cc}}).sort((a,b)=>b.cc.run-a.cc.run);
+    const rows=MEM.filter(m=>AG(m)&&teamOk(m)).map(m=>{const p=monthPoint(m.id,ym),ef=effDays(m.id,ym,elC),cc=comCalc(p,ef.elapsed,ef.total,null);return {m,p,cc}}).sort((a,b)=>b.cc.run-a.cc.run);
     const TK={name:r=>(r.m.nick||r.m.name||'')+'',team:r=>teamOf(r.m.team).name+'',point:r=>r.p,avg:r=>r.cc.avg,run:r=>r.cc.run,tier:r=>r.cc.tier.rate,before:r=>r.cc.before,net:r=>r.cc.net};
     const sk=C.ts||'run',sd=C.td||'desc',kf=TK[sk]||TK.run;
     rows.sort((a,b)=>{const x=kf(a),y=kf(b);const c=typeof x==='string'?x.localeCompare(y,'th'):x-y;return sd==='asc'?c:-c});
@@ -1389,6 +1395,7 @@ function renderCom(){
   }
   if(PRIV&&D.kpi&&D.kpi.seniors.length)h+=seniorComHTML(C,ym,elC);
   $('#comBody').innerHTML=h;
+  bindTeamSel('cmTeam',renderCom);
   if($('#snW'))$('#snW').onchange=e=>{C.sn=e.target.value;renderCom()};
   $('#cmM').onchange=e=>{if(e.target.value){C.ym=e.target.value>today.slice(0,7)?today.slice(0,7):e.target.value;C.el=null;C.target=null;renderCom()}};
   if($('#cmW'))$('#cmW').onchange=e=>{C.who=e.target.value;renderCom()};
@@ -1409,14 +1416,24 @@ const rkPrev=k=>{const m=RK().mode;return m==='day'?addDays(k,-1):m==='month'?ad
 const rkNext=k=>{const m=RK().mode;return m==='day'?addDays(k,1):m==='month'?addMonths(k,1):String(+k+1)};
 const rkLabel=k=>{const m=RK().mode;return m==='day'?dShort(k):m==='month'?`${THMON[+k.slice(5)-1]} ${+k.slice(0,4)+543}`:`ปี ${+k+543}`};
 const rkFull=k=>RK().mode==='day'?k:RK().mode==='month'?k+'-01':k+'-01-01';
-const inGrp=m=>{const g=RK().grp;return g==='all'||(g==='member'?!m.role:m.role===g)};
+const AG=m=>!m.role||m.role==='leader';          // Agent (ไม่รวม Senior / แอดมิน)
+const teamOk=m=>!S.tf||m.team===S.tf;             // ตัวกรองทีม (กลุ่ม Senior)
+const okM=id=>{const m=memOf(id);return !!m&&AG(m)&&teamOk(m)};
+const AGM=()=>MEM.filter(m=>AG(m)&&teamOk(m));
+const inGrp=m=>AG(m)&&teamOk(m);
+const teamSelHTML=id=>{const ts=TEAMS.filter(t=>MEM.some(m=>AG(m)&&m.team===t.id));return ts.length>1?`<select id="${id}" title="เลือกทีม (กลุ่ม Senior)"><option value="">👥 ทุกทีม</option>${ts.map(t=>`<option value="${esc(t.id)}" ${S.tf===t.id?'selected':''}>${esc(t.name)}</option>`).join('')}</select>`:''};
+const bindTeamSel=(id,fn)=>{const e=$('#'+id);if(e)e.onchange=ev=>{S.tf=ev.target.value;fn()}};
+const hms=x=>{const t=Math.round((+x||0)*60),h=Math.floor(t/3600),m=Math.floor(t%3600/60),sc=t%60;return pad(h)+':'+pad(m)+':'+pad(sc)};
+const cmpV=(a,b)=>a==null&&b==null?0:a==null?1:b==null?-1:typeof a==='string'?a.localeCompare(b,'th'):a-b;
+const sortBy=(rows,get,dir)=>rows.sort((x,y)=>{const a=get(x),b=get(y);if(a==null&&b==null)return 0;if(a==null)return 1;if(b==null)return -1;return (dir==='asc'?1:-1)*cmpV(a,b)});
+const shArrow=(cur,k,d)=>cur===k?(d==='asc'?' ▲':' ▼'):' <span style="opacity:.35">⇅</span>';
 const skillOf=p=>{const x=PRODS.find(q=>q.id===p);return x?x.skill:'อื่นๆ'};
 const prodName=p=>{const x=PRODS.find(q=>q.id===p);return x?x.name:p};
-function psum(key,fn){const o={};PS.forEach(r=>{if(!r.per.startsWith(key)||(fn&&!fn(r)))return;const x=o[r.p]||(o[r.p]={q:0,a:0,pt:0});x.q+=r.q;x.a+=r.a;x.pt+=PTV(r)});return o}
+function psum(key,fn){const o={};PS.forEach(r=>{if(!r.per.startsWith(key)||!okM(r.m)||(fn&&!fn(r)))return;const x=o[r.p]||(o[r.p]={q:0,a:0,pt:0});x.q+=r.q;x.a+=r.a;x.pt+=PTV(r)});return o}
 const medal=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
 
 function skillTableHTML(R,key,by,pv,bl,cur){
-  const tv=R.tv||'skill',prods=PRODS.filter(p=>p.active||cur[p.id]),skills=[...new Set(prods.map(p=>p.skill))];
+  const tv='prod',prods=PRODS.filter(p=>p.active||cur[p.id]),skills=[...new Set(prods.map(p=>p.skill))];
   const cols=tv==='prod'?prods.slice().sort((a,b)=>skills.indexOf(a.skill)-skills.indexOf(b.skill)).map(p=>({k:p.id,label:p.name,sub:p.skill})):skills.map(s=>({k:s,label:s,sub:''}));
   const people=MEM.filter(inGrp).map(m=>{const o=psum(key,r=>r.m===m.id),cell={},sc={};let tot=0;cols.forEach(c=>cell[c.k]=0);skills.forEach(k=>sc[k]=0);
     Object.keys(o).forEach(id=>{const v=pv(o[id]),s=skillOf(id);if(s in sc)sc[s]+=v;const k=tv==='prod'?id:s;if(k in cell)cell[k]+=v;tot+=v});return{m,cell,sc,tot}});
@@ -1425,7 +1442,7 @@ function skillTableHTML(R,key,by,pv,bl,cur){
   people.sort((a,b)=>dir*((sk==='_t'?a.tot-b.tot:a.cell[sk]-b.cell[sk]))||b.tot-a.tot);
   const colMax={};cols.forEach(c=>colMax[c.k]=Math.max(0,...people.map(p=>p.cell[c.k])));
   const top=skills.map(s=>({s,t:people.filter(p=>p.sc[s]>0).sort((a,b)=>b.sc[s]-a.sc[s]).slice(0,3)}));
-  return `<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>🎯 ตารางคน × ${tv==='prod'?'สินค้า':'ประเภทสินค้า (Skill)'} · ${rkLabel(key)} (${bl})</span><span class="seg" id="prTv"><button data-tv="skill" class="${tv==='skill'?'on':''}">แยกประเภท</button><button data-tv="prod" class="${tv==='prod'?'on':''}">แยกรายสินค้า</button></span></h3>
+  return `<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>🎯 ตารางคน × ${tv==='prod'?'สินค้า':'ประเภทสินค้า (Skill)'} · ${rkLabel(key)} (${bl})</span></h3>
     <div class="skc" style="margin-bottom:12px">${top.map(x=>`<div><b class="sk">${esc(x.s)}</b>${x.t.length?x.t.map((p,i)=>`<div class="rule" style="margin:3px 0"><span>${medal(i)} ${esc(p.m.nick||p.m.name)}</span><b class="num up">${fmt(p.sc[x.s])}</b></div>`).join(''):'<div class="hint">ยังไม่มียอด</div>'}</div>`).join('')}</div>
     <div class="tblwrap"><table class="tbl"><thead><tr><th>#</th><th>ชื่อ</th>${cols.map(c=>`<th class="sortable" data-sk="${esc(c.k)}" title="${esc(c.label)}${c.sub?' · '+esc(c.sub):''}">${esc(c.label)}${c.sub?`<div class="hint" style="font-weight:400">${esc(c.sub)}</div>`:''}${sk===c.k?arrow:''}</th>`).join('')}<th class="sortable" data-sk="_t">รวม${sk==='_t'?arrow:''}</th></tr></thead><tbody>${people.map((p,i)=>`<tr class="row ${p.m.id===D.me.id?'sel':''}"><td class="rk">${i+1}</td><td><span class="dot" style="background:${tcol(p.m.team)}"></span>${esc(p.m.nick||p.m.name)}</td>${cols.map(c=>{const v=p.cell[c.k],a=colMax[c.k]?v/colMax[c.k]:0;return `<td class="hm" style="background:rgba(14,203,129,${(a*.35).toFixed(2)})">${v?fmt(v):'<span class="nodata">–</span>'}</td>`}).join('')}<td class="hm"><b>${p.tot?fmt(p.tot):'–'}</b></td></tr>`).join('')}</tbody></table></div>
     <div class="hint" style="margin-top:6px">แตะหัวคอลัมน์เพื่อเรียง · แตะซ้ำเพื่อสลับ <b>มาก→น้อย (▼)</b> / <b>น้อย→มาก (▲)</b> · เรียงน้อย→มาก คนที่ยังไม่มียอดจะอยู่บนสุด</div></div>`;
@@ -1435,16 +1452,19 @@ function metricTableHTML(R,key){
   const lv=rkLv(),sk=R.mk||'amount',dir=R.md==='asc'?1:-1,arrow=dir===1?' ▲':' ▼';
   const rows=MEM.filter(inGrp).map(m=>({m,v:{amount:val([m.id],lv,key,'amount'),point:val([m.id],lv,key,'point'),sub:val([m.id],lv,key,'sub')}}));
   if(!rows.length)return '';
-  rows.sort((a,b)=>{const x=a.v[sk],y=b.v[sk];if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;return dir*(x-y)});   // ไม่มีข้อมูลอยู่ท้ายเสมอ
+  const strK=sk==='name'||sk==='team',base=strK?'amount':sk,rnk=new Map();
+  rows.slice().filter(r=>r.v[base]!=null).sort((a,b)=>b.v[base]-a.v[base]).forEach((r,i)=>rnk.set(r.m.id,i+1));
+  if(strK)rows.sort((a,b)=>dir*((sk==='name'?(a.m.nick||a.m.name):teamOf(a.m.team).name).localeCompare(sk==='name'?(b.m.nick||b.m.name):teamOf(b.m.team).name,'th')));
+  else rows.sort((a,b)=>{const x=a.v[sk],y=b.v[sk];if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;return dir*(x-y)});   // ไม่มีข้อมูลอยู่ท้ายเสมอ
   const mx={};MT3.forEach(([k])=>mx[k]=Math.max(0,...rows.map(r=>r.v[k]||0)));
   const f=(k,x)=>x==null?'<span class="nodata">–</span>':k==='amount'?'฿'+fmt(x):k==='point'?(+x).toLocaleString('en-US',{maximumFractionDigits:2}):fmt(x);
   let rk=0;
   return `<div class="panel sec"><h3>📊 ตารางเทียบ ยอดขาย · POINT · SUB · ${rkLabel(key)}</h3>
-    <div class="tblwrap"><table class="tbl"><thead><tr><th>#</th><th>ชื่อ</th><th>ทีม</th>${MT3.map(([k,l])=>`<th class="sortable" data-mk="${k}">${l}${sk===k?arrow:''}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>{const has=r.v[sk]!=null;if(has)rk++;
+    <div class="tblwrap"><table class="tbl"><thead><tr><th>#</th><th class="sortable" data-mk="name">ชื่อ${sk==='name'?arrow:''}</th><th class="sortable" data-mk="team">ทีม${strK&&sk==='team'?arrow:''}</th>${MT3.map(([k,l])=>`<th class="sortable" data-mk="${k}">${l}${sk===k?arrow:''}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>{const has=rnk.has(r.m.id);if(has)rk=rnk.get(r.m.id);
       return `<tr class="row ${r.m.id===D.me.id?'sel':''}"><td class="rk">${has?rk:'–'}</td><td><span class="dot" style="background:${tcol(r.m.team)}"></span>${esc(r.m.nick||r.m.name)}${r.m.role?` <span class="role">${ROLE[r.m.role]}</span>`:''}</td><td class="hint">${esc(teamOf(r.m.team).name)}</td>${MT3.map(([k])=>{const a=mx[k]&&r.v[k]!=null?r.v[k]/mx[k]:0;return `<td class="hm num" style="background:rgba(14,203,129,${(a*.3).toFixed(2)})">${f(k,r.v[k])}</td>`}).join('')}</tr>`}).join('')}</tbody></table></div>
     <div class="hint" style="margin-top:6px">แตะหัวคอลัมน์เพื่อเรียง · แตะซ้ำเพื่อสลับ <b>มาก→น้อย (▼)</b> / <b>น้อย→มาก (▲)</b> · “–” = ยังไม่มีข้อมูลช่วงนี้ (อยู่ท้ายตารางเสมอ) · เปลี่ยนรายวัน/เดือน/ปี และตำแหน่ง ที่แถบด้านบน</div></div>`;
 }
-function bindMetricTable(R){$$('[data-mk]').forEach(t=>t.onclick=()=>{const k=t.dataset.mk;if((R.mk||'amount')===k)R.md=R.md==='asc'?'desc':'asc';else{R.mk=k;R.md='desc'}renderRank()})}
+function bindMetricTable(R){$$('[data-mk]').forEach(t=>t.onclick=()=>{const k=t.dataset.mk;if((R.mk||'amount')===k)R.md=R.md==='asc'?'desc':'asc';else{R.mk=k;R.md=(k==='name'||k==='team')?'asc':'desc'}renderRank()})}
 /* ---------- กราฟเทียบสินค้าของ Agent 1 คน: ยอดขาย · POINT · จำนวนชิ้น ---------- */
 function agentMixHTML(R,key){
   const people=MEM.filter(inGrp);if(!people.length)return '';
@@ -1472,8 +1492,35 @@ function agentMixHTML(R,key){
     <div class="hint" style="margin-top:6px">${two?`ฟ้า = ${esc(nmOf(A))} · ส้ม = ${esc(nmOf(B))} · แท่งเทียบกันในคอลัมน์เดียวกัน (สเกลเดียวกัน) · `:'แท่งเทียบกับสินค้าที่ขายได้มากที่สุดของคนนี้ · '}ตัวเลขในวงเล็บ = สัดส่วนของยอดรวมคนนั้น · จำนวนชิ้นคือ SUB · เปลี่ยนช่วงเวลา (วัน/เดือน/ปี) ที่แถบด้านบน</div>`
     :`<div class="empty">ยังไม่มียอดขายรายสินค้าของ${rkLabel(key)}</div>`}</div>`;
 }
+function miniChart(labels,vals,type,color,fmtv){
+  const W=760,H=270,pl=56,pr=10,pt=12,pb=26,iw=W-pl-pr,ih=H-pt-pb,N=vals.length,step=iw/Math.max(1,N);
+  const mx=Math.max(1,...vals.map(v=>v||0))*1.1,X=i=>pl+step*(i+.5),Y=v=>pt+ih-((v||0)/mx)*ih;
+  let g='';
+  for(let i=0;i<=4;i++){const v=mx*i/4,y=Y(v);g+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="#222c37" stroke-dasharray="3 5"/><text x="${pl-6}" y="${y+4}" text-anchor="end" font-size="10" fill="#848e9c">${v>=10000?Math.round(v/1000)+'k':Math.round(v*10)/10}</text>`}
+  const every=Math.ceil(N/10);labels.forEach((l,i)=>{if(i%every===(N-1)%every)g+=`<text x="${X(i)}" y="${H-8}" text-anchor="middle" font-size="10" fill="#848e9c">${l}</text>`});
+  const bw=Math.max(2,Math.min(30,step*.7));
+  if(type==='line'){g+=`<polyline points="${vals.map((v,i)=>X(i)+','+Y(v)).join(' ')}" fill="none" stroke="${color}" stroke-width="2"/>`+vals.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="3" fill="${color}"><title>${labels[i]}: ${fmtv(v||0)}</title></circle>`).join('')}
+  else if(type==='bar'){vals.forEach((v,i)=>{g+=`<rect x="${X(i)-bw/2}" y="${Y(v)}" width="${bw}" height="${Math.max(0,pt+ih-Y(v))}" rx="2" fill="${color}" opacity=".85"><title>${labels[i]}: ${fmtv(v||0)}</title></rect>`})}
+  else vals.forEach((v,i)=>{const o=i?vals[i-1]||0:(v||0),c=(v||0)>=o?'#0ecb81':'#f6465d',yT=Y(Math.max(o,v||0)),yB=Y(Math.min(o,v||0));g+=`<rect x="${X(i)-bw/2}" y="${yT}" width="${bw}" height="${Math.max(1.5,yB-yT)}" rx="1.5" fill="${c}" stroke="${c}"><title>${labels[i]}: ${fmtv(v||0)}</title></rect>`});
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">${g}</svg>`;
+}
+function prodChartHTML(R){
+  const C=R.pc||(R.pc={prod:'',met:'a',type:'candle'});
+  const P=buildPeriods(R.mode,R.anchor,DEFN[R.mode]);
+  const used=[...new Set(PS.filter(r=>okM(r.m)).map(r=>r.p))],prods=PRODS.filter(p=>used.includes(p.id)||p.active);
+  const mt={a:['💰 ยอดขาย (฿)','#f0b90b',x=>'฿'+fmt(x)],pt:['🎯 POINT','#0ecb81',x=>(+x).toLocaleString('en-US',{maximumFractionDigits:2})],q:['📦 จำนวนชิ้น (SUB)','#5b9cf6',x=>fmt(x)]}[C.met];
+  const vals=P.map(p=>{let t=0;PS.forEach(r=>{if(!okM(r.m)||(C.prod&&r.p!==C.prod))return;if(p.lv==='d'?r.per===p.key:r.per.startsWith(p.key))t+=C.met==='pt'?PTV(r):r[C.met]});return t});
+  const tot=vals.reduce((a,b)=>a+b,0),mxv=Math.max(...vals),nz=vals.filter(v=>v>0).length;
+  const nm=C.prod?prodName(C.prod):'ทุกสินค้ารวม';
+  return `<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>📈 กราฟยอดขายสินค้า · ${esc(nm)}</span><span style="display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center"><select id="pcProd"><option value="">★ ทุกสินค้ารวม</option>${prods.map(p=>`<option value="${esc(p.id)}" ${C.prod===p.id?'selected':''}>${esc(p.name)} · ${esc(p.skill)}</option>`).join('')}</select>
+    <span class="seg" id="pcMet">${['a','pt','q'].map(k=>`<button data-v="${k}" class="${C.met===k?'on':''}">${{a:'฿ ยอดขาย',pt:'POINT',q:'จำนวนชิ้น'}[k]}</button>`).join('')}</span>
+    <span class="seg" id="pcType">${[['candle','🕯 แท่งเทียน'],['line','เส้น'],['bar','แท่ง']].map(([k,l])=>`<button data-v="${k}" class="${C.type===k?'on':''}">${l}</button>`).join('')}</span></span></h3>
+    <div class="topstats c3" style="margin-bottom:8px"><div class="tcell"><small style="color:${mt[1]}">${mt[0]} รวมในช่วงนี้</small><div class="tv">${mt[2](tot)}</div></div><div class="tcell"><small>สูงสุดในหนึ่ง${R.mode==='day'?'วัน':R.mode==='month'?'เดือน':'ปี'}</small><div class="tv">${mt[2](mxv)}</div></div><div class="tcell"><small>มียอด</small><div class="tv">${nz}/${P.length}</div><div class="ts">${R.mode==='day'?'วัน':R.mode==='month'?'เดือน':'ปี'}</div></div></div>
+    ${miniChart(P.map(p=>p.label),vals,C.type,mt[1],mt[2])}
+    <div class="hint" style="margin-top:4px">${C.type==='candle'?'เขียว = เพิ่มจากช่วงก่อนหน้า · แดง = ลดลง · ':''}ช่วงเวลา/วันที่/ทีม เปลี่ยนที่แถบด้านบน (รายวัน/เดือน/ปี) · แตะแท่งหรือจุดเพื่อดูตัวเลข</div></div>`;
+}
 function prodSections(R,key,pk){
-  let h='';
+  let h=prodChartHTML(R);
   /* --- สินค้าขายดี + Skill --- */
   const vis=new Set(MEM.map(m=>m.id)),cur=psum(key),prv=psum(pk),by=R.pby,bl=by==='amount'?'฿':by==='point'?'Point':'ชิ้น';
   const pv=x=>by==='amount'?x.a:by==='point'?x.pt:x.q,pf=x=>by==='amount'?'฿'+fmt(x):by==='point'?fmt(x)+' Point':fmt(x)+' ชิ้น';
@@ -1500,20 +1547,49 @@ function renderProdPg(){
     $('#prCtl').innerHTML=`<div class="seg" id="prMode"><button data-v="day" class="${R.mode==='day'?'on':''}">รายวัน</button><button data-v="month" class="${R.mode==='month'?'on':''}">รายเดือน</button><button data-v="year" class="${R.mode==='year'?'on':''}">รายปี</button></div>
       <button class="btn" id="prPrev">◀</button><span class="lbl">${rkLabel(key)}</span><button class="btn" id="prNext" ${key>=maxKey?'disabled':''}>▶</button>
       <input type="date" id="prDate" max="${today}" value="${rkFull(key)}">
-      ${groups.length>2?`<div class="seg" id="prGrp">${groups.map(g=>`<button data-v="${g}" class="${R.grp===g?'on':''}">${g==='all'?'ทุกตำแหน่ง':g==='member'?'สมาชิก':ROLE[g]}</button>`).join('')}</div>`:''}`;
+      ${teamSelHTML('prTeam')}`;
     $$('#prMode button').forEach(b=>b.onclick=()=>{const a=rkFull(key);R.mode=b.dataset.v;R.anchor=a>today?today:a;renderProdPg()});
-    $$('#prGrp button').forEach(b=>b.onclick=()=>{R.grp=b.dataset.v;renderProdPg()});
+    bindTeamSel('prTeam',renderProdPg);
     $('#prPrev').onclick=()=>{R.anchor=rkFull(pk);renderProdPg()};
     $('#prNext').onclick=()=>{const n=rkNext(key);R.anchor=rkFull(n)>today?today:rkFull(n);renderProdPg()};
     $('#prDate').onchange=e=>{if(e.target.value){R.anchor=e.target.value>today?today:e.target.value;renderProdPg()}};
     $('#prBody').innerHTML=prodSections(R,key,pk);
     $$('#rkBy button').forEach(b=>b.onclick=()=>{R.pby=b.dataset.v;renderProdPg()});
+    if($('#pcProd'))$('#pcProd').onchange=e=>{R.pc.prod=e.target.value;renderProdPg()};
+    $$('#pcMet button').forEach(b=>b.onclick=()=>{R.pc.met=b.dataset.v;renderProdPg()});
+    $$('#pcType button').forEach(b=>b.onclick=()=>{R.pc.type=b.dataset.v;renderProdPg()});
     if($('#mixWho'))$('#mixWho').onchange=e=>{R.mixWho=e.target.value;renderProdPg()};
     if($('#mixWho2'))$('#mixWho2').onchange=e=>{R.mixWho2=e.target.value;renderProdPg()};
     $$('[data-mxs]').forEach(b=>b.onclick=()=>{R.mixSort=b.dataset.mxs;renderProdPg()});
     $$('[data-sk]').forEach(t=>t.onclick=()=>{const k=t.dataset.sk;if(R.sort===k)R.dir=R.dir==='asc'?'desc':'asc';else{R.sort=k;R.dir='desc'}renderProdPg()});
     $$('[data-tv]').forEach(t=>t.onclick=()=>{R.tv=t.dataset.tv;R.sort='_t';R.dir='desc';renderProdPg()});
   }finally{S.rank=keep}
+}
+function renderRun(){
+  const C=S.run||(S.run={ym:today.slice(0,7)}),ym=C.ym,dim=monthDays(ym),elC=autoElapsed(ym);
+  $('#runCtl').innerHTML=`<input type="month" id="rnM" max="${today.slice(0,7)}" value="${ym}">${teamSelHTML('rnTeam')}<span class="hint">นับถึงวันที่ ${elC}/${dim} · Runrate = ค่าเฉลี่ยต่อวันทำงานจริง (หักวันลา) × วันทำงานทั้งเดือน</span>`;
+  $('#rnM').onchange=e=>{if(e.target.value){C.ym=e.target.value>today.slice(0,7)?today.slice(0,7):e.target.value;renderRun()}};
+  bindTeamSel('rnTeam',renderRun);
+  const f2=x=>(+x||0).toLocaleString('en-US',{maximumFractionDigits:2}),fb=x=>'฿'+fmt(x);
+  const rows=AGM().map(m=>{const ef=effDays(m.id,ym,elC),amt=val([m.id],'m',ym,'amount')||0,pt=monthPoint(m.id,ym),sub=val([m.id],'m',ym,'sub')||0,rr=v=>ef.elapsed>0?v/ef.elapsed*ef.total:0;return{m,name:m.nick||m.name,team:teamOf(m.team).name,amt,ramt:rr(amt),pt,rpt:rr(pt),sub,rsub:rr(sub)}});
+  const ak=C.ak||'ramt',ad=C.ad||'desc';sortBy(rows,r=>r[ak],ad);
+  const T=rows.reduce((a,r)=>({amt:a.amt+r.amt,ramt:a.ramt+r.ramt,pt:a.pt+r.pt,rpt:a.rpt+r.rpt,sub:a.sub+r.sub,rsub:a.rsub+r.rsub}),{amt:0,ramt:0,pt:0,rpt:0,sub:0,rsub:0});
+  const AH=(k,l,cls)=>`<th class="${cls||''} sortable" data-ak="${k}">${l}${shArrow(ak,k,ad)}</th>`;
+  let h=`<div class="panel sec"><h3>🚀 Run Rate ยอดขาย · POINT · SUB ของ Agent · ${THMON[+ym.slice(5)-1]} ${+ym.slice(0,4)+543}</h3>
+   <div class="tblwrap"><table class="atbl"><thead><tr><th>#</th>${AH('name','ชื่อ')}${AH('team','ทีม')}${AH('amt','ยอดขายตอนนี้','r')}${AH('ramt','Runrate ยอดขาย','r')}${AH('pt','POINT ตอนนี้','r')}${AH('rpt','Runrate POINT','r')}${AH('sub','SUB ตอนนี้','r')}${AH('rsub','Runrate SUB','r')}</tr></thead><tbody>
+   ${rows.map((r,i)=>`<tr><td class="num hint">${i+1}</td><td>${esc(r.name)}</td><td class="hint">${esc(r.team)}</td><td class="r num">${fb(r.amt)}</td><td class="r num up"><b>${fb(r.ramt)}</b></td><td class="r num">${f2(r.pt)}</td><td class="r num up"><b>${f2(r.rpt)}</b></td><td class="r num">${fmt(r.sub)}</td><td class="r num up"><b>${f2(r.rsub)}</b></td></tr>`).join('')}
+   <tr><td></td><td colspan="2"><b>รวม ${rows.length} คน</b></td><td class="r num"><b>${fb(T.amt)}</b></td><td class="r num up"><b>${fb(T.ramt)}</b></td><td class="r num"><b>${f2(T.pt)}</b></td><td class="r num up"><b>${f2(T.rpt)}</b></td><td class="r num"><b>${fmt(T.sub)}</b></td><td class="r num up"><b>${f2(T.rsub)}</b></td></tr></tbody></table></div>
+   <div class="hint" style="margin-top:6px">แตะหัวคอลัมน์เพื่อเรียง มาก↔น้อย · POINT หัก DIFF ${D.diffPct==null?5:D.diffPct}% แล้ว · เมนูนี้เห็นได้เฉพาะ Senior และแอดมิน</div></div>`;
+  const sens=(D.kpi?D.kpi.seniors:[]).filter(x=>!S.tf||x.teams.includes(S.tf)).map(x=>{const c=seniorCalc(x.id,ym,elC);return c?{x,c,name:(memOf(x.id)||{}).nick||(memOf(x.id)||{}).name||x.id,n:c.agents.length,sp:c.sumP,rp:c.sumRun,avg:c.agents.length?c.sumRun/Math.max(1,c.actual):0,aq:c.run.aq,tm:c.run.tm,ex:c.run.co+c.run.bz,now:c.now.total,run:c.run.total}:null}).filter(Boolean);
+  const sk=C.sk||'run',sd=C.sd||'desc';sortBy(sens,r=>r[sk],sd);
+  const SH=(k,l,cls)=>`<th class="${cls||''} sortable" data-sk2="${k}">${l}${shArrow(sk,k,sd)}</th>`;
+  h+=`<div class="panel sec"><h3>🏅 Run Rate คอมมิชชั่น Senior (N-5) · ${THMON[+ym.slice(5)-1]} ${+ym.slice(0,4)+543}</h3>
+   ${sens.length?`<div class="tblwrap"><table class="atbl"><thead><tr><th>#</th>${SH('name','Senior')}${SH('n','Agent','r')}${SH('sp','POINT รวมทีม','r')}${SH('rp','Runrate POINT รวม','r')}${SH('avg','Runrate/Agent','r')}${SH('aq','Agent Quality','r')}${SH('tm','Team Mgmt','r')}${SH('ex','Collab + Biz','r')}${SH('now','คอมตอนนี้','r')}${SH('run','คอมตาม Runrate','r')}</tr></thead><tbody>
+   ${sens.map((r,i)=>`<tr><td class="num hint">${i+1}</td><td><b>${esc(r.name)}</b><div class="hint">${esc(r.x.teams.map(t=>teamOf(t).name).join(', '))}</div></td><td class="r num">${r.n}</td><td class="r num">${f2(r.sp)}</td><td class="r num">${fp(r.rp)}</td><td class="r num">${fp(r.avg)}</td><td class="r num">${fb(r.aq)}</td><td class="r num">${fb(r.tm)}</td><td class="r num">${fb(r.ex)}</td><td class="r num">${fb(r.now)}</td><td class="r num up"><b>${fb(r.run)}</b></td></tr>`).join('')}</tbody></table></div>
+   <div class="hint" style="margin-top:6px">คิดตามตารางเกณฑ์ N-5 · Collab/Biz แอดมินกรอกที่ชีต SeniorKpi · รายละเอียดรายคนดูได้ที่แท็บ 💸 คอม</div>`:'<div class="empty">ไม่พบ Senior ในทีมที่เลือก (ตรวจ role = senior ในชีต Members)</div>'}</div>`;
+  $('#runBody').innerHTML=h;
+  $$('[data-ak]').forEach(t=>t.onclick=()=>{const k=t.dataset.ak;if((C.ak||'ramt')===k)C.ad=(C.ad||'desc')==='desc'?'asc':'desc';else{C.ak=k;C.ad=(k==='name'||k==='team')?'asc':'desc'}renderRun()});
+  $$('[data-sk2]').forEach(t=>t.onclick=()=>{const k=t.dataset.sk2;if((C.sk||'run')===k)C.sd=(C.sd||'desc')==='desc'?'asc':'desc';else{C.sk=k;C.sd=k==='name'?'asc':'desc'}renderRun()});
 }
 function renderRank(){
   const R=RK(),key=rkKey(),pk=rkPrev(key),maxKey=R.mode==='day'?today:R.mode==='month'?today.slice(0,7):today.slice(0,4);
@@ -1523,11 +1599,11 @@ function renderRank(){
     <button class="btn" id="rkPrev">◀</button><span class="lbl" id="rkLbl">${rkLabel(key)}</span><button class="btn" id="rkNext" ${key>=maxKey?'disabled':''}>▶</button>
     <input type="date" id="rkDate" max="${today}" value="${rkFull(key)}">
     <div class="seg" id="rkMet"><button data-v="amount" class="${R.pm==='amount'?'on':''}">💰 ยอดขาย</button><button data-v="point" class="${R.pm==='point'?'on':''}">🎯 POINT</button><button data-v="sub" class="${R.pm==='sub'?'on':''}">👤 SUB</button></div>
-    <div class="seg" id="rkGrp">${groups.map(g=>`<button data-v="${g}" class="${R.grp===g?'on':''}">${g==='all'?'ทุกตำแหน่ง':g==='member'?'สมาชิก':ROLE[g]}</button>`).join('')}</div>
+    ${teamSelHTML('rkTeam')}
     ${TEAMS.length>1?`<div class="seg" id="rkView"><button data-v="person" class="${R.view==='person'?'on':''}">รายบุคคล</button><button data-v="team" class="${R.view==='team'?'on':''}">รายทีม</button></div>`:''}`;
   const bind=(id,fn)=>$$(id+' button').forEach(b=>b.onclick=()=>{fn(b.dataset.v);renderRank()});
   bind('#rkMode',v=>{R.anchor=rkAnchor();R.mode=v});
-  bind('#rkMet',v=>R.pm=v);bind('#rkGrp',v=>R.grp=v);bind('#rkView',v=>R.view=v);
+  bind('#rkMet',v=>R.pm=v);bind('#rkView',v=>R.view=v);bindTeamSel('rkTeam',renderRank);
   $('#rkPrev').onclick=()=>{R.anchor=rkFull(pk);renderRank()};
   $('#rkNext').onclick=()=>{const n=rkNext(key);R.anchor=rkFull(n)>today?today:rkFull(n);renderRank()};
   $('#rkDate').onchange=e=>{if(e.target.value){R.anchor=e.target.value>today?today:e.target.value;renderRank()}};
@@ -1537,18 +1613,22 @@ function renderRank(){
   if(R.view==='team'&&TEAMS.length>1)rows=TEAMS.map(t=>{const ids=MEM.filter(m=>m.team===t.id&&inGrp(m)).map(m=>m.id);return{sym:'T-'+t.id,name:t.name,sub:ids.length+' คน',col:t.color,me:t.id===D.me.team,ids,cur:ids.length?val(ids,lv,key,met):null,prev:ids.length?val(ids,lv,pk,met):null}}).filter(r=>r.ids.length);
   else rows=MEM.filter(inGrp).map(m=>({sym:m.tick,name:m.name,sub:m.role?`<span class="role">${ROLE[m.role]}</span>`:'',col:tcol(m.team),me:m.id===D.me.id,ids:[m.id],cur:val([m.id],lv,key,met),prev:val([m.id],lv,pk,met),tn:teamOf(m.team).name}));
   rows.sort((a,b)=>(b.cur==null?-1:b.cur)-(a.cur==null?-1:a.cur)||0);
-  const top=Math.max(1,...rows.map(r=>r.cur||0)),mine=rows.findIndex(r=>r.me&&r.cur!=null);
+  rows.forEach((r,i)=>r.rn=r.cur==null?null:i+1);
+  const mine0=rows.findIndex(r=>r.me&&r.cur!=null),rs=R.rs||'cur',rd=R.rd||'desc';
+  if(!(rs==='cur'&&rd==='desc'))sortBy(rows,{name:r=>r.name,team:r=>r.tn||r.sub||'',cur:r=>r.cur,chg:r=>r.cur!=null&&r.prev?(r.cur-r.prev)/r.prev:null}[rs],rd);
+  const top=Math.max(1,...rows.map(r=>r.cur||0)),mine=mine0;
   const locked=MEM.length<2&&R.view!=='team';
   let h=`<div class="panel sec"><h3>🏆 อันดับ ${METRIC[met].label} · ${rkLabel(key)}${mine>=0?` <span class="newdot" style="background:var(--flat)">คุณอันดับ ${mine+1}/${rows.filter(r=>r.cur!=null).length}</span>`:''}</h3>`;
   if(locked)h+=`<div class="lockmsg">🔒 ตอนนี้คุณเห็นเฉพาะข้อมูลของตัวเอง จึงยังไม่มีอันดับให้เทียบ — แอดมินเปิดได้ที่ แอดมิน → ตั้งค่า → “พนักงานมองเห็นข้อมูล” (ทีม/ทุกคน) หรือกำหนดตำแหน่ง Leader / Senior Leader ให้เห็นทีมที่ดูแล</div>`;
-  h+=rows.length?`<div class="tblwrap"><table class="tbl"><thead><tr><th>#</th><th>SYMBOL</th><th>ชื่อ</th>${R.view==='person'?'<th>ทีม</th>':'<th></th>'}<th>${METRIC[met].label}</th><th>CHG%</th></tr></thead><tbody>${rows.map((r,i)=>{
+  h+=rows.length?`<div class="tblwrap"><table class="tbl"><thead><tr><th>#</th><th>SYMBOL</th><th class="sortable" data-rs="name">ชื่อ${shArrow(rs,'name',rd)}</th><th class="sortable" data-rs="team">${R.view==='person'?'ทีม':'กลุ่ม'}${shArrow(rs,'team',rd)}</th><th class="sortable" data-rs="cur">${METRIC[met].label}${shArrow(rs,'cur',rd)}</th><th class="sortable" data-rs="chg">CHG%${shArrow(rs,'chg',rd)}</th></tr></thead><tbody>${rows.map((r,i)=>{
     const pc=r.cur!=null&&r.prev?((r.cur-r.prev)/r.prev*100):null,k=r.cur==null?'flat':(r.prev==null||r.cur>=r.prev?'up':'down');
-    return `<tr class="row ${r.me?'sel':''}"><td class="rk"><span class="medal">${r.cur==null?'–':medal(i)}</span></td><td class="sym">${esc(r.sym)}</td><td><span class="dot" style="background:${r.col}"></span>${esc(r.name)} ${r.sub&&R.view==='person'?r.sub:''}</td><td class="hint">${R.view==='person'?esc(r.tn):esc(r.sub)}</td>
+    return `<tr class="row ${r.me?'sel':''}"><td class="rk"><span class="medal">${r.rn==null?'–':medal(r.rn-1)}</span></td><td class="sym">${esc(r.sym)}</td><td><span class="dot" style="background:${r.col}"></span>${esc(r.name)} ${r.sub&&R.view==='person'?r.sub:''}</td><td class="hint">${R.view==='person'?esc(r.tn):esc(r.sub)}</td>
       <td class="num ${k}"><b>${r.cur==null?'–':unit+fvv(r.cur)}</b><div class="pbar"><i style="width:${(r.cur||0)/top*100}%;background:${r.col}"></i></div></td><td class="num ${k}">${pc==null?'–':(pc>=0?'▲ +':'▼ ')+pc.toFixed(1)+'%'}</td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">ไม่มีข้อมูลในกลุ่มนี้</div>';
   h+=`<div class="hint" style="margin-top:6px">เรียงตามค่าของช่วงที่เลือก · “–” = แอดมินยังไม่ได้บันทึกข้อมูลระดับ${modeNoun[R.mode]}นี้ · % เทียบกับ${R.mode==='day'?'วัน':R.mode==='month'?'เดือน':'ปี'}ก่อนหน้า${key>=maxKey&&R.mode!=='day'?' · งวดนี้ยังไม่จบ จึงอาจต่ำกว่าจริง':''}</div></div>`;
   $('#rkBody').innerHTML=gradePanelHTML()+h+metricTableHTML(R,key);bindGradePanel();bindMetricTable(R);
   $$('#rkBy button').forEach(b=>b.onclick=()=>{R.pby=b.dataset.v;renderRank()});
-  $$('[data-sk]').forEach(t=>t.onclick=()=>{R.sort=t.dataset.sk;renderRank()});
+  $$('[data-rs]').forEach(t=>t.onclick=()=>{const k=t.dataset.rs;if((R.rs||'cur')===k)R.rd=(R.rd||'desc')==='desc'?'asc':'desc';else{R.rs=k;R.rd=(k==='name'||k==='team')?'asc':'desc'}renderRank()});
+  $$('[data-gs]').forEach(t=>t.onclick=()=>{const k=t.dataset.gs;if((S.gs||'r')===k)S.gd=(S.gd||'desc')==='desc'?'asc':'desc';else{S.gs=k;S.gd=(k==='name'||k==='team')?'asc':'desc'}renderRank()});
 }
 
 /* ---------- แอดมิน: ข่าว/ประกาศ · รางวัล · สินค้า ---------- */
@@ -1637,7 +1717,7 @@ function admProducts(el){
 let LASTTAB='';
 function prodWhoHTML(key,by){
   const val1=x=>by==='amount'?x.a:by==='point'?x.pt:x.q,fm=x=>by==='amount'?'฿'+fmt(x):by==='point'?fmt(x)+' Point':fmt(x)+' ชิ้น';
-  const P={};PS.forEach(r=>{if(!r.per.startsWith(key))return;const pr=P[r.p]||(P[r.p]={}),m=pr[r.m]||(pr[r.m]={q:0,a:0,pt:0});m.q+=r.q;m.a+=r.a;m.pt+=PTV(r)});
+  const P={};PS.forEach(r=>{if(!r.per.startsWith(key)||!okM(r.m))return;const pr=P[r.p]||(P[r.p]={}),m=pr[r.m]||(pr[r.m]={q:0,a:0,pt:0});m.q+=r.q;m.a+=r.a;m.pt+=PTV(r)});
   const SK={};Object.keys(P).forEach(pid=>{const mem=Object.keys(P[pid]).map(id=>({id,v:val1(P[pid][id])})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);if(!mem.length)return;
     const tot=mem.reduce((t,x)=>t+x.v,0),sk=skillOf(pid);(SK[sk]||(SK[sk]={tot:0,items:[]})).tot+=tot;SK[sk].items.push({pid,tot,mem})});
   const sks=Object.keys(SK).sort((a,b)=>SK[b].tot-SK[a].tot);
@@ -1674,7 +1754,8 @@ function render(){
   const cnt=S.count||DEFN[S.mode];S.ext=buildPeriods(S.mode,S.anchor,cnt+LOOK);S.periods=S.ext.slice(-cnt);
   renderHeader();renderTicker();renderBell();applyMenu();renderBnav();
   if(S.tab==='admin'&&!D.isAdmin)S.tab='dash';
-  ['dash','rank','prod','com','road','login','talk','svc','game','admin'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);
+  if(S.tab==='run'&&!D.canSeeAll)S.tab='dash';
+  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);
   $$('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab));
   if(S.tab==='dash'){rebuildProd();syncControls();renderTop();renderComStrip();renderSvcStrip();renderNews();renderQuote();renderChart();renderBoard();renderDashMix()}
   else if(S.tab==='rank')renderRank();
@@ -1683,6 +1764,7 @@ function render(){
   else if(S.tab==='login')renderLogin();
   else if(S.tab==='prod')renderProdPg();
   else if(S.tab==='talk')renderTalk();
+  else if(S.tab==='run')renderRun();
   else if(S.tab==='svc')renderSvc();
   else if(S.tab==='game'){if(S.tab!==LASTTAB)GM=null;renderGame()}
   else renderAdmin();
@@ -1731,7 +1813,7 @@ const WDN=['อา','จ','อ','พ','พฤ','ศ','ส'];
 const nowMs=()=>Date.now();
 const curYM=()=>today.slice(0,7);
 const durTxt=ms=>{ms=Math.abs(ms);const m=Math.floor(ms/60000),h=Math.floor(m/60),d=Math.floor(h/24);return d>=2?`${d} วัน ${h%24} ชม.`:h>=1?`${h} ชม. ${m%60} น.`:`${m} น.`};
-const hm=x=>{x=Math.round(+x||0);return Math.floor(x/60)+':'+String(x%60).padStart(2,'0')};
+
 const mn2=x=>(+x||0).toLocaleString('en-US',{maximumFractionDigits:1});
 
 /* ---------- เกรด ---------- */
@@ -1801,10 +1883,13 @@ async function viewFile(kind,id){
    ===================================================================== */
 function gradePanelHTML(){
   const yms=Object.keys(D.grades||{}).sort();if(!yms.length)return '';
-  const ym=S.gm&&yms.includes(S.gm)?S.gm:curYM(),G=GR(ym),ids=MEM.map(m=>m.id).filter(id=>G[id]);
+  const ym=S.gm&&yms.includes(S.gm)?S.gm:curYM(),G=GR(ym),ids=MEM.filter(m=>AG(m)&&teamOk(m)).map(m=>m.id).filter(id=>G[id]);
   const dist={};GN.forEach(g=>dist[g]=0);ids.forEach(id=>dist[G[id][0]]++);
   const max=Math.max(1,...GN.map(g=>dist[g])),my=G[D.me.id],prevY=gradeInfo(D.me.id,addMonths(ym,-1));
   const multi=MEM.length>1,rows=ids.map(id=>({id,g:G[id][0],r:G[id][1],c:G[id][2],p:monthPoint(id,ym)})).sort((a,b)=>b.r-a.r);
+  rows.forEach((r,i)=>r.rn=i+1);
+  const gs=S.gs||'r',gd=S.gd||'desc';
+  if(!(gs==='r'&&gd==='desc'))sortBy(rows,{name:r=>{const m=memOf(r.id);return m.nick||m.name},team:r=>teamOf(memOf(r.id).team).name,g:r=>GN.indexOf(r.g),r:r=>r.r,p:r=>r.p,c:r=>r.c}[gs],gd);
   const trend=my&&prevY?(GN.indexOf(my[0])<GN.indexOf(prevY[0])?'<b class="up">▲ ขึ้นจากเกรด '+prevY[0]+'</b>':GN.indexOf(my[0])>GN.indexOf(prevY[0])?'<b class="down">▼ ลงจากเกรด '+prevY[0]+'</b>':'<span class="hint">เท่าเดือนก่อน</span>'):'';
   const bas=D.v5.cfg.gradeBasis==='perday'?'POINT ต่อวันทำงานจริง (หักวันลา) เทียบกับค่าเฉลี่ยของทุกคน':'POINT รวมทั้งเดือน เทียบกับค่าเฉลี่ยของทุกคน';
   let h=`<div class="panel sec"><h3 style="justify-content:space-between"><span>🏅 เกรดประสิทธิภาพการขาย A–F</span><select id="gmSel">${yms.map(y=>`<option value="${y}" ${y===ym?'selected':''}>${THMON[+y.slice(5)-1]} ${+y.slice(0,4)+543}</option>`).join('')}</select></h3>
@@ -1817,7 +1902,7 @@ function gradePanelHTML(){
      ${GN.map(g=>`<div class="gdrow"><span class="gb g${g}" style="margin:0">${g}</span><div class="gdbar"><i class="g${g}" style="width:${dist[g]/max*100}%"></i></div><b class="num">${dist[g]}</b><small>${GLBL[g]}</small></div>`).join('')}
    </div></div>`;
   if(multi){
-    h+=`<div class="tblwrap" style="margin-top:12px"><table class="tbl"><thead><tr><th>#</th><th>ชื่อ</th><th>ทีม</th><th>เกรด</th><th>% เทียบค่าเฉลี่ย</th><th>POINT</th><th>Critical</th></tr></thead><tbody>${rows.slice(0,200).map((r,i)=>{const m=memOf(r.id);return `<tr class="row ${r.id===D.me.id?'sel':''}"><td class="rk">${i+1}</td><td>${esc(m.nick||m.name)}${m.role?` <span class="role">${ROLE[m.role]}</span>`:''}</td><td class="hint">${esc(teamOf(m.team).name)}</td><td>${gradeBadge(r.g,true)}</td><td class="num">${r.r}%</td><td class="num">${f2(r.p)}</td><td class="num ${r.c?'down':''}">${r.c||'–'}</td></tr>`}).join('')}</tbody></table></div>`;
+    h+=`<div class="tblwrap" style="margin-top:12px"><table class="tbl"><thead><tr><th>#</th><th class="sortable" data-gs="name">ชื่อ${shArrow(gs,'name',gd)}</th><th class="sortable" data-gs="team">ทีม${shArrow(gs,'team',gd)}</th><th class="sortable" data-gs="g">เกรด${shArrow(gs,'g',gd)}</th><th class="sortable" data-gs="r">% เทียบค่าเฉลี่ย${shArrow(gs,'r',gd)}</th><th class="sortable" data-gs="p">POINT${shArrow(gs,'p',gd)}</th><th class="sortable" data-gs="c">Critical${shArrow(gs,'c',gd)}</th></tr></thead><tbody>${rows.slice(0,200).map((r,i)=>{const m=memOf(r.id);return `<tr class="row ${r.id===D.me.id?'sel':''}"><td class="rk">${r.rn}</td><td>${esc(m.nick||m.name)}${m.role?` <span class="role">${ROLE[m.role]}</span>`:''}</td><td class="hint">${esc(teamOf(m.team).name)}</td><td>${gradeBadge(r.g,true)}</td><td class="num">${r.r}%</td><td class="num">${f2(r.p)}</td><td class="num ${r.c?'down':''}">${r.c||'–'}</td></tr>`}).join('')}</tbody></table></div>`;
     if(TEAMS.length>1){
       h+=`<div class="tblwrap" style="margin-top:12px"><table class="atbl"><thead><tr><th>ทีม</th>${GN.map(g=>`<th class="r">${g}</th>`).join('')}<th class="r">เกรดเฉลี่ย (% เฉลี่ย)</th></tr></thead><tbody>${TEAMS.map(t=>{const tids=ids.filter(id=>memOf(id).team===t.id);if(!tids.length)return '';const c={};GN.forEach(g=>c[g]=0);tids.forEach(id=>c[G[id][0]]++);const av=tids.reduce((s,id)=>s+G[id][1],0)/tids.length;const ag=av>=150?'A':av>=120?'B':av>=90?'C':av>=70?'D':av>=50?'E':'F';
         return `<tr><td><span class="dot" style="background:${t.color}"></span>${esc(t.name)} <span class="hint">(${tids.length})</span></td>${GN.map(g=>`<td class="r"><span class="gcnt g${g}">${c[g]||'·'}</span></td>`).join('')}<td class="r">${gradeBadge(ag,true)} <span class="num">${av.toFixed(0)}%</span></td></tr>`}).join('')}</tbody></table></div>`;
@@ -1838,9 +1923,7 @@ function renderSvcStrip(){
   const trend=gi&&prev?(GN.indexOf(gi[0])<GN.indexOf(prev[0])?' ▲':GN.indexOf(gi[0])>GN.indexOf(prev[0])?' ▼':''):'';
   el.innerHTML=`
    <div class="tcell ${gi?(gi[0]<='B'?'up':gi[0]<='D'?'flat':'down'):''}" data-go="rank" style="cursor:pointer"><small>🏅 เกรดเดือนนี้</small><div class="tv">${gradeBadge(gi?gi[0]:null).replace('gb ','gb xl ')}<span style="font-size:18px;margin-left:10px">${gi?gi[1]+'%':''}${trend}</span></div><div class="ts">${gi?'เทียบค่าเฉลี่ยทุกคน'+(prev?' · เดือนก่อน '+prev[0]:''):'ยังไม่มีข้อมูลพอคิดเกรด'}</div></div>
-   <div class="tcell ${(mgr?crit.length||overdue.length:mineOpen.some(c=>c.sev==='critical'))?'down':(mgr?openC.length:mineOpen.length)?'flat':'up'}" data-go="svc:cmp" style="cursor:pointer"><small>🗂 เรื่องร้องเรียน${mgr?' (สายงานที่ดูแล)':''}</small><div class="tv">${mgr?openC.length:mineOpen.length} <span style="font-size:14px;color:var(--mute)">เปิดอยู่</span></div><div class="ts">${mgr?`เกิน SLA ${overdue.length} · Critical ${crit.length}`:(mineOpen.length?'มีเคสที่ยังไม่ปิด':'ไม่มีเรื่องร้องเรียนค้าง')}</div></div>
-   <div class="tcell ${pend.length||toApprove?'flat':'up'}" data-go="svc:leave" style="cursor:pointer"><small>🙋 การลา</small><div class="tv">${mgr&&toApprove?toApprove+' <span style="font-size:14px;color:var(--mute)">รออนุมัติ</span>':pend.length?pend.length+' <span style="font-size:14px;color:var(--mute)">รออนุมัติ</span>':next?dShort(next.start):'–'}</div><div class="ts">${mgr?`ลาวันนี้ ${onToday} คน`:next?'ลาครั้งถัดไป '+dShort(next.start)+(next.end!==next.start?' – '+dShort(next.end):''):'ไม่มีใบลาที่รออยู่'}</div></div>
-   <div class="tcell ${ts.avg==null?'':ts.avg>=D.v5.cfg.talkMin?'up':'down'}" data-go="talk" style="cursor:pointer"><small>⏱ Talk Time เดือนนี้</small><div class="tv">${ts.avg==null?'–':hm(ts.avg)} <span style="font-size:14px;color:var(--mute)">ชม:นาที/วัน</span></div><div class="ts">ผ่านเกณฑ์ ${ts.pass} · ต่ำกว่า ${ts.fail} · ลา ${ts.leave} วัน (เกณฑ์ ${D.v5.cfg.talkMin})</div></div>`;
+   <div class="tcell ${ts.avg==null?'':ts.avg>=D.v5.cfg.talkMin?'up':'down'}" data-go="talk" style="cursor:pointer"><small>⏱ Talk Time เดือนนี้</small><div class="tv">${ts.avg==null?'–':hms(ts.avg)} <span style="font-size:14px;color:var(--mute)">ชม:นาที/วัน</span></div><div class="ts">ผ่านเกณฑ์ ${ts.pass} · ต่ำกว่า ${ts.fail} · ลา ${ts.leave} วัน (เกณฑ์ ${D.v5.cfg.talkMin})</div></div>`;
   $$('#svcStrip [data-go]').forEach(x=>x.onclick=()=>goTab(x.dataset.go));
 }
 function goTab(spec){const [t,v]=spec.split(':');S.tab=t;if(t==='svc'&&v)(S.svc||(S.svc={})).view=v;render();scrollTo(0,0)}
@@ -1858,11 +1941,12 @@ function parseTalkLines(txt){
 }
 function renderTalk(){
   const T=S.tk||(S.tk={ym:curYM()}),ym=T.ym,dim=monthDays(ym),cfg=D.v5.cfg,mgr=D.canManage,minYM=addMonths(curYM(),-2);
-  $('#tkCtl').innerHTML=`<input type="month" id="tkM" min="${minYM}" max="${curYM()}" value="${ym}"><span class="hint">เกณฑ์ผ่าน ≥ <b>${hm(cfg.talkMin)}</b> ชม.:นาที/วัน (${cfg.talkMin} นาที) · ข้อมูลย้อนหลังได้ 3 เดือน</span>`;
+  $('#tkCtl').innerHTML=`<input type="month" id="tkM" min="${minYM}" max="${curYM()}" value="${ym}"><span class="hint">เกณฑ์ผ่าน ≥ <b>${hms(cfg.talkMin)}</b> ชม.:นาที/วัน (${cfg.talkMin} นาที) · ข้อมูลย้อนหลังได้ 3 เดือน</span>${teamSelHTML('tkTeam')}`;
+  bindTeamSel('tkTeam',renderTalk);
   $('#tkM').onchange=e=>{if(e.target.value&&e.target.value>=minYM&&e.target.value<=curYM()){T.ym=e.target.value;renderTalk()}};
-  const ids=MEM.slice().sort((a,b)=>(a.team>b.team?1:a.team<b.team?-1:0)||(a.nick||a.name).localeCompare(b.nick||b.name,'th')).map(m=>m.id);
+  const ids=MEM.filter(m=>AG(m)&&teamOk(m)).sort((a,b)=>(a.team>b.team?1:a.team<b.team?-1:0)||(a.nick||a.name).localeCompare(b.nick||b.name,'th')).map(m=>m.id);
   const my=talkSum(D.me.id,ym);
-  let h=`<div class="topstats c3" style="margin-bottom:14px"><div class="tcell ${my.avg==null?'':my.avg>=cfg.talkMin?'up':'down'}"><small>⏱ ค่าเฉลี่ยของคุณ</small><div class="tv">${my.avg==null?'–':hm(my.avg)} <span style="font-size:14px;color:var(--mute)">ชม:นาที/วัน</span></div><div class="ts">นับเฉพาะวันที่มีข้อมูล ไม่รวมวันลา</div></div>
+  let h=`<div class="topstats c3" style="margin-bottom:14px"><div class="tcell ${my.avg==null?'':my.avg>=cfg.talkMin?'up':'down'}"><small>⏱ ค่าเฉลี่ยของคุณ</small><div class="tv">${my.avg==null?'–':hms(my.avg)} <span style="font-size:14px;color:var(--mute)">ชม:นาที/วัน</span></div><div class="ts">นับเฉพาะวันที่มีข้อมูล ไม่รวมวันลา</div></div>
     <div class="tcell up"><small>✅ ผ่านเกณฑ์</small><div class="tv">${my.pass} <span style="font-size:14px;color:var(--mute)">วัน</span></div><div class="ts">ต่ำกว่าเกณฑ์ ${my.fail} วัน</div></div>
     <div class="tcell" style="--acc:var(--purple)"><small>🏖 วันลา (ไม่นับเป็นวันขาด)</small><div class="tv" style="color:var(--purple)">${my.leave} <span style="font-size:14px;color:var(--mute)">วัน</span></div><div class="ts">ลาที่อนุมัติแล้วจะแสดงเป็น “ลา” อัตโนมัติ</div></div></div>`;
   if(mgr)h+=`<div class="panel sec"><h3>✏️ บันทึก Talk Time (Leader / แอดมิน)</h3>
@@ -1880,14 +1964,14 @@ function renderTalk(){
   teamsShown.forEach(t=>{
     const tids=ids.filter(id=>memOf(id).team===t.id);
     if(MEM.length>1){
-      let tsum=0,tn=0;const cells=Array.from({length:dim},(_,i)=>{const k=ym+'-'+pad(i+1);let s=0,n=0;tids.forEach(id=>{const c=talkCell(id,k);if(c.m!=null){s+=c.m;n++}});if(n){tsum+=s;tn+=n}return n?`<td class="${s/n>=cfg.talkMin?'PASS':'FAIL'}" title="เฉลี่ยทีม ${hm(s/n)} นาที (${n} คน)">${hm(s/n)}</td>`:'<td class="NA">·</td>'}).join('');
-      h+=`<tr class="tm"><td class="n"><span class="dot" style="background:${t.color}"></span>${esc(t.name)} (เฉลี่ย)</td>${cells}<td class="a ${tn&&tsum/tn>=cfg.talkMin?'PASS':tn?'FAIL':''}">${tn?hm(tsum/tn):'–'}</td><td class="a">–</td></tr>`;
+      let tsum=0,tn=0;const cells=Array.from({length:dim},(_,i)=>{const k=ym+'-'+pad(i+1);let s=0,n=0;tids.forEach(id=>{const c=talkCell(id,k);if(c.m!=null){s+=c.m;n++}});if(n){tsum+=s;tn+=n}return n?`<td class="${s/n>=cfg.talkMin?'PASS':'FAIL'}" title="เฉลี่ยทีม ${hms(s/n)} นาที (${n} คน)">${hms(s/n)}</td>`:'<td class="NA">·</td>'}).join('');
+      h+=`<tr class="tm"><td class="n"><span class="dot" style="background:${t.color}"></span>${esc(t.name)} (เฉลี่ย)</td>${cells}<td class="a ${tn&&tsum/tn>=cfg.talkMin?'PASS':tn?'FAIL':''}">${tn?hms(tsum/tn):'–'}</td><td class="a">–</td></tr>`;
     }
     tids.forEach(id=>{
       const m=memOf(id),sm=talkSum(id,ym);
       h+=`<tr class="${id===D.me.id?'me':''}"><td class="n" title="${esc(m.name)}">${esc(m.nick||m.name)}${gradeFor(id,ym)}</td>${Array.from({length:dim},(_,i)=>{const k=ym+'-'+pad(i+1),c=talkCell(id,k);
-        const txt=c.s==='LEAVE'?'ลา':c.m!=null?Math.round(c.m):c.s==='NA'?'·':'';
-        return `<td class="${c.s}${mgr&&c.s!=='FUT'?' cl':''}" ${mgr&&c.s!=='FUT'?`data-tc="${esc(id)}|${k}"`:''} title="${dayTxt(k)}${c.m!=null?' · '+hm(c.m)+' ชม. ('+Math.round(c.m)+' นาที)':''}${c.s==='LEAVE'?' · ลา':''}">${txt}</td>`}).join('')}<td class="a ${sm.avg==null?'':sm.avg>=cfg.talkMin?'PASS':'FAIL'}">${sm.avg==null?'–':hm(sm.avg)}</td><td class="a">${sm.pass}/${sm.n}</td></tr>`;
+        const txt=c.s==='LEAVE'?'ลา':c.m!=null?hms(c.m):c.s==='NA'?'·':'';
+        return `<td class="${c.s}${mgr&&c.s!=='FUT'?' cl':''}" ${mgr&&c.s!=='FUT'?`data-tc="${esc(id)}|${k}"`:''} title="${dayTxt(k)}${c.m!=null?' · '+hms(c.m)+' ชม. ('+Math.round(c.m)+' นาที)':''}${c.s==='LEAVE'?' · ลา':''}">${txt}</td>`}).join('')}<td class="a ${sm.avg==null?'':sm.avg>=cfg.talkMin?'PASS':'FAIL'}">${sm.avg==null?'–':hms(sm.avg)}</td><td class="a">${sm.pass}/${sm.n}</td></tr>`;
     });
   });
   h+=`</tbody></table></div><div class="hint" style="margin-top:8px">เฉลี่ย = ค่าเฉลี่ยนาทีของวันที่มีข้อมูล (ไม่รวมวันลาและ NA) · แถว “(เฉลี่ย)” คือค่าเฉลี่ยของทั้งทีมในแต่ละวัน</div></div>`;
@@ -2110,14 +2194,14 @@ function openInbox(){
 }
 $('#bellBtn').onclick=()=>D&&openInbox();
 /* ---------- เมนู: ลำดับ/ซ่อน ตั้งโดยแอดมิน (config menuOrder) ---------- */
-const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['rank','🏆','อันดับ','🏆 อันดับ'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
+const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
 function menuList(raw){   // คืน [{id,show}] ตามลำดับที่ตั้ง (ที่ไม่ได้ระบุต่อท้ายตามค่าเริ่มต้น)
   const L=[],seen={};String(raw==null?((D.v5&&D.v5.cfg&&D.v5.cfg.menu)||''):raw).split(/[,;\s]+/).filter(Boolean).forEach(x=>{const h=x[0]==='-',id=h?x.slice(1):x;if(seen[id]||!TABDEF.some(t=>t[0]===id))return;seen[id]=1;L.push({id,show:!(h&&id!=='dash'&&id!=='admin')})});
   TABDEF.forEach(t=>{if(!seen[t[0]])L.push({id:t[0],show:true})});return L}
-const menuVisible=()=>menuList().filter(x=>x.show&&(x.id!=='admin'||(D&&D.isAdmin))).map(x=>TABDEF.find(t=>t[0]===x.id));
+const menuVisible=()=>menuList().filter(x=>x.show&&(x.id!=='admin'||(D&&D.isAdmin))&&(x.id!=='run'||(D&&D.canSeeAll))).map(x=>TABDEF.find(t=>t[0]===x.id));
 function applyMenu(){
   const nav=$('#tabs');if(!nav||!D)return;const L=menuList();
-  L.forEach(x=>{const b=nav.querySelector(`[data-tab="${x.id}"]`);if(!b)return;nav.appendChild(b);if(x.id!=='admin')b.hidden=!x.show});
+  L.forEach(x=>{const b=nav.querySelector(`[data-tab="${x.id}"]`);if(!b)return;nav.appendChild(b);if(x.id==='run')b.hidden=!x.show||!D.canSeeAll;else if(x.id!=='admin')b.hidden=!x.show});
 }
 function renderBnav(){
   const n=inboxUnread();
