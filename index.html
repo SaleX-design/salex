@@ -1433,7 +1433,7 @@ function psum(key,fn){const o={};PS.forEach(r=>{if(!r.per.startsWith(key)||!okM(
 const medal=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
 
 function skillTableHTML(R,key,by,pv,bl,cur){
-  const tv='prod',prods=PRODS.filter(p=>p.active||cur[p.id]),skills=[...new Set(prods.map(p=>p.skill))];
+  const tv=R.tv||'skill',prods=PRODS.filter(p=>p.active||cur[p.id]),skills=[...new Set(prods.map(p=>p.skill))];
   const cols=tv==='prod'?prods.slice().sort((a,b)=>skills.indexOf(a.skill)-skills.indexOf(b.skill)).map(p=>({k:p.id,label:p.name,sub:p.skill})):skills.map(s=>({k:s,label:s,sub:''}));
   const people=MEM.filter(inGrp).map(m=>{const o=psum(key,r=>r.m===m.id),cell={},sc={};let tot=0;cols.forEach(c=>cell[c.k]=0);skills.forEach(k=>sc[k]=0);
     Object.keys(o).forEach(id=>{const v=pv(o[id]),s=skillOf(id);if(s in sc)sc[s]+=v;const k=tv==='prod'?id:s;if(k in cell)cell[k]+=v;tot+=v});return{m,cell,sc,tot}});
@@ -1442,7 +1442,7 @@ function skillTableHTML(R,key,by,pv,bl,cur){
   people.sort((a,b)=>dir*((sk==='_t'?a.tot-b.tot:a.cell[sk]-b.cell[sk]))||b.tot-a.tot);
   const colMax={};cols.forEach(c=>colMax[c.k]=Math.max(0,...people.map(p=>p.cell[c.k])));
   const top=skills.map(s=>({s,t:people.filter(p=>p.sc[s]>0).sort((a,b)=>b.sc[s]-a.sc[s]).slice(0,3)}));
-  return `<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>🎯 ตารางคน × ${tv==='prod'?'สินค้า':'ประเภทสินค้า (Skill)'} · ${rkLabel(key)} (${bl})</span></h3>
+  return `<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>🎯 ตารางคน × ${tv==='prod'?'สินค้า':'ประเภทสินค้า (Skill)'} · ${rkLabel(key)} (${bl})</span><span class="seg" id="prTv"><button data-tv="skill" class="${tv==='skill'?'on':''}">แยกประเภท</button><button data-tv="prod" class="${tv==='prod'?'on':''}">แยกรายสินค้า</button></span></h3>
     <div class="skc" style="margin-bottom:12px">${top.map(x=>`<div><b class="sk">${esc(x.s)}</b>${x.t.length?x.t.map((p,i)=>`<div class="rule" style="margin:3px 0"><span>${medal(i)} ${esc(p.m.nick||p.m.name)}</span><b class="num up">${fmt(p.sc[x.s])}</b></div>`).join(''):'<div class="hint">ยังไม่มียอด</div>'}</div>`).join('')}</div>
     <div class="tblwrap"><table class="tbl"><thead><tr><th>#</th><th>ชื่อ</th>${cols.map(c=>`<th class="sortable" data-sk="${esc(c.k)}" title="${esc(c.label)}${c.sub?' · '+esc(c.sub):''}">${esc(c.label)}${c.sub?`<div class="hint" style="font-weight:400">${esc(c.sub)}</div>`:''}${sk===c.k?arrow:''}</th>`).join('')}<th class="sortable" data-sk="_t">รวม${sk==='_t'?arrow:''}</th></tr></thead><tbody>${people.map((p,i)=>`<tr class="row ${p.m.id===D.me.id?'sel':''}"><td class="rk">${i+1}</td><td><span class="dot" style="background:${tcol(p.m.team)}"></span>${esc(p.m.nick||p.m.name)}</td>${cols.map(c=>{const v=p.cell[c.k],a=colMax[c.k]?v/colMax[c.k]:0;return `<td class="hm" style="background:rgba(14,203,129,${(a*.35).toFixed(2)})">${v?fmt(v):'<span class="nodata">–</span>'}</td>`}).join('')}<td class="hm"><b>${p.tot?fmt(p.tot):'–'}</b></td></tr>`).join('')}</tbody></table></div>
     <div class="hint" style="margin-top:6px">แตะหัวคอลัมน์เพื่อเรียง · แตะซ้ำเพื่อสลับ <b>มาก→น้อย (▼)</b> / <b>น้อย→มาก (▲)</b> · เรียงน้อย→มาก คนที่ยังไม่มียอดจะอยู่บนสุด</div></div>`;
