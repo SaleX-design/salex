@@ -433,17 +433,15 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
   <div class="spacer"></div>
   <nav class="tabs" id="tabs">
     <button class="tabbtn on" data-tab="dash">📈 ยอดขาย</button>
-    <button class="tabbtn" data-tab="rank">🏆 อันดับ</button>
+    <button class="tabbtn" data-tab="rank">🏆 อันดับ &amp; TOP SALE</button>
     <button class="tabbtn" data-tab="com">💸 คอม</button>
     <button class="tabbtn" data-tab="road">🎁 ROAD MAP &amp; รางวัล</button>
     <button class="tabbtn" data-tab="login">🔥 LOGIN</button>
     <button class="tabbtn" data-tab="prod">🛍 สินค้า</button>
     <button class="tabbtn" data-tab="talk">⏱ Talk Time</button>
     <button class="tabbtn" data-tab="run" id="runTab" hidden>🚀 Run Rate</button>
-    <button class="tabbtn" data-tab="feed">🌐 ฟีด</button>
+    <button class="tabbtn" data-tab="feed">🌐 ฟีด &amp; Feedback</button>
     <button class="tabbtn" data-tab="ins">📊 Insight</button>
-    <button class="tabbtn" data-tab="spot">🏆 TOP SALE</button>
-    <button class="tabbtn" data-tab="fb">💬 Feedback</button>
     <button class="tabbtn" data-tab="svc">🗂 ลา/ร้องเรียน</button>
     <button class="tabbtn" data-tab="game">🎮 เกม</button>
     <button class="tabbtn" data-tab="admin" id="adminTab" hidden>🛠 แอดมิน</button>
@@ -533,6 +531,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 <section id="tab-rank" hidden>
   <div class="rkctl" id="rkCtl"></div>
   <div id="rkBody"></div>
+  <div id="spotBody" style="margin-top:14px"></div>
 </section>
 
 <!-- ROADMAP / REWARDS -->
@@ -566,10 +565,8 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 <!-- PRODUCTS -->
 <section id="tab-prod" hidden><div class="rkctl" id="prCtl"></div><div id="prBody"></div></section>
 <!-- TALK TIME -->
-<section id="tab-spot" hidden><div id="spotBody"></div></section>
-<section id="tab-feed" hidden><div id="feedBody"></div></section>
+<section id="tab-feed" hidden><div class="rkctl"><div class="seg" id="feedSeg"><button data-v="feed">🌐 ฟีด</button><button data-v="fb">💬 Feedback ถึงแอดมิน</button></div></div><div id="feedBody"></div><div id="fbBody" hidden></div></section>
 <section id="tab-ins" hidden><div id="insBody"></div></section>
-<section id="tab-fb" hidden><div id="fbBody"></div></section>
 <section id="tab-run" hidden><div class="rkctl" id="runCtl"></div><div id="runBody"></div></section>
 <section id="tab-talk" hidden><div class="rkctl" id="tkCtl"></div><div id="tkBody"></div></section>
 <!-- LEAVE / COMPLAINTS -->
@@ -1613,7 +1610,7 @@ const spLabel=p=>p.kind==='d'?'ประจำวัน '+dShort(p.period):'ป�
 async function ensureSpot(force){
   if(!D)return;
   if(force||!S.spot||Date.now()-S.spot.ts>120000){try{const r=await api('spotlight',{});S.spot=Object.assign(r,{ts:Date.now()})}catch(e){if(!S.spot)return}}
-  if(S.tab==='dash')renderSpotBanner();else if(S.tab==='spot')renderSpotTab(true);
+  if(S.tab==='dash')renderSpotBanner();else if(S.tab==='rank')renderSpotTab(true);
   spPopupOnce();
 }
 function spTop(kind){return S.spot&&S.spot.posts.find(p=>p.kind===kind&&p.cat==='all')}
@@ -1625,17 +1622,17 @@ function renderSpotBanner(){
   const chip=(p,t)=>p?`<div class="spotchip">${spAvatar(p.m,p.name,56)}<div><div class="st">🏆 TOP SALE ${t} · ${spLabel(p).replace(/^ประจำ(วัน|เดือน) /,'')}</div><div class="sn">${esc(p.name)} <span class="sv">฿${fmt(p.v)}</span></div><div>${spLikes(p)}</div></div></div>`:'';
   el.innerHTML=`<div class="spotbn"><span class="sbx" id="spbX" title="ซ่อนวันนี้">✕</span>${chip(d,'ประจำวัน')}${chip(m,'ประจำเดือน')}<div style="display:flex;align-items:center"><button class="btn sm" id="spbAll">🛍 ดูแยกตามสินค้า →</button></div></div>`;
   $('#spbX').onclick=()=>{try{sessionStorage.setItem('sx_spb',S.spot.day)}catch(e){}el.innerHTML=''};
-  $('#spbAll').onclick=()=>goTab('spot');
+  $('#spbAll').onclick=()=>goTab('rank');
 }
 function spPopupOnce(){
-  if(!S.spot||S.spotPop||S.tab==='spot'||!$('#modal').hidden)return;
+  if(!S.spot||S.spotPop||S.tab==='rank'||!$('#modal').hidden)return;
   const d=spTop('d'),m=spTop('m');if(!d&&!m)return;
   const k=SPK+D.me.id;let seen='';try{seen=localStorage.getItem(k)||''}catch(e){}
   if(seen===S.spot.day)return;S.spotPop=1;
   try{localStorage.setItem(k,S.spot.day)}catch(e){}
   const card=(p,t)=>p?`<div class="spcard big" style="align-items:center;text-align:center">${spAvatar(p.m,p.name,92)}<div class="st" style="color:#f0b90b;font-weight:700">🏆 TOP SALE ${t}</div><div style="font-size:20px;font-weight:800">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)} · ${spLabel(p)}</div><div class="num up" style="font-size:22px;font-weight:800">฿${fmt(p.v)}</div><div>${spLikes(p)}</div></div>`:'';
   openModal(`<h2 style="text-align:center">🎉 ขอแสดงความยินดี! 🎉</h2><div class="spgrid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${card(d,'ประจำวัน')}${card(m,'ประจำเดือน')}</div><div class="hint" style="text-align:center;margin:8px 0">กดหัวใจ ❤️ หรือไลก์ 👍 ให้กำลังใจเพื่อนร่วมงานได้เลย</div><div class="mrow"><button class="btn primary" id="spGo">ดูแยกตามสินค้า</button><button class="btn" onclick="closeModal()">ปิด</button></div>`);
-  $('#spGo').onclick=()=>{closeModal();goTab('spot')};
+  $('#spGo').onclick=()=>{closeModal();goTab('rank')};
 }
 document.addEventListener('click',async e=>{
   const b=e.target.closest&&e.target.closest('[data-lk]');if(!b)return;
@@ -1692,7 +1689,7 @@ async function imgResize(file,maxW,maxCh){
 async function ensureFeed(force){
   if(!D)return;
   if(force||!SOC.feed||Date.now()-SOC.ts>60000){try{SOC.feed=await api('feed',{});SOC.ts=Date.now()}catch(e){if(!SOC.feed){const el=$('#feedBody');if(el)el.innerHTML=`<div class="panel"><div class="err">${esc(e.message)}</div></div>`;return}}}
-  if(S.tab==='feed')renderFeed();
+  if(S.tab==='feed'&&(S.feedView||'feed')==='feed')renderFeed();
 }
 function feedText(x){
   if(x.type==='win'){const lab=x.kind==='d'?'ประจำวัน '+THFULL(x.period):'ประจำเดือน '+ymLabel(x.period);
@@ -1725,6 +1722,12 @@ function itemHTML(x,i){
    <div class="fact">${spLikes(x)}<span class="cmcnt" data-cmx="${i}">💬 <b>${x.cn||0}</b></span></div>
    <div class="cmwrap" id="cmw${i}">${(x.cn||0)>cms.length?`<a class="plk" data-cml="${i}">ดูคอมเมนต์ทั้งหมด ${x.cn} รายการ</a>`:''}${cms.map(cmHTML).join('')}</div>
    <div class="cmin"><input type="text" maxlength="500" placeholder="เขียนคอมเมนต์ให้กำลังใจ…" data-cmi="${i}"><button class="btn sm primary" data-cms="${i}">ส่ง</button></div></div>`;
+}
+function renderFeedPage(){
+  const v=S.feedView||'feed';
+  $$('#feedSeg button').forEach(b=>{b.classList.toggle('on',b.dataset.v===v);b.onclick=()=>{S.feedView=b.dataset.v;renderFeedPage()}});
+  $('#feedBody').hidden=v!=='feed';$('#fbBody').hidden=v!=='fb';
+  if(v==='fb')renderFb();else renderFeed();
 }
 function renderFeed(){
   const el=$('#feedBody');if(!el)return;
@@ -2088,21 +2091,20 @@ function render(){
   if(!D)return;
   const cnt=S.count||DEFN[S.mode];S.ext=buildPeriods(S.mode,S.anchor,cnt+LOOK);S.periods=S.ext.slice(-cnt);
   renderHeader();renderTicker();renderBell();applyMenu();renderBnav();
+  if(S.tab==='spot')S.tab='rank';if(S.tab==='fb'){S.tab='feed';S.feedView='fb'}
   if(S.tab==='admin'&&!D.isAdmin)S.tab='dash';
   if(S.tab==='run'&&!D.canSeeAll)S.tab='dash';
-  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','fb','spot','feed','ins'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
+  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
   $$('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab));
   if(S.tab==='dash'){rebuildProd();syncControls();renderTop();renderComStrip();renderSvcStrip();renderNews();renderQuote();renderChart();renderBoard();renderDashMix();ensureSpot()}
-  else if(S.tab==='rank')renderRank();
+  else if(S.tab==='rank'){renderRank();renderSpotTab()}
   else if(S.tab==='com')renderCom();
   else if(S.tab==='road')renderRoad();
   else if(S.tab==='login')renderLogin();
   else if(S.tab==='prod')renderProdPg();
   else if(S.tab==='talk')renderTalk();
   else if(S.tab==='run')renderRun();
-  else if(S.tab==='fb')renderFb();
-  else if(S.tab==='spot')renderSpotTab();
-  else if(S.tab==='feed')renderFeed();
+  else if(S.tab==='feed')renderFeedPage();
   else if(S.tab==='ins')renderIns();
   else if(S.tab==='svc')renderSvc();
   else if(S.tab==='game'){if(S.tab!==LASTTAB)GM=null;renderGame()}
@@ -2533,7 +2535,7 @@ function openInbox(){
 }
 $('#bellBtn').onclick=()=>D&&openInbox();
 /* ---------- เมนู: ลำดับ/ซ่อน ตั้งโดยแอดมิน (config menuOrder) ---------- */
-const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['feed','🌐','ฟีด','🌐 ฟีด'],['ins','📊','Insight','📊 Insight'],['run','🚀','Run Rate','🚀 Run Rate'],['spot','🏆','TOP SALE','🏆 TOP SALE'],['fb','💬','Feedback','💬 Feedback'],['rank','🏆','อันดับ','🏆 อันดับ'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
+const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['feed','🌐','ฟีด','🌐 ฟีด & Feedback'],['ins','📊','Insight','📊 Insight'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
 function menuList(raw){   // คืน [{id,show}] ตามลำดับที่ตั้ง (ที่ไม่ได้ระบุต่อท้ายตามค่าเริ่มต้น)
   const L=[],seen={};String(raw==null?((D.v5&&D.v5.cfg&&D.v5.cfg.menu)||''):raw).split(/[,;\s]+/).filter(Boolean).forEach(x=>{const h=x[0]==='-',id=h?x.slice(1):x;if(seen[id]||!TABDEF.some(t=>t[0]===id))return;seen[id]=1;L.push({id,show:!(h&&id!=='dash'&&id!=='admin')})});
   TABDEF.forEach(t=>{if(!seen[t[0]])L.push({id:t[0],show:true})});return L}
