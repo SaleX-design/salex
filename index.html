@@ -123,6 +123,25 @@ html,body{overflow-x:hidden}
 .share{height:5px;background:var(--panel2);border-radius:3px;margin-top:4px;min-width:70px;overflow:hidden}
 .share i{display:block;height:100%}
 
+
+/* social */
+.plk{color:var(--text);font-weight:700;cursor:pointer;text-decoration:none}.plk:hover{color:var(--up);text-decoration:underline}
+.up{color:var(--up)}.dn{color:var(--down)}
+.fcard{margin-bottom:12px}.fcard .fhead{margin-bottom:2px}.fact{display:flex;gap:6px;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
+.cmcnt{margin-left:auto;font-size:13px;color:var(--mute)}.cmcnt b{font-family:var(--mono)}
+.cmwrap{display:grid;gap:6px;margin-top:8px}.cmt{display:flex;gap:8px;align-items:flex-start}.cmt .sav{border-width:1px}
+.cmb{background:var(--panel2);border-radius:12px;padding:6px 10px;font-size:13px;word-break:break-word}.cmb small{display:block;color:var(--mute);font-size:11px}
+.cmdel{cursor:pointer;color:var(--down)}
+.cmin{display:flex;gap:6px;margin-top:8px}.cmin input{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:7px 12px;color:var(--text)}
+.pimg{max-width:100%;border-radius:10px;margin-top:8px;display:block}
+.chb{background:linear-gradient(135deg,#0d2a20,#14181e);border:1px solid #0ecb8166;border-radius:12px;padding:12px}
+.chr{display:flex;gap:8px;align-items:center;margin:5px 0}.chn{width:26px;text-align:center}.chnm{flex:0 1 auto;min-width:90px}
+.chbar{flex:1;height:8px;background:var(--panel2);border-radius:6px;overflow:hidden;min-width:40px}.chbar i{display:block;height:100%;background:var(--up);border-radius:6px}.chbar.prev i{background:#848e9c88}
+.pst{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:12px}.pst>div{background:var(--panel2);border-radius:10px;padding:8px 10px}.pst small{display:block;color:var(--mute);font-size:11px}.pst b{font-size:16px}
+.bgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}.bgi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:2px}.bgi span{font-size:26px}.bgi small{color:var(--mute);font-size:11px}
+.insbig{display:flex;gap:14px;align-items:center;margin-bottom:8px}.insl{margin:0;padding-left:20px;display:grid;gap:5px}
+.fcg{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}.fcb{background:var(--panel2);border-radius:10px;padding:10px}
+.hcol{display:flex;flex-direction:column;gap:3px}.hc{display:block;width:16px;height:16px;border-radius:3px;background:var(--panel2);font-style:normal}
 /* feed */
 .feed{display:grid;gap:2px;max-height:230px;overflow:auto}
 .fi{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:13px;padding:5px 8px;border-radius:6px;background:var(--panel2)}
@@ -280,6 +299,17 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 .topstats.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(max-width:700px){.topstats.c2{grid-template-columns:1fr}}
 .tkm td{font-size:10px}
+.spotbn{display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;margin:0 0 14px;padding:10px 12px;border-radius:12px;border:1px solid #f0b90b66;background:linear-gradient(120deg,#2a2208 0%,#14181e 55%,#0d1f17 100%);position:relative}
+.spotbn .sbx{position:absolute;top:4px;right:8px;color:var(--mute);cursor:pointer;font-size:14px}
+.spotchip{display:flex;gap:10px;align-items:center;flex:1 1 280px;min-width:240px}
+.spotchip .st{font-size:11px;color:#f0b90b;font-weight:700;letter-spacing:.3px}
+.spotchip .sn{font-weight:700;font-size:16px}.spotchip .sv{font-family:var(--mono);color:var(--up);font-weight:700}
+.sav{border-radius:50%;object-fit:cover;display:inline-flex;align-items:center;justify-content:center;font-weight:800;color:#0b0e11;flex:none;border:2px solid #f0b90b}
+.lkb{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;cursor:pointer;color:var(--text);margin-right:6px}
+.lkb.on{border-color:#f6465d;background:#f6465d22}.lkb b{font-family:var(--mono)}
+.spgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.spcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.spcard.big{border-color:#f0b90b88;background:linear-gradient(135deg,#2a2208,#14181e)}
 @media(max-width:700px){.topstats.c3{grid-template-columns:1fr}}
 .tcell.com{--acc:var(--blue);cursor:pointer}.tcell.com .tv{color:var(--text)}
 .cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}
@@ -410,6 +440,10 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
     <button class="tabbtn" data-tab="prod">🛍 สินค้า</button>
     <button class="tabbtn" data-tab="talk">⏱ Talk Time</button>
     <button class="tabbtn" data-tab="run" id="runTab" hidden>🚀 Run Rate</button>
+    <button class="tabbtn" data-tab="feed">🌐 ฟีด</button>
+    <button class="tabbtn" data-tab="ins">📊 Insight</button>
+    <button class="tabbtn" data-tab="spot">🏆 TOP SALE</button>
+    <button class="tabbtn" data-tab="fb">💬 Feedback</button>
     <button class="tabbtn" data-tab="svc">🗂 ลา/ร้องเรียน</button>
     <button class="tabbtn" data-tab="game">🎮 เกม</button>
     <button class="tabbtn" data-tab="admin" id="adminTab" hidden>🛠 แอดมิน</button>
@@ -427,6 +461,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 
 <!-- DASHBOARD -->
 <section id="tab-dash">
+  <div id="spotBanner"></div>
   <div class="topstats" id="topStats"></div>
   <div class="topstats c3" id="comStrip"></div>
   <div class="topstats c2" id="svcStrip"></div>
@@ -531,6 +566,10 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 <!-- PRODUCTS -->
 <section id="tab-prod" hidden><div class="rkctl" id="prCtl"></div><div id="prBody"></div></section>
 <!-- TALK TIME -->
+<section id="tab-spot" hidden><div id="spotBody"></div></section>
+<section id="tab-feed" hidden><div id="feedBody"></div></section>
+<section id="tab-ins" hidden><div id="insBody"></div></section>
+<section id="tab-fb" hidden><div id="fbBody"></div></section>
 <section id="tab-run" hidden><div class="rkctl" id="runCtl"></div><div id="runBody"></div></section>
 <section id="tab-talk" hidden><div class="rkctl" id="tkCtl"></div><div id="tkBody"></div></section>
 <!-- LEAVE / COMPLAINTS -->
@@ -1565,6 +1604,302 @@ function renderProdPg(){
     $$('[data-tv]').forEach(t=>t.onclick=()=>{R.tv=t.dataset.tv;R.sort='_t';R.dir='desc';renderProdPg()});
   }finally{S.rank=keep}
 }
+/* ---------- TOP SALE: แบนเนอร์ / ป๊อปอัป / หน้าเต็ม + Like ❤️ ---------- */
+const SPK='sx_spot_';
+function spAvatar(id,name,sz){const ph=(S.spot&&S.spot.photos||{})[id],m=memOf(id)||{},col=m.team?tcol(m.team):'#f0b90b';
+  return ph?`<img class="sav" src="${ph}" alt="" style="width:${sz}px;height:${sz}px">`:`<span class="sav" style="width:${sz}px;height:${sz}px;background:${col};font-size:${Math.round(sz*.4)}px">${esc(String(name||'?').slice(0,2).toUpperCase())}</span>`}
+function spLikes(p){return `<span data-lkw="${esc(p.key)}"><button class="lkb ${p.mHeart?'on':''}" data-lk="${esc(p.key)}|heart">❤️ <b>${p.heart}</b></button><button class="lkb ${p.mLike?'on':''}" data-lk="${esc(p.key)}|like">👍 <b>${p.like}</b></button></span>`}
+const spLabel=p=>p.kind==='d'?'ประจำวัน '+dShort(p.period):'ประจำเดือน '+THMON[+p.period.slice(5)-1]+' '+(+p.period.slice(0,4)+543);
+async function ensureSpot(force){
+  if(!D)return;
+  if(force||!S.spot||Date.now()-S.spot.ts>120000){try{const r=await api('spotlight',{});S.spot=Object.assign(r,{ts:Date.now()})}catch(e){if(!S.spot)return}}
+  if(S.tab==='dash')renderSpotBanner();else if(S.tab==='spot')renderSpotTab(true);
+  spPopupOnce();
+}
+function spTop(kind){return S.spot&&S.spot.posts.find(p=>p.kind===kind&&p.cat==='all')}
+function renderSpotBanner(){
+  const el=$('#spotBanner');if(!el)return;
+  let hide=false;try{hide=sessionStorage.getItem('sx_spb')===(S.spot&&S.spot.day)}catch(e){}
+  const d=spTop('d'),m=spTop('m');
+  if(!S.spot||hide||(!d&&!m)){el.innerHTML='';return}
+  const chip=(p,t)=>p?`<div class="spotchip">${spAvatar(p.m,p.name,56)}<div><div class="st">🏆 TOP SALE ${t} · ${spLabel(p).replace(/^ประจำ(วัน|เดือน) /,'')}</div><div class="sn">${esc(p.name)} <span class="sv">฿${fmt(p.v)}</span></div><div>${spLikes(p)}</div></div></div>`:'';
+  el.innerHTML=`<div class="spotbn"><span class="sbx" id="spbX" title="ซ่อนวันนี้">✕</span>${chip(d,'ประจำวัน')}${chip(m,'ประจำเดือน')}<div style="display:flex;align-items:center"><button class="btn sm" id="spbAll">🛍 ดูแยกตามสินค้า →</button></div></div>`;
+  $('#spbX').onclick=()=>{try{sessionStorage.setItem('sx_spb',S.spot.day)}catch(e){}el.innerHTML=''};
+  $('#spbAll').onclick=()=>goTab('spot');
+}
+function spPopupOnce(){
+  if(!S.spot||S.spotPop||S.tab==='spot'||!$('#modal').hidden)return;
+  const d=spTop('d'),m=spTop('m');if(!d&&!m)return;
+  const k=SPK+D.me.id;let seen='';try{seen=localStorage.getItem(k)||''}catch(e){}
+  if(seen===S.spot.day)return;S.spotPop=1;
+  try{localStorage.setItem(k,S.spot.day)}catch(e){}
+  const card=(p,t)=>p?`<div class="spcard big" style="align-items:center;text-align:center">${spAvatar(p.m,p.name,92)}<div class="st" style="color:#f0b90b;font-weight:700">🏆 TOP SALE ${t}</div><div style="font-size:20px;font-weight:800">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)} · ${spLabel(p)}</div><div class="num up" style="font-size:22px;font-weight:800">฿${fmt(p.v)}</div><div>${spLikes(p)}</div></div>`:'';
+  openModal(`<h2 style="text-align:center">🎉 ขอแสดงความยินดี! 🎉</h2><div class="spgrid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${card(d,'ประจำวัน')}${card(m,'ประจำเดือน')}</div><div class="hint" style="text-align:center;margin:8px 0">กดหัวใจ ❤️ หรือไลก์ 👍 ให้กำลังใจเพื่อนร่วมงานได้เลย</div><div class="mrow"><button class="btn primary" id="spGo">ดูแยกตามสินค้า</button><button class="btn" onclick="closeModal()">ปิด</button></div>`);
+  $('#spGo').onclick=()=>{closeModal();goTab('spot')};
+}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest&&e.target.closest('[data-lk]');if(!b)return;
+  const [key,r]=b.dataset.lk.split('|');if(b.dataset.busy)return;b.dataset.busy='1';
+  try{const x=await api('spotLike',{key,r});
+    [S.spot&&S.spot.posts,SOC.feed&&SOC.feed.items].forEach(L=>{const p=L&&L.find(z=>z.key===key);if(p){if(r==='heart'){p.heart=x.count;p.mHeart=x.on}else{p.like=x.count;p.mLike=x.on}}});
+    document.querySelectorAll(`[data-lk="${key}|${r}"]`).forEach(el=>{el.classList.toggle('on',x.on);el.querySelector('b').textContent=x.count})}
+  catch(err){toast('⚠️ '+esc(err.message))}finally{delete b.dataset.busy}
+});
+async function spResize(file){
+  const bmp=await createImageBitmap(file),side=Math.min(bmp.width,bmp.height),cv=document.createElement('canvas');cv.width=cv.height=192;
+  cv.getContext('2d').drawImage(bmp,(bmp.width-side)/2,(bmp.height-side)/2,side,side,0,0,192,192);
+  for(const q of [.8,.7,.55,.4]){const u=cv.toDataURL('image/jpeg',q);if(u.length<=46000)return u}
+  throw new Error('รูปซับซ้อนเกินไป ลองรูปอื่น');
+}
+function renderSpotTab(fromEnsure){
+  const el=$('#spotBody');if(!el)return;
+  if(!S.spot){el.innerHTML='<div class="panel"><div class="hint">กำลังโหลด…</div></div>';if(!fromEnsure)ensureSpot();return}
+  if(!fromEnsure&&Date.now()-S.spot.ts>120000){ensureSpot();}
+  const P=S.spot.posts,adm=!!S.spot.canPhoto;
+  const sec=(kind,title)=>{
+    const all=P.find(p=>p.kind===kind&&p.cat==='all'),rest=P.filter(p=>p.kind===kind&&p.cat!=='all');
+    const card=(p,big)=>`<div class="spcard ${big?'big':''}" style="${big?'align-items:center;text-align:center':''}">${spAvatar(p.m,p.name,big?96:56)}<div class="st" style="color:#f0b90b;font-weight:700;font-size:12px">🏆 ${esc(p.catName)}</div><div style="font-weight:800;font-size:${big?20:15}px">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)}</div><div class="num up" style="font-weight:800;font-size:${big?22:16}px">฿${fmt(p.v)}</div>${p.q?`<div class="hint">${fmt(p.q)} ชิ้น</div>`:''}<div>${spLikes(p)}</div>${adm?`<label class="btn sm" style="cursor:pointer">📷 ใส่/เปลี่ยนรูป<input type="file" accept="image/*" hidden data-ph="${esc(p.m)}"></label>`:''}</div>`;
+    return `<div class="panel sec"><h3>🏆 ${title} · ${esc(spLabel({kind,period:kind==='d'?S.spot.day:S.spot.ym}))}</h3>${all?`<div style="max-width:320px;margin:0 auto 10px">${card(all,true)}</div>`:'<div class="empty">ยังไม่มีข้อมูลยอดขายของช่วงนี้</div>'}${rest.length?`<div class="hint" style="margin:6px 0">🛍 TOP SALE แยกตามสินค้า</div><div class="spgrid">${rest.map(p=>card(p,false)).join('')}</div>`:''}</div>`};
+  let h=sec('d','TOP SALE ประจำวัน')+sec('m','TOP SALE ประจำเดือน');
+  if(adm)h+=`<div class="panel sec"><h3>📷 รูปประจำตัว Agent (แอดมิน)</h3><div class="hint" style="margin-bottom:8px">ใส่รูปให้ Agent คนใดก็ได้ ระบบย่อรูปให้อัตโนมัติ (ตัดเป็นสี่เหลี่ยมจัตุรัสจากกลางภาพ) · รูปจะแสดงที่แบนเนอร์ ป๊อปอัป และหน้านี้ เมื่อคนนั้นเป็น TOP SALE</div>
+    <div class="mrow" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><select id="phWho">${MEM.filter(AG).map(m=>`<option value="${esc(m.id)}">${esc(m.name)}${m.nick?' ('+esc(m.nick)+')':''}</option>`).join('')}</select><label class="btn primary" style="cursor:pointer">📷 เลือกรูป<input type="file" accept="image/*" hidden id="phFile"></label><button class="btn danger" id="phDel">🗑 ลบรูปคนนี้</button></div><div id="phErr" class="err"></div></div>`;
+  el.innerHTML=h;
+  const send=async(id,file)=>{try{const img=file?await spResize(file):'';await api('photoSet',{m:id,img});toast(img?'✅ บันทึกรูปแล้ว':'🗑 ลบรูปแล้ว');await ensureSpot(true)}catch(e){const x=$('#phErr');if(x)x.textContent=e.message;toast('⚠️ '+esc(e.message))}};
+  $$('[data-ph]').forEach(i=>i.onchange=()=>{if(i.files[0])send(i.dataset.ph,i.files[0])});
+  if($('#phFile')){$('#phFile').onchange=e=>{if(e.target.files[0])send($('#phWho').value,e.target.files[0])};$('#phDel').onclick=()=>{if(confirm('ลบรูปของคนนี้?'))send($('#phWho').value,null)}}
+}
+/* =====================================================================
+   🌐 ฟีด · โปรไฟล์ Agent · Challenge · Insight (Social)
+   ===================================================================== */
+const SOC={feed:null,ts:0,ins:null,its:0,adm:null,noti:null,nts:0,busy:0};
+const sRid=()=>'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const THFULL=d=>dShort(d);
+function sAv(id,name,sz,ph){
+  ph=ph||((SOC.feed&&SOC.feed.photos)||{})[id];const m=memOf(id)||{},col=m.team?tcol(m.team):'#f0b90b';
+  return ph?`<img class="sav" data-pf="${esc(id)}" src="${ph}" alt="" style="width:${sz}px;height:${sz}px;cursor:pointer">`:`<span class="sav" data-pf="${esc(id)}" style="width:${sz}px;height:${sz}px;background:${col};font-size:${Math.round(sz*.4)}px;cursor:pointer">${esc(String(name||'?').slice(0,2).toUpperCase())}</span>`}
+const sNm=x=>`<a class="plk" data-pf="${esc(x.m)}">${esc(x.name)}</a>`;
+function sAgo(ts){const s=Math.max(1,Math.round((Date.now()-ts)/1000));if(s<60)return 'เมื่อสักครู่';if(s<3600)return Math.floor(s/60)+' นาทีที่แล้ว';if(s<86400)return Math.floor(s/3600)+' ชม.ที่แล้ว';if(s<86400*7)return Math.floor(s/86400)+' วันที่แล้ว';return tsTxt(ts)}
+function ymLabel(ym){return THMON[+ym.slice(5)-1]+' '+(+ym.slice(0,4)+543)}
+async function imgResize(file,maxW,maxCh){
+  const bmp=await createImageBitmap(file);
+  for(const w of [maxW,Math.round(maxW*.8),Math.round(maxW*.62),Math.round(maxW*.48),Math.round(maxW*.36)]){
+    const sc=Math.min(1,w/bmp.width),cv=document.createElement('canvas');cv.width=Math.max(8,Math.round(bmp.width*sc));cv.height=Math.max(8,Math.round(bmp.height*sc));
+    cv.getContext('2d').drawImage(bmp,0,0,cv.width,cv.height);
+    for(const q of [.8,.65,.5,.38]){const u=cv.toDataURL('image/jpeg',q);if(u.length<=maxCh)return u}
+  }
+  throw new Error('รูปซับซ้อนเกินไป ลองรูปอื่น');
+}
+async function ensureFeed(force){
+  if(!D)return;
+  if(force||!SOC.feed||Date.now()-SOC.ts>60000){try{SOC.feed=await api('feed',{});SOC.ts=Date.now()}catch(e){if(!SOC.feed){const el=$('#feedBody');if(el)el.innerHTML=`<div class="panel"><div class="err">${esc(e.message)}</div></div>`;return}}}
+  if(S.tab==='feed')renderFeed();
+}
+function feedText(x){
+  if(x.type==='win'){const lab=x.kind==='d'?'ประจำวัน '+THFULL(x.period):'ประจำเดือน '+ymLabel(x.period);
+    return `🏆 ${sNm(x)} เป็น <b>TOP SALE ${lab}</b>${x.cat==='all'?'':` · สินค้า <b>${esc(x.catName)}</b>`} ด้วยยอด <b class="up">฿${fmt(x.v)}</b>`}
+  if(x.type==='streak')return `🔥 ${sNm(x)} ขายได้ต่อเนื่อง <b>${x.n} วัน</b> แล้ว!`;
+  if(x.type==='growth')return `🚀 ${sNm(x)} ยอด 7 วันล่าสุดพุ่ง <b class="up">+${x.pct}%</b> (฿${fmt(x.b)} → ฿${fmt(x.a)})`;
+  if(x.type==='team')return `👑 ทีม <b>${esc(x.name)}</b> นำยอดขายเดือนนี้ <b class="up">฿${fmt(x.v)}</b>${x.second?` · ตามด้วย ${esc(x.second)} ฿${fmt(x.secondV)}`:''}`;
+  return '';
+}
+function chHTML(c){
+  const st={live:['🟢 กำลังแข่ง','var(--up)'],soon:['🕓 เร็วๆ นี้','var(--flat)'],ended:['🏁 จบแล้ว','var(--mute)']}[c.status]||['',''];
+  const fm=v=>c.metric==='sub'?fmt(v)+' SUB':'฿'+fmt(v),mx=c.board.length?c.board[0].v:1;
+  const days=c.status==='live'?Math.max(0,Math.round((Date.parse(c.end+'T00:00:00Z')-Date.parse(today+'T00:00:00Z'))/86400000)):0;
+  return `<div class="chb"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><b style="font-size:16px">🎯 ${esc(c.title)}</b><span class="role" style="color:${st[1]}">${st[0]}</span></div>
+   <div class="hint" style="margin:3px 0">${THFULL(c.start)} – ${THFULL(c.end)} · แข่งด้วย <b>${c.metric==='sub'?'SUB':'ยอดขาย'}</b> · แบบ <b>${c.mode==='team'?'ทีมต่อทีม':'รายบุคคล'}</b>${c.status==='live'?` · เหลืออีก <b>${days}</b> วัน`:''}</div>
+   ${c.desc?`<div style="white-space:pre-wrap;margin:4px 0">${esc(c.desc)}</div>`:''}${c.prize?`<div style="margin:4px 0">🎁 รางวัล: <b>${esc(c.prize)}</b></div>`:''}
+   ${c.board.length?c.board.slice(0,c.status==='ended'?3:5).map(b=>{const md=['🥇','🥈','🥉'][b.rank-1]||b.rank+'.';return `<div class="chr"><span class="chn">${md}</span><span class="chnm">${c.mode==='agent'?`<a class="plk" data-pf="${esc(b.id)}">${esc(b.name)}</a> <span class="hint">${esc(b.team||'')}</span>`:esc(b.name)}</span><span class="chbar"><i style="width:${Math.max(4,Math.round(b.v/mx*100))}%"></i></span><b class="num">${fm(b.v)}</b></div>`}).join(''):`<div class="hint">${c.status==='soon'?'ยังไม่เริ่ม':'ยังไม่มียอดในช่วงนี้'}</div>`}</div>`;
+}
+function cmHTML(c){
+  const adm=SOC.feed&&SOC.feed.admin;
+  return `<div class="cmt" data-cid="${esc(c.id)}">${sAv(c.m,c.name,26)}<div class="cmb"><a class="plk" data-pf="${esc(c.m)}">${esc(c.name)}</a> ${esc(c.text)}<small>${sAgo(c.ts)}${(c.own||adm)?` · <a class="cmdel" data-cd="${esc(c.id)}">ลบ</a>`:''}</small></div></div>`}
+function itemHTML(x,i){
+  let body='';
+  if(x.type==='post')body=`<div class="fhead">${x.pinned?'<span class="role">📌 ปักหมุด</span> ':''}<span class="role">📢 ประกาศ</span> <span class="hint">${sAgo(x.ts)}</span></div>${x.title?`<div style="font-weight:800;font-size:16px;margin:4px 0">${esc(x.title)}</div>`:''}${x.body?`<div style="white-space:pre-wrap">${esc(x.body)}</div>`:''}${x.img?`<img class="pimg" src="${x.img}" alt="">`:''}`;
+  else if(x.type==='challenge')body=chHTML(x.c);
+  else{const ph=x.m?sAv(x.m,x.name,44):`<span class="sav" style="width:44px;height:44px;background:${esc(x.color||'#f0b90b')};font-size:20px">👑</span>`;
+    body=`<div style="display:flex;gap:10px;align-items:center">${ph}<div><div>${feedText(x)}</div><div class="hint">${x.type==='win'||x.type==='team'?(x.ts?sAgo(x.ts):''):sAgo(x.ts)}</div></div></div>`}
+  const cms=(x.cm||[]);
+  return `<div class="panel fcard" data-fi="${i}">${body}
+   <div class="fact">${spLikes(x)}<span class="cmcnt" data-cmx="${i}">💬 <b>${x.cn||0}</b></span></div>
+   <div class="cmwrap" id="cmw${i}">${(x.cn||0)>cms.length?`<a class="plk" data-cml="${i}">ดูคอมเมนต์ทั้งหมด ${x.cn} รายการ</a>`:''}${cms.map(cmHTML).join('')}</div>
+   <div class="cmin"><input type="text" maxlength="500" placeholder="เขียนคอมเมนต์ให้กำลังใจ…" data-cmi="${i}"><button class="btn sm primary" data-cms="${i}">ส่ง</button></div></div>`;
+}
+function renderFeed(){
+  const el=$('#feedBody');if(!el)return;
+  if(!SOC.feed){el.innerHTML='<div class="panel"><div class="hint">กำลังโหลดฟีด…</div></div>';ensureFeed();return}
+  if(Date.now()-SOC.ts>60000)ensureFeed();
+  const F=SOC.feed;
+  const drafts={};$$('[data-cmi]').forEach(i=>{if(i.value)drafts[i.dataset.cmi]=i.value});
+  let h='';
+  if(F.admin)h+=`<div class="panel sec"><h3>🛠 แอดมิน: จัดการฟีด</h3><div class="mrow" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><button class="btn primary" id="fdPost">✍️ โพสต์ประกาศ</button><button class="btn primary" id="fdCh">🎯 สร้าง Challenge</button><button class="btn" id="fdMng">📋 จัดการโพสต์/Challenge เดิม</button></div><div class="hint" style="margin-top:6px">โพสต์เรื่อง TOP SALE สถิติต่อเนื่อง ยอดพุ่ง และทีมนำ ระบบสร้างให้อัตโนมัติจากยอดขาย ไม่ต้องพิมพ์</div></div>`;
+  h+=F.items.length?F.items.map(itemHTML).join(''):'<div class="panel"><div class="empty">ยังไม่มีความเคลื่อนไหว — เมื่อมียอดขายรายวัน ระบบจะสร้างโพสต์ให้เองครับ</div></div>';
+  h+=`<div class="hint" style="text-align:center;margin:10px">ข้อมูล ณ วันที่ ${THFULL(F.day)} · ฟีดแสดง 40 รายการล่าสุด · กดชื่อหรือรูปเพื่อดูโปรไฟล์</div>`;
+  el.innerHTML=h;
+  Object.keys(drafts).forEach(k=>{const i=$(`[data-cmi="${k}"]`);if(i)i.value=drafts[k]});
+  if(F.admin){$('#fdPost').onclick=()=>postModal();$('#fdCh').onclick=()=>chModal();$('#fdMng').onclick=mngModal}
+}
+async function updCm(i){
+  const x=SOC.feed.items[i],w=$('#cmw'+i);if(!w)return;
+  w.innerHTML=((x.cn||0)>x.cm.length?`<a class="plk" data-cml="${i}">ดูคอมเมนต์ทั้งหมด ${x.cn} รายการ</a>`:'')+x.cm.map(cmHTML).join('');
+  const c=$(`[data-cmx="${i}"] b`);if(c)c.textContent=x.cn||0;
+}
+async function sendCm(i){
+  const inp=$(`[data-cmi="${i}"]`),x=SOC.feed.items[i],t=inp.value.trim();if(!t||inp.dataset.busy)return;
+  inp.dataset.busy='1';
+  try{const r=await api('commentAdd',{key:x.key,text:t,reqId:sRid()});inp.value='';if(r.c){x.cm.push(r.c);x.cn=(x.cn||0)+1}updCm(i)}
+  catch(e){toast('⚠️ '+esc(e.message))}finally{delete inp.dataset.busy}
+}
+document.addEventListener('click',async e=>{
+  const t=e.target;if(!t.closest)return;
+  const pf=t.closest('[data-pf]');if(pf){e.preventDefault();openProfile(pf.dataset.pf);return}
+  const s=t.closest('[data-cms]');if(s){sendCm(+s.dataset.cms);return}
+  const l=t.closest('[data-cml]');if(l){const i=+l.dataset.cml,x=SOC.feed.items[i];try{const r=await api('commentList',{key:x.key});x.cm=r.list;x.cn=r.list.length;updCm(i)}catch(er){toast('⚠️ '+esc(er.message))}return}
+  const d=t.closest('[data-cd]');if(d){if(!confirm('ลบคอมเมนต์นี้?'))return;try{await api('commentDel',{id:d.dataset.cd});SOC.feed.items.forEach(x=>{const n=x.cm.length;x.cm=x.cm.filter(c=>c.id!==d.dataset.cd);if(x.cm.length<n)x.cn=Math.max(0,(x.cn||1)-1)});SOC.feed.items.forEach((x,i)=>updCm(i))}catch(er){toast('⚠️ '+esc(er.message))}}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.cmi!==undefined)sendCm(+e.target.dataset.cmi)});
+/* ---- แอดมิน: โพสต์ประกาศ / Challenge ---- */
+function postModal(p){
+  p=p||{};let img='',keep=!!p.id;
+  openModal(`<h2>${p.id?'✏️ แก้ไขโพสต์':'✍️ โพสต์ประกาศ'}</h2><div class="fld"><label>หัวข้อ</label><input id="poT" maxlength="120" value="${esc(p.title||'')}"></div><div class="fld"><label>ข้อความ</label><textarea id="poB" rows="5" maxlength="2000">${esc(p.body||'')}</textarea></div>
+   <div class="fld"><label>รูปภาพ (ไม่บังคับ · ระบบย่อให้อัตโนมัติ)</label><label class="btn" style="cursor:pointer">📷 เลือกรูป<input type="file" accept="image/*" hidden id="poF"></label> <span class="hint" id="poFn">${p.hasImg?'มีรูปเดิมอยู่ (เลือกใหม่เพื่อเปลี่ยน)':''}</span> <button class="btn sm" id="poRm" ${p.hasImg?'':'hidden'}>ลบรูป</button></div>
+   <label class="chk"><input type="checkbox" id="poP" ${p.pinned?'checked':''}> 📌 ปักหมุดไว้บนสุด</label><div id="poE" class="err"></div><div class="mrow"><button class="btn primary" id="poGo">${p.id?'บันทึก':'โพสต์'}</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
+  $('#poF').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{img=await imgResize(f,560,46000);keep=false;$('#poFn').textContent='✅ เลือกรูปแล้ว';$('#poRm').hidden=false}catch(er){$('#poE').textContent=er.message}};
+  $('#poRm').onclick=()=>{img='';keep=false;$('#poFn').textContent='ลบรูปแล้ว';$('#poRm').hidden=true};
+  $('#poGo').onclick=async()=>{$('#poGo').disabled=true;try{await api('postSave',{id:p.id||'',title:$('#poT').value,body:$('#poB').value,img,keepImg:!!(p.id&&keep),pinned:$('#poP').checked});closeModal();toast('✅ บันทึกแล้ว');SOC.adm=null;ensureFeed(true)}catch(er){$('#poE').textContent=er.message;$('#poGo').disabled=false}};
+}
+function chModal(c){
+  c=c||{};
+  openModal(`<h2>${c.id?'✏️ แก้ไข Challenge':'🎯 สร้าง Challenge'}</h2><div class="fld"><label>ชื่อ Challenge</label><input id="chT" maxlength="120" value="${esc(c.title||'')}" placeholder="เช่น ศึกชิงเจ้ายอดขายสัปดาห์นี้"></div>
+   <div class="fld"><label>รายละเอียด / กติกา</label><textarea id="chD" rows="3" maxlength="600">${esc(c.desc||'')}</textarea></div>
+   <div class="row2"><div class="fld"><label>วัดผลด้วย</label><select id="chM"><option value="amount" ${c.metric!=='sub'?'selected':''}>ยอดขาย (฿)</option><option value="sub" ${c.metric==='sub'?'selected':''}>SUB</option></select></div>
+   <div class="fld"><label>แข่งแบบ</label><select id="chO"><option value="agent" ${c.mode!=='team'?'selected':''}>รายบุคคล</option><option value="team" ${c.mode==='team'?'selected':''}>ทีมต่อทีม</option></select></div></div>
+   <div class="row2"><div class="fld"><label>วันเริ่ม</label><input type="date" id="chS" value="${esc(c.start||today)}"></div><div class="fld"><label>วันสิ้นสุด</label><input type="date" id="chE" value="${esc(c.end||today)}"></div></div>
+   <div class="fld"><label>รางวัล (ไม่บังคับ)</label><input id="chP" maxlength="160" value="${esc(c.prize||'')}"></div><div id="chErr" class="err"></div>
+   <div class="mrow"><button class="btn primary" id="chGo">${c.id?'บันทึก':'สร้าง'}</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
+  $('#chGo').onclick=async()=>{$('#chGo').disabled=true;try{await api('challengeSave',{id:c.id||'',title:$('#chT').value,desc:$('#chD').value,metric:$('#chM').value,mode:$('#chO').value,start:$('#chS').value,end:$('#chE').value,prize:$('#chP').value});closeModal();toast('✅ บันทึกแล้ว');SOC.adm=null;ensureFeed(true)}catch(er){$('#chErr').textContent=er.message;$('#chGo').disabled=false}};
+}
+async function mngModal(){
+  openModal('<h2>📋 โพสต์ / Challenge</h2><div class="hint">กำลังโหลด…</div>');
+  let A;try{A=await api('adminSocial',{})}catch(e){$('#mbox').innerHTML=`<h2>📋 โพสต์ / Challenge</h2><div class="err">${esc(e.message)}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`;return}
+  SOC.adm=A;
+  $('#mbox').innerHTML=`<h2>📋 โพสต์ / Challenge</h2><h3 style="margin:8px 0">📢 ประกาศ</h3><div class="mlist">${A.posts.length?A.posts.map(p=>`<div class="rule" style="display:flex;gap:6px;justify-content:space-between;align-items:center"><span>${p.pinned?'📌 ':''}${esc(p.title||p.body.slice(0,40)||'(รูป)')} <small class="hint">${tsTxt(p.ts)}</small></span><span><button class="btn sm" data-pe="${esc(p.id)}">แก้ไข</button> <button class="btn sm danger" data-pd="${esc(p.id)}">ลบ</button></span></div>`).join(''):'<div class="empty">ยังไม่มี</div>'}</div>
+   <h3 style="margin:10px 0 8px">🎯 Challenge</h3><div class="mlist">${A.challenges.length?A.challenges.map(c=>`<div class="rule" style="display:flex;gap:6px;justify-content:space-between;align-items:center"><span>${esc(c.title)} <small class="hint">${THFULL(c.start)} – ${THFULL(c.end)}</small></span><span><button class="btn sm" data-ce="${esc(c.id)}">แก้ไข</button> <button class="btn sm danger" data-cx="${esc(c.id)}">ลบ</button></span></div>`).join(''):'<div class="empty">ยังไม่มี</div>'}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`;
+  $$('[data-pe]').forEach(b=>b.onclick=()=>postModal(A.posts.find(p=>p.id===b.dataset.pe)));
+  $$('[data-ce]').forEach(b=>b.onclick=()=>chModal(A.challenges.find(c=>c.id===b.dataset.ce)));
+  $$('[data-pd]').forEach(b=>b.onclick=async()=>{if(!confirm('ลบโพสต์นี้?'))return;try{await api('postDelete',{id:b.dataset.pd});toast('🗑 ลบแล้ว');ensureFeed(true);mngModal()}catch(e){toast('⚠️ '+esc(e.message))}});
+  $$('[data-cx]').forEach(b=>b.onclick=async()=>{if(!confirm('ลบ Challenge นี้?'))return;try{await api('challengeDelete',{id:b.dataset.cx});toast('🗑 ลบแล้ว');ensureFeed(true);mngModal()}catch(e){toast('⚠️ '+esc(e.message))}});
+}
+/* ---- โปรไฟล์ Agent ---- */
+function spark(ser,labels,col){
+  const W=320,H=70,mx=Math.max(1,...ser),bw=W/ser.length;
+  return `<svg viewBox="0 0 ${W} ${H+4}" width="100%" height="${H+4}" preserveAspectRatio="none" style="display:block">${ser.map((v,i)=>`<rect x="${(i*bw+1).toFixed(1)}" y="${(H-v/mx*H).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${Math.max(v>0?2:0,v/mx*H).toFixed(1)}" rx="1.5" fill="${col}" opacity="${v>0?.9:.15}"><title>${THFULL(labels[i])}: ฿${fmt(v)}</title></rect>`).join('')}</svg>`}
+async function openProfile(id){
+  if(!id)return;
+  openModal('<h2>👤 โปรไฟล์</h2><div class="hint">กำลังโหลด…</div>');
+  let P;try{P=await api('profile',{m:id})}catch(e){$('#mbox').innerHTML=`<h2>👤 โปรไฟล์</h2><div class="empty">${esc(e.message)}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`;return}
+  const col=P.color||tcol(P.team)||'#0ecb81',st=P.stat,mxp=P.prods.length?P.prods[0].a:1;
+  $('#mbox').innerHTML=`<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">${sAv(P.m,P.name,84,P.photo).replace(/data-pf="[^"]*"/,'').replace('cursor:pointer','')}<div><div style="font-size:22px;font-weight:800">${esc(P.name)}</div><div class="hint">${esc(P.teamName)} · ข้อมูล ${ymLabel(P.ym)}</div>
+     <div style="margin-top:4px">${st.rank?`<span class="role">อันดับ ${st.rank}/${P.nAgents}</span> `:''}<span class="role">❤️ ${P.hearts}</span> <span class="role">👍 ${P.likes}</span></div></div></div>
+   <div class="pst"><div><small>ยอดขายเดือนนี้</small><b class="num">฿${fmt(st.amt)}</b></div><div><small>POINT</small><b class="num">${fmt(st.pt)}</b></div><div><small>SUB</small><b class="num">${fmt(st.sub)}</b></div><div><small>ขายต่อเนื่อง</small><b class="num">${st.streak} วัน</b></div><div><small>TOP SALE รายวัน</small><b class="num">${st.dayWins} ครั้ง</b></div></div>
+   <h3 style="margin:10px 0 6px">🏅 เหรียญรางวัล</h3>${P.badges.length?`<div class="bgs">${P.badges.map(b=>`<div class="bgi" title="${esc(b.d)}"><span>${b.e}</span><b>${esc(b.n)}</b><small>${esc(b.d)}</small></div>`).join('')}</div>`:'<div class="hint">ยังไม่มีเหรียญ — ขายต่อเนื่อง 3 วัน หรือขึ้นอันดับ Top 3 เพื่อรับเหรียญแรก 🔥</div>'}
+   <h3 style="margin:10px 0 6px">📈 ยอดขาย 30 วันล่าสุด</h3>${spark(st.ser,P.labels,col)}<div class="hint" style="display:flex;justify-content:space-between"><span>${THFULL(P.labels[0])}</span><span>${THFULL(P.labels[29])}</span></div>
+   <h3 style="margin:10px 0 6px">🛍 สินค้าที่ขายเดือนนี้</h3>${P.prods.length?P.prods.slice(0,8).map(p=>`<div class="chr"><span class="chnm" style="min-width:110px">${esc(p.name)}</span><span class="chbar"><i style="width:${Math.max(4,Math.round(p.a/mxp*100))}%"></i></span><b class="num">฿${fmt(p.a)}</b></div>`).join(''):'<div class="hint">ยังไม่มีข้อมูลแยกสินค้า</div>'}
+   ${P.canPhoto?`<div style="margin-top:10px"><label class="btn sm" style="cursor:pointer">📷 ใส่/เปลี่ยนรูป<input type="file" accept="image/*" hidden id="pfPh"></label></div>`:''}
+   <div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`;
+  if(P.canPhoto)$('#pfPh').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const img=await spResize(f);await api('photoSet',{m:P.m,img});toast('✅ บันทึกรูปแล้ว');if(S.spot)S.spot.ts=0;await ensureFeed(true);openProfile(P.m)}catch(er){toast('⚠️ '+esc(er.message))}};
+}
+/* ---- 📊 Insight ---- */
+async function ensureIns(force){
+  if(!D)return;
+  if(force||!SOC.ins||Date.now()-SOC.its>120000){try{SOC.ins=await api('insights',{});SOC.its=Date.now()}catch(e){if(!SOC.ins){const el=$('#insBody');if(el)el.innerHTML=`<div class="panel"><div class="err">${esc(e.message)}</div></div>`;return}}}
+  if(S.tab==='ins')renderIns();
+}
+function heatHTML(heat,day){
+  const WK=14,end=U(day),dow=(end.getUTCDay()+6)%7;   // จันทร์=0
+  const start=new Date(end.getTime()-(dow+(WK-1)*7)*86400000),cells=[];
+  const ks=Object.keys(heat),mx=Math.max(1,...ks.map(k=>heat[k]));
+  for(let w=0;w<WK;w++){let col='';for(let d=0;d<7;d++){const t=new Date(start.getTime()+(w*7+d)*86400000),k=t.toISOString().slice(0,10);
+    if(k>day){col+='<i class="hc" style="opacity:0"></i>';continue}
+    const v=heat[k]||0,a=v>0?(.18+.82*v/mx).toFixed(2):0;
+    col+=`<i class="hc" style="${v>0?`background:rgba(14,203,129,${a})`:''}" title="${THFULL(k)}: ${v>0?'฿'+fmt(v):'ไม่มียอด'}"></i>`}
+    cells.push(`<div class="hcol">${col}</div>`)}
+  // เฉลี่ยตามวันในสัปดาห์
+  const sum=[0,0,0,0,0,0,0],n=[0,0,0,0,0,0,0];ks.forEach(k=>{if(heat[k]>0){const d=(U(k).getUTCDay()+6)%7;sum[d]+=heat[k];n[d]++}});
+  const avg=sum.map((s,i)=>n[i]?s/n[i]:0),am=Math.max(1,...avg),best=avg.indexOf(Math.max(...avg)),nm=['จ.','อ.','พ.','พฤ.','ศ.','ส.','อา.'];
+  return `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start"><div><div style="display:flex;gap:3px"><div class="hcol hlab">${nm.map(x=>`<i class="hc" style="background:none;font-size:10px;color:var(--mute);font-style:normal;width:auto;line-height:16px">${x}</i>`).join('')}</div>${cells.join('')}</div><div class="hint" style="margin-top:4px">ล่าสุด ${WK} สัปดาห์ · สีเข้ม = ยอดขายรวมทั้งทีมสูง</div></div>
+   <div style="flex:1;min-width:200px"><div class="hint" style="margin-bottom:4px">ยอดเฉลี่ยตามวันในสัปดาห์${avg[best]>0?` · ขายดีสุด <b>วัน${nm[best].replace('.','')}</b>`:''}</div>${avg.map((v,i)=>`<div class="chr"><span class="chn" style="width:28px">${nm[i]}</span><span class="chbar"><i style="width:${Math.max(2,Math.round(v/am*100))}%;${i===best&&v>0?'background:#f0b90b':''}"></i></span><b class="num" style="min-width:70px;text-align:right">${v>0?'฿'+fmt(v):'-'}</b></div>`).join('')}</div></div>`;
+}
+function renderIns(){
+  const el=$('#insBody');if(!el)return;
+  if(!SOC.ins){el.innerHTML='<div class="panel"><div class="hint">กำลังวิเคราะห์ข้อมูล…</div></div>';ensureIns();return}
+  const I=SOC.ins,ym=today.slice(0,7),dim=monthDays(ym),elC=autoElapsed(ym);
+  const f2=x=>(+x||0).toLocaleString('en-US',{maximumFractionDigits:0});
+  const chg=I.chg;
+  // พยากรณ์สิ้นเดือน (ใช้สูตร Run Rate เดียวกับเมนู Run Rate)
+  const ag=AGM();let A0=0,A1=0,P0=0,P1=0,S0=0,S1=0;
+  ag.forEach(m=>{const ef=effDays(m.id,ym,elC),rr=v=>ef.elapsed>0?v/ef.elapsed*ef.total:0,a=val([m.id],'m',ym,'amount')||0,p=monthPoint(m.id,ym),s=val([m.id],'m',ym,'sub')||0;A0+=a;A1+=rr(a);P0+=p;P1+=rr(p);S0+=s;S1+=rr(s)});
+  const fc=(l,a,b,pre)=>`<div class="fcb"><small>${l}</small><div class="num" style="font-size:20px;font-weight:800">${pre}${f2(b)}</div><div class="chbar" style="margin:4px 0"><i style="width:${b>0?Math.min(100,Math.round(a/b*100)):0}%"></i></div><div class="hint">ตอนนี้ ${pre}${f2(a)} (${b>0?Math.round(a/b*100):0}% ของที่คาด)</div></div>`;
+  const mxT=I.teams.length?I.teams[0].amt:1,mxP=Math.max(1,...I.prods.map(p=>Math.max(p.cur,p.prev)));
+  let h=`<div class="panel sec"><h3>💡 Insight ประจำสัปดาห์ (สร้างอัตโนมัติจากยอดขาย)</h3>
+    ${chg===null?'':`<div class="insbig"><span class="num ${chg>=0?'up':'dn'}" style="font-size:30px;font-weight:800">${chg>=0?'▲':'▼'} ${Math.abs(chg)}%</span><span class="hint">ยอดขายรวม 7 วันล่าสุดเทียบ 7 วันก่อนหน้า<br>฿${fmt(I.totP)} → ฿${fmt(I.totL)}</span></div>`}
+    <ul class="insl">${I.lines.map(l=>`<li>${esc(l)}</li>`).join('')}</ul></div>`;
+  h+=`<div class="panel sec"><h3>🔮 พยากรณ์สิ้นเดือน ${ymLabel(ym)} (Run Rate)</h3><div style="margin-bottom:8px">${teamSelHTML('inTeam')}<span class="hint"> นับถึงวันที่ ${elC}/${dim} · หักวันลา/วันหยุดแล้ว · ${ag.length} Agent</span></div>
+    <div class="fcg">${fc('ยอดขาย',A0,A1,'฿')}${fc('POINT',P0,P1,'')}${fc('SUB',S0,S1,'')}</div><div class="hint" style="margin-top:6px">เป็นการประมาณจากความเร็วที่ขายได้ตอนนี้ ไม่ใช่ตัวเลขรับประกัน</div></div>`;
+  h+=`<div class="panel sec"><h3>🗓 Heatmap ยอดขายรายวัน</h3>${Object.keys(I.heat||{}).length?heatHTML(I.heat,I.day):'<div class="empty">ยังไม่มียอดขายรายวัน (บันทึกที่ชีต SalesDaily)</div>'}</div>`;
+  h+=`<div class="spgrid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start"><div class="panel sec"><h3>🏁 ทีมนำเดือนนี้ (ยอดขาย)</h3>${I.teams.length?I.teams.map((t,i)=>`<div class="chr"><span class="chn">${['🥇','🥈','🥉'][i]||(i+1)+'.'}</span><span class="chnm">${esc(t.name)} <span class="hint">${t.act} คน</span></span><span class="chbar"><i style="width:${Math.max(3,Math.round(t.amt/mxT*100))}%;background:${esc(t.color||'')||'var(--up)'}"></i></span><b class="num">฿${fmt(t.amt)}</b></div>`).join(''):'<div class="empty">ยังไม่มีข้อมูล</div>'}</div>
+   <div class="panel sec"><h3>🛍 สินค้า เดือนนี้ vs เดือนก่อน</h3>${I.prods.length?I.prods.map(p=>`<div style="margin:6px 0"><div style="display:flex;justify-content:space-between;gap:6px"><span>${esc(p.name)}</span><span class="num ${p.pct===null?'hint':p.pct>=0?'up':'dn'}">${p.pct===null?'ใหม่':(p.pct>=0?'+':'')+p.pct+'%'}</span></div><div class="chbar" style="margin:2px 0"><i style="width:${Math.max(2,Math.round(p.cur/mxP*100))}%"></i></div><div class="chbar prev" style="margin:0"><i style="width:${Math.max(2,Math.round(p.prev/mxP*100))}%"></i></div><div class="hint">฿${fmt(p.cur)} (เดือนก่อน ฿${fmt(p.prev)})</div></div>`).join(''):'<div class="empty">ยังไม่มีข้อมูลแยกสินค้า</div>'}</div></div>`;
+  h+=`<div class="spgrid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start"><div class="panel sec"><h3>🚀 ยอดพุ่ง 7 วันล่าสุด</h3>${I.movers.length?I.movers.map(x=>`<div class="chr"><span class="chnm"><a class="plk" data-pf="${esc(x.m)}">${esc(x.name)}</a> <span class="hint">${esc(x.team)}</span></span><b class="num up">+${x.pct}%</b><span class="hint num">฿${fmt(x.b)}→฿${fmt(x.a)}</span></div>`).join(''):'<div class="empty">ยังไม่มีคนที่ยอดพุ่งชัดเจน</div>'}</div>
+   ${I.priv?`<div class="panel sec"><h3>👀 ควรช่วยดูแล (ยอดตก · เห็นเฉพาะ Senior/แอดมิน)</h3>${I.watch.length?I.watch.map(x=>`<div class="chr"><span class="chnm"><a class="plk" data-pf="${esc(x.m)}">${esc(x.name)}</a> <span class="hint">${esc(x.team)}</span></span><b class="num dn">${x.pct}%</b><span class="hint num">฿${fmt(x.b)}→฿${fmt(x.a)}</span></div>`).join(''):'<div class="empty">ไม่มีใครยอดตกชัดเจน 👍</div>'}</div>`:''}</div>`;
+  h+=`<div class="hint" style="text-align:center;margin:8px">ข้อมูล ณ ${THFULL(I.day)} · นับเฉพาะ Agent</div>`;
+  el.innerHTML=h;
+  bindTeamSel('inTeam',renderIns);
+}
+/* ---- 🔔 แจ้งเตือนสังคม ---- */
+const socSeen=()=>+LS.get('sb_soc')||0;
+const socUnread=()=>((SOC.noti||[]).filter(i=>i.ts>socSeen()).length);
+async function ensureNoti(){
+  if(!D||(SOC.noti&&Date.now()-SOC.nts<180000)||SOC.nbusy)return;
+  SOC.nbusy=1;try{SOC.noti=(await api('notify',{})).list;SOC.nts=Date.now();renderBell();renderBnav()}catch(e){if(!SOC.noti)SOC.noti=[]}finally{SOC.nbusy=0}
+}
+
+/* ---------- Feedback: Agent ส่งได้ · แอดมินอ่านได้คนเดียว ---------- */
+const FBC=['ทั่วไป','ระบบ / เว็บ SALE X','สวัสดิการ / รางวัล','ทีม / หัวหน้า','ค่าคอม / เป้าหมาย','อื่นๆ'];
+async function renderFb(){
+  const F=S.fb||(S.fb={cat:FBC[0],txt:'',anon:false,st:'all',sent:0,list:null,rid:''});
+  const adm=!!D.isAdmin;
+  let h=`<div class="panel sec"><h3>💬 ส่ง Feedback ถึงแอดมิน</h3>
+    <div class="hint" style="margin-bottom:8px">บอกความเห็น ข้อเสนอแนะ หรือปัญหาที่เจอได้เลย · <b>อ่านได้เฉพาะแอดมินเท่านั้น</b> (หัวหน้า/Senior และเพื่อนร่วมทีมไม่เห็น) · ส่งได้วันละไม่เกิน 5 ครั้ง</div>
+    <div class="row2"><div class="fld" style="margin:0"><label>หัวข้อ</label><select id="fbC">${FBC.map(c=>`<option ${F.cat===c?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+      <label class="chk" style="align-self:end"><input type="checkbox" id="fbA" ${F.anon?'checked':''}> 🕶 ส่งแบบไม่ระบุชื่อ</label></div>
+    <div class="fld"><label>ข้อความ (ไม่เกิน 1,000 ตัวอักษร)</label><textarea id="fbT" rows="5" maxlength="1000" placeholder="พิมพ์ข้อความที่นี่...">${esc(F.txt)}</textarea></div>
+    <div class="mrow" style="justify-content:flex-start"><button class="btn primary" id="fbGo">📨 ส่ง Feedback</button><span class="hint" id="fbMsg">${F.sent?'✅ ส่งแล้ว '+F.sent+' ครั้งในเซสชันนี้ ขอบคุณครับ':''}</span></div><div id="fbErr" class="err"></div></div><div id="fbList"></div>`;
+  $('#fbBody').innerHTML=h;
+  $('#fbC').onchange=e=>F.cat=e.target.value;$('#fbA').onchange=e=>F.anon=e.target.checked;$('#fbT').oninput=e=>F.txt=e.target.value;
+  $('#fbGo').onclick=async()=>{
+    const txt=$('#fbT').value.trim();if(txt.length<5){$('#fbErr').textContent='กรุณาพิมพ์ข้อความอย่างน้อย 5 ตัวอักษร';return}
+    if(!F.rid)F.rid='fb'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+    $('#fbGo').disabled=true;
+    try{await api('feedbackAdd',{cat:$('#fbC').value,message:txt,anon:$('#fbA').checked,reqId:F.rid});F.sent++;F.txt='';F.rid='';F.list=null;toast('✅ ส่ง Feedback แล้ว ขอบคุณครับ');renderFb()}
+    catch(e){$('#fbErr').textContent=e.message;$('#fbGo').disabled=false}
+  };
+  if(adm)await fbAdminList();
+}
+async function fbAdminList(){
+  const F=S.fb,el=$('#fbList');if(!el)return;
+  if(!F.list){el.innerHTML='<div class="panel"><div class="hint">กำลังโหลด Feedback…</div></div>';try{F.list=(await api('adminFeedback',{})).list}catch(e){el.innerHTML=`<div class="panel"><div class="err">${esc(e.message)}</div></div>`;return}}
+  if(!$('#fbList'))return;
+  const st=F.st,L=F.list.filter(x=>st==='all'||x.status===st),nNew=F.list.filter(x=>x.status==='new').length;
+  const SL={new:'ใหม่',read:'อ่านแล้ว',done:'จัดการแล้ว'};
+  $('#fbList').innerHTML=`<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>📥 Feedback ที่ได้รับ (เห็นเฉพาะแอดมิน) ${nNew?`<span class="newdot">${nNew} ใหม่</span>`:''}</span><span class="seg" id="fbSt">${[['all','ทั้งหมด'],['new','ใหม่'],['read','อ่านแล้ว'],['done','จัดการแล้ว']].map(([k,l])=>`<button data-v="${k}" class="${st===k?'on':''}">${l}</button>`).join('')}</span></h3>
+    ${L.length?L.map(x=>`<div class="rule" style="display:block;border-left:3px solid ${x.status==='new'?'var(--flat)':x.status==='done'?'var(--up)':'var(--line)'};padding:8px 10px;margin:8px 0">
+      <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>${x.m?esc(x.name||x.m):'🕶 ไม่ระบุชื่อ'}</b>${x.team?` <span class="hint">· ${esc(teamOf(x.team).name)}</span>`:''} <span class="role">${esc(x.cat)}</span></span><span class="hint num">${tsTxt(x.ts)} · ${SL[x.status]||x.status}</span></div>
+      <div style="white-space:pre-wrap;margin:6px 0">${esc(x.message)}</div>
+      <div>${['new','read','done'].filter(k=>k!==x.status).map(k=>`<button class="btn sm" data-fs="${esc(x.id)}|${k}">ทำเป็น “${SL[k]}”</button>`).join(' ')}</div></div>`).join(''):'<div class="empty">ยังไม่มี Feedback ในหมวดนี้</div>'}</div>`;
+  $$('#fbSt button').forEach(b=>b.onclick=()=>{F.st=b.dataset.v;fbAdminList()});
+  $$('[data-fs]').forEach(b=>b.onclick=async()=>{const [id,k]=b.dataset.fs.split('|');try{await api('feedbackSet',{id,status:k});const it=F.list.find(z=>z.id===id);if(it)it.status=k;fbAdminList()}catch(e){toast('⚠️ '+esc(e.message))}});
+}
 function renderRun(){
   const C=S.run||(S.run={ym:today.slice(0,7)}),ym=C.ym,dim=monthDays(ym),elC=autoElapsed(ym);
   $('#runCtl').innerHTML=`<input type="month" id="rnM" max="${today.slice(0,7)}" value="${ym}">${teamSelHTML('rnTeam')}<span class="hint">นับถึงวันที่ ${elC}/${dim} · Runrate = ค่าเฉลี่ยต่อวันทำงานจริง (หักวันลา) × วันทำงานทั้งเดือน</span>`;
@@ -1755,9 +2090,9 @@ function render(){
   renderHeader();renderTicker();renderBell();applyMenu();renderBnav();
   if(S.tab==='admin'&&!D.isAdmin)S.tab='dash';
   if(S.tab==='run'&&!D.canSeeAll)S.tab='dash';
-  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);
+  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','fb','spot','feed','ins'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
   $$('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab));
-  if(S.tab==='dash'){rebuildProd();syncControls();renderTop();renderComStrip();renderSvcStrip();renderNews();renderQuote();renderChart();renderBoard();renderDashMix()}
+  if(S.tab==='dash'){rebuildProd();syncControls();renderTop();renderComStrip();renderSvcStrip();renderNews();renderQuote();renderChart();renderBoard();renderDashMix();ensureSpot()}
   else if(S.tab==='rank')renderRank();
   else if(S.tab==='com')renderCom();
   else if(S.tab==='road')renderRoad();
@@ -1765,6 +2100,10 @@ function render(){
   else if(S.tab==='prod')renderProdPg();
   else if(S.tab==='talk')renderTalk();
   else if(S.tab==='run')renderRun();
+  else if(S.tab==='fb')renderFb();
+  else if(S.tab==='spot')renderSpotTab();
+  else if(S.tab==='feed')renderFeed();
+  else if(S.tab==='ins')renderIns();
   else if(S.tab==='svc')renderSvc();
   else if(S.tab==='game'){if(S.tab!==LASTTAB)GM=null;renderGame()}
   else renderAdmin();
@@ -2184,17 +2523,17 @@ async function spin(){
    แจ้งเตือน (กระดิ่ง) · เมนูล่างมือถือ
    ===================================================================== */
 const inbSeen=()=>+LS.get('sb_inb')||0;
-function inboxUnread(){return (D.inbox||[]).filter(i=>i.k==='pend'||i.k==='sla'||i.ts>inbSeen()).length}
+function inboxUnread(){return (D.inbox||[]).filter(i=>i.k==='pend'||i.k==='sla'||i.ts>inbSeen()).length+(typeof socUnread==='function'?socUnread():0)}
 function renderBell(){const n=inboxUnread(),b=$('#bellN');b.hidden=!n;b.textContent=n>99?'99+':n}
 function openInbox(){
-  const L=D.inbox||[];
-  openModal(`<h2>🔔 แจ้งเตือน</h2><div class="mlist">${L.length?L.map(i=>`<div class="ibi ${i.tone}" data-ib="${esc(i.go)}"><span>${i.k==='leave'?'🙋':i.k==='pend'?'📝':i.k==='cmp'?'🗂':'⏰'}</span><div>${esc(i.text)}<small>${tsTxt(i.ts)}</small></div></div>`).join(''):'<div class="empty">ไม่มีแจ้งเตือน</div>'}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`);
-  $$('[data-ib]').forEach(x=>x.onclick=()=>{closeModal();goTab('svc:'+(x.dataset.ib==='leave'?'leave':'cmp'))});
-  LS.set('sb_inb',String(nowMs()));renderBell();
+  const L=(D.inbox||[]).concat((SOC.noti||[]).map(i=>Object.assign({tone:''},i))).sort((a,b)=>b.ts-a.ts);
+  openModal(`<h2>🔔 แจ้งเตือน</h2><div class="mlist">${L.length?L.map(i=>`<div class="ibi ${i.tone}" data-ib="${esc(i.go)}"><span>${{leave:'🙋',pend:'📝',cmp:'🗂',like:'❤️',cm:'💬',post:'📢',ch:'🎯'}[i.k]||'⏰'}</span><div>${esc(i.text)}<small>${tsTxt(i.ts)}</small></div></div>`).join(''):'<div class="empty">ไม่มีแจ้งเตือน</div>'}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`);
+  $$('[data-ib]').forEach(x=>x.onclick=()=>{closeModal();if(x.dataset.ib==='feed')goTab('feed');else goTab('svc:'+(x.dataset.ib==='leave'?'leave':'cmp'))});
+  LS.set('sb_inb',String(nowMs()));LS.set('sb_soc',String(nowMs()));renderBell();renderBnav();
 }
 $('#bellBtn').onclick=()=>D&&openInbox();
 /* ---------- เมนู: ลำดับ/ซ่อน ตั้งโดยแอดมิน (config menuOrder) ---------- */
-const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
+const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['feed','🌐','ฟีด','🌐 ฟีด'],['ins','📊','Insight','📊 Insight'],['run','🚀','Run Rate','🚀 Run Rate'],['spot','🏆','TOP SALE','🏆 TOP SALE'],['fb','💬','Feedback','💬 Feedback'],['rank','🏆','อันดับ','🏆 อันดับ'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
 function menuList(raw){   // คืน [{id,show}] ตามลำดับที่ตั้ง (ที่ไม่ได้ระบุต่อท้ายตามค่าเริ่มต้น)
   const L=[],seen={};String(raw==null?((D.v5&&D.v5.cfg&&D.v5.cfg.menu)||''):raw).split(/[,;\s]+/).filter(Boolean).forEach(x=>{const h=x[0]==='-',id=h?x.slice(1):x;if(seen[id]||!TABDEF.some(t=>t[0]===id))return;seen[id]=1;L.push({id,show:!(h&&id!=='dash'&&id!=='admin')})});
   TABDEF.forEach(t=>{if(!seen[t[0]])L.push({id:t[0],show:true})});return L}
