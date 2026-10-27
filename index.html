@@ -671,7 +671,7 @@ function ingest(d){
   const d0=d.dayFrom;
   const mk=s=>{s=s||{d:[],mo:{},yr:{}};const Dm={},dm={};for(let i=0;i<s.d.length;i+=2){const k=addDays(d0,s.d[i]);Dm[k]=s.d[i+1];dm[k.slice(0,7)]=1}return {D:Dm,dm,MO:s.mo,YR:s.yr}};
   MEM.forEach(m=>{DB[m.id]={amount:mk(d.sales[m.id]),sub:mk(d.metrics&&d.metrics.sub[m.id]),point:mk(d.metrics&&d.metrics.point[m.id])}});
-  if(!S.anchor||S.anchor>today)S.anchor=today;
+  if(!S.anchor||S.anchor>today)S.anchor=(d.asOf&&d.asOf<today?d.asOf:today);   // วันนี้ยังไม่มียอด → เริ่มที่วันล่าสุดที่มีข้อมูล
   const ids=MEM.map(m=>m.id);
   if(S.scope.type==='member'&&!ids.includes(S.scope.id))S.scope={type:'all'};
   if(S.scope.type==='team'&&!TEAMS.some(t=>t.id===S.scope.id))S.scope={type:'all'};
@@ -804,7 +804,8 @@ function renderTicker(){
   const items=[];
   if(MEM.length>1){items.push({code:'ALL',ids:MEM.map(m=>m.id)});TEAMS.forEach(t=>items.push({code:'T-'+t.id,ids:memIds(t.id)}))}
   MEM.forEach(m=>items.push({code:m.tick,ids:[m.id]}));
-  let h='';items.forEach(it=>{const p=perf(it.ids);h+=`<span class="tk"><b>${esc(it.code)}</b><span class="${cls(p.diff)}">${p.known?fv(p.cur):'–'}</span><span class="${cls(p.diff)}">${arrow(p.diff)} ${pctTxt(p.pct)}</span></span>`});
+  let h='';items.forEach(it=>{const p=perf(it.ids);if(!p.known||(!p.cur&&!p.prev))return;h+=`<span class="tk"><b>${esc(it.code)}</b><span class="${cls(p.diff)}">${p.known?fv(p.cur):'–'}</span><span class="${cls(p.diff)}">${arrow(p.diff)} ${pctTxt(p.pct)}</span></span>`});
+  if(!h)h=`<span class="tk"><b>SALE X</b><span class="flat">ยังไม่มีข้อมูลยอดขายในช่วงนี้ — ลองเปลี่ยนวันที่หรือกด “รายเดือน”</span></span>`;
   const el=$('#tape');el.innerHTML=h+h;el.style.animationDelay='-'+((Date.now()/1000)%70).toFixed(2)+'s';
 }
 setInterval(()=>{const n=new Date();$('#clock').textContent=`${n.getDate()} ${THMON[n.getMonth()]} ${n.getFullYear()+543} · ${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`},1000);
