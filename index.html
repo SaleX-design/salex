@@ -1795,7 +1795,7 @@ async function mngModal(){
   $$('[data-cx]').forEach(b=>b.onclick=async()=>{if(!confirm('ลบ Challenge นี้?'))return;try{await api('challengeDelete',{id:b.dataset.cx});toast('🗑 ลบแล้ว');ensureFeed(true);mngModal()}catch(e){toast('⚠️ '+esc(e.message))}});
 }
 /* ---- โปรไฟล์ Agent ---- */
-function spark(ser,labels,col){
+function sparkBars(ser,labels,col){
   const W=320,H=70,mx=Math.max(1,...ser),bw=W/ser.length;
   return `<svg viewBox="0 0 ${W} ${H+4}" width="100%" height="${H+4}" preserveAspectRatio="none" style="display:block">${ser.map((v,i)=>`<rect x="${(i*bw+1).toFixed(1)}" y="${(H-v/mx*H).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${Math.max(v>0?2:0,v/mx*H).toFixed(1)}" rx="1.5" fill="${col}" opacity="${v>0?.9:.15}"><title>${THFULL(labels[i])}: ฿${fmt(v)}</title></rect>`).join('')}</svg>`}
 async function openProfile(id){
@@ -1807,7 +1807,7 @@ async function openProfile(id){
      <div style="margin-top:4px">${st.rank?`<span class="role">อันดับ ${st.rank}/${P.nAgents}</span> `:''}<span class="role">❤️ ${P.hearts}</span> <span class="role">👍 ${P.likes}</span></div></div></div>
    <div class="pst"><div><small>ยอดขายเดือนนี้</small><b class="num">฿${fmt(st.amt)}</b></div><div><small>POINT</small><b class="num">${fmt(st.pt)}</b></div><div><small>SUB</small><b class="num">${fmt(st.sub)}</b></div><div><small>ขายต่อเนื่อง</small><b class="num">${st.streak} วัน</b></div><div><small>TOP SALE รายวัน</small><b class="num">${st.dayWins} ครั้ง</b></div></div>
    <h3 style="margin:10px 0 6px">🏅 เหรียญรางวัล</h3>${P.badges.length?`<div class="bgs">${P.badges.map(b=>`<div class="bgi" title="${esc(b.d)}"><span>${b.e}</span><b>${esc(b.n)}</b><small>${esc(b.d)}</small></div>`).join('')}</div>`:'<div class="hint">ยังไม่มีเหรียญ — ขายต่อเนื่อง 3 วัน หรือขึ้นอันดับ Top 3 เพื่อรับเหรียญแรก 🔥</div>'}
-   <h3 style="margin:10px 0 6px">📈 ยอดขาย 30 วันล่าสุด</h3>${spark(st.ser,P.labels,col)}<div class="hint" style="display:flex;justify-content:space-between"><span>${THFULL(P.labels[0])}</span><span>${THFULL(P.labels[29])}</span></div>
+   <h3 style="margin:10px 0 6px">📈 ยอดขาย 30 วันล่าสุด</h3>${sparkBars(st.ser,P.labels,col)}<div class="hint" style="display:flex;justify-content:space-between"><span>${THFULL(P.labels[0])}</span><span>${THFULL(P.labels[29])}</span></div>
    <h3 style="margin:10px 0 6px">🛍 สินค้าที่ขายเดือนนี้</h3>${P.prods.length?P.prods.slice(0,8).map(p=>`<div class="chr"><span class="chnm" style="min-width:110px">${esc(p.name)}</span><span class="chbar"><i style="width:${Math.max(4,Math.round(p.a/mxp*100))}%"></i></span><b class="num">฿${fmt(p.a)}</b></div>`).join(''):'<div class="hint">ยังไม่มีข้อมูลแยกสินค้า</div>'}
    ${P.canPhoto?`<div style="margin-top:10px"><label class="btn sm" style="cursor:pointer">📷 ใส่/เปลี่ยนรูป<input type="file" accept="image/*" hidden id="pfPh"></label></div>`:''}
    <div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`;
