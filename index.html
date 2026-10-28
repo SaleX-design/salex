@@ -127,6 +127,7 @@ html,body{overflow-x:hidden}
 /* social */
 .plk{color:var(--text);font-weight:700;cursor:pointer;text-decoration:none}.plk:hover{color:var(--up);text-decoration:underline}
 .up{color:var(--up)}.dn{color:var(--down)}
+.pmn a{cursor:pointer;margin-left:6px;opacity:.8}.pmn a:hover{opacity:1}
 .fcard{margin-bottom:12px}.fcard .fhead{margin-bottom:2px}.fact{display:flex;gap:6px;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
 .cmcnt{margin-left:auto;font-size:13px;color:var(--mute)}.cmcnt b{font-family:var(--mono)}
 .cmwrap{display:grid;gap:6px;margin-top:8px}.cmt{display:flex;gap:8px;align-items:flex-start}.cmt .sav{border-width:1px}
@@ -440,7 +441,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
     <button class="tabbtn" data-tab="prod">🛍 สินค้า</button>
     <button class="tabbtn" data-tab="talk">⏱ Talk Time</button>
     <button class="tabbtn" data-tab="run" id="runTab" hidden>🚀 Run Rate</button>
-    <button class="tabbtn" data-tab="feed">🌐 ฟีด &amp; Feedback</button>
+    <button class="tabbtn" data-tab="feed">💬 หัวข้อ &amp; Feedback</button>
     <button class="tabbtn" data-tab="ins">📊 Insight</button>
     <button class="tabbtn" data-tab="svc">🗂 ลา/ร้องเรียน</button>
     <button class="tabbtn" data-tab="game">🎮 เกม</button>
@@ -565,7 +566,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 <!-- PRODUCTS -->
 <section id="tab-prod" hidden><div class="rkctl" id="prCtl"></div><div id="prBody"></div></section>
 <!-- TALK TIME -->
-<section id="tab-feed" hidden><div class="rkctl"><div class="seg" id="feedSeg"><button data-v="feed">🌐 ฟีด</button><button data-v="fb">💬 Feedback ถึงแอดมิน</button></div></div><div id="feedBody"></div><div id="fbBody" hidden></div></section>
+<section id="tab-feed" hidden><div class="rkctl"><div class="seg" id="feedSeg"><button data-v="feed">💬 หัวข้อสนทนา</button><button data-v="fb">💬 Feedback ถึงแอดมิน</button></div></div><div id="feedBody"></div><div id="fbBody" hidden></div></section>
 <section id="tab-ins" hidden><div id="insBody"></div></section>
 <section id="tab-run" hidden><div class="rkctl" id="runCtl"></div><div id="runBody"></div></section>
 <section id="tab-talk" hidden><div class="rkctl" id="tkCtl"></div><div id="tkBody"></div></section>
@@ -1749,37 +1750,19 @@ async function ensureFeed(force){
   if(force||!SOC.feed||Date.now()-SOC.ts>60000){try{SOC.feed=await api('feed',{});SOC.ts=Date.now()}catch(e){if(!SOC.feed){const el=$('#feedBody');if(el)el.innerHTML=`<div class="panel"><div class="err">${esc(e.message)}</div></div>`;return}}}
   if(S.tab==='feed'&&(S.feedView||'feed')==='feed')renderFeed();
 }
-function feedText(x){
-  if(x.type==='win'){const lab=x.kind==='d'?'ประจำวัน '+THFULL(x.period):'ประจำเดือน '+ymLabel(x.period);
-    return `🏆 ${sNm(x)} เป็น <b>TOP SALE ${lab}</b>${x.cat==='all'?'':` · สินค้า <b>${esc(x.catName)}</b>`} ด้วยยอด <b class="up">฿${fmt(x.v)}</b>`}
-  if(x.type==='streak')return `🔥 ${sNm(x)} ขายได้ต่อเนื่อง <b>${x.n} วัน</b> แล้ว!`;
-  if(x.type==='growth')return `🚀 ${sNm(x)} ยอด 7 วันล่าสุดพุ่ง <b class="up">+${x.pct}%</b> (฿${fmt(x.b)} → ฿${fmt(x.a)})`;
-  if(x.type==='team')return `👑 ทีม <b>${esc(x.name)}</b> นำยอดขายเดือนนี้ <b class="up">฿${fmt(x.v)}</b>${x.second?` · ตามด้วย ${esc(x.second)} ฿${fmt(x.secondV)}`:''}`;
-  return '';
-}
-function chHTML(c){
-  const st={live:['🟢 กำลังแข่ง','var(--up)'],soon:['🕓 เร็วๆ นี้','var(--flat)'],ended:['🏁 จบแล้ว','var(--mute)']}[c.status]||['',''];
-  const fm=v=>c.metric==='sub'?fmt(v)+' SUB':'฿'+fmt(v),mx=c.board.length?c.board[0].v:1;
-  const days=c.status==='live'?Math.max(0,Math.round((Date.parse(c.end+'T00:00:00Z')-Date.parse(today+'T00:00:00Z'))/86400000)):0;
-  return `<div class="chb"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><b style="font-size:16px">🎯 ${esc(c.title)}</b><span class="role" style="color:${st[1]}">${st[0]}</span></div>
-   <div class="hint" style="margin:3px 0">${THFULL(c.start)} – ${THFULL(c.end)} · แข่งด้วย <b>${c.metric==='sub'?'SUB':'ยอดขาย'}</b> · แบบ <b>${c.mode==='team'?'ทีมต่อทีม':'รายบุคคล'}</b>${c.status==='live'?` · เหลืออีก <b>${days}</b> วัน`:''}</div>
-   ${c.desc?`<div style="white-space:pre-wrap;margin:4px 0">${esc(c.desc)}</div>`:''}${c.prize?`<div style="margin:4px 0">🎁 รางวัล: <b>${esc(c.prize)}</b></div>`:''}
-   ${c.board.length?c.board.slice(0,c.status==='ended'?3:5).map(b=>{const md=['🥇','🥈','🥉'][b.rank-1]||b.rank+'.';return `<div class="chr"><span class="chn">${md}</span><span class="chnm">${c.mode==='agent'?`<a class="plk" data-pf="${esc(b.id)}">${esc(b.name)}</a> <span class="hint">${esc(b.team||'')}</span>`:esc(b.name)}</span><span class="chbar"><i style="width:${Math.max(4,Math.round(b.v/mx*100))}%"></i></span><b class="num">${fm(b.v)}</b></div>`}).join(''):`<div class="hint">${c.status==='soon'?'ยังไม่เริ่ม':'ยังไม่มียอดในช่วงนี้'}</div>`}</div>`;
-}
 function cmHTML(c){
   const adm=SOC.feed&&SOC.feed.admin;
   return `<div class="cmt" data-cid="${esc(c.id)}">${sAv(c.m,c.name,26)}<div class="cmb"><a class="plk" data-pf="${esc(c.m)}">${esc(c.name)}</a> ${esc(c.text)}<small>${sAgo(c.ts)}${(c.own||adm)?` · <a class="cmdel" data-cd="${esc(c.id)}">ลบ</a>`:''}</small></div></div>`}
+const ROLEL={senior:'Senior',leader:'Leader',admin:'แอดมิน'};
 function itemHTML(x,i){
-  let body='';
-  if(x.type==='post')body=`<div class="fhead">${x.pinned?'<span class="role">📌 ปักหมุด</span> ':''}<span class="role">📢 ประกาศ</span> <span class="hint">${sAgo(x.ts)}</span></div>${x.title?`<div style="font-weight:800;font-size:16px;margin:4px 0">${esc(x.title)}</div>`:''}${x.body?`<div style="white-space:pre-wrap">${esc(x.body)}</div>`:''}${x.img?`<img class="pimg" src="${x.img}" alt="">`:''}`;
-  else if(x.type==='challenge')body=chHTML(x.c);
-  else{const ph=x.m?sAv(x.m,x.name,44):`<span class="sav" style="width:44px;height:44px;background:${esc(x.color||'#f0b90b')};font-size:20px">👑</span>`;
-    body=`<div style="display:flex;gap:10px;align-items:center">${ph}<div><div>${feedText(x)}</div><div class="hint">${x.type==='win'||x.type==='team'?(x.ts?sAgo(x.ts):''):sAgo(x.ts)}</div></div></div>`}
+  const F=SOC.feed,role=x.role?ROLEL[x.role]||'':(x.by&&F.admin&&x.by===F.me?'แอดมิน':'');
+  const body=`<div style="display:flex;gap:10px;align-items:center">${sAv(x.by,x.name,42)}<div style="flex:1;min-width:0"><div><a class="plk" data-pf="${esc(x.by)}">${esc(x.name)}</a> ${role?`<span class="role">${esc(role)}</span>`:''}${x.pinned?' <span class="role">📌 ปักหมุด</span>':''}</div><div class="hint">${sAgo(x.ts)}</div></div>${x.can?`<span class="pmn"><a data-pe="${i}" title="แก้ไข">✏️</a> <a data-pd="${i}" title="ลบ">🗑</a></span>`:''}</div>
+    ${x.title?`<div style="font-weight:800;font-size:17px;margin:10px 0 4px">${esc(x.title)}</div>`:''}${x.body?`<div style="white-space:pre-wrap;margin-top:${x.title?0:10}px">${esc(x.body)}</div>`:''}${x.img?`<img class="pimg" src="${x.img}" alt="">`:''}`;
   const cms=(x.cm||[]);
   return `<div class="panel fcard" data-fi="${i}">${body}
    <div class="fact">${spLikes(x)}<span class="cmcnt" data-cmx="${i}">💬 <b>${x.cn||0}</b></span></div>
    <div class="cmwrap" id="cmw${i}">${(x.cn||0)>cms.length?`<a class="plk" data-cml="${i}">ดูคอมเมนต์ทั้งหมด ${x.cn} รายการ</a>`:''}${cms.map(cmHTML).join('')}</div>
-   <div class="cmin"><input type="text" maxlength="500" placeholder="เขียนคอมเมนต์ให้กำลังใจ…" data-cmi="${i}"><button class="btn sm primary" data-cms="${i}">ส่ง</button></div></div>`;
+   <div class="cmin"><input type="text" maxlength="500" placeholder="แสดงความคิดเห็น…" data-cmi="${i}"><button class="btn sm primary" data-cms="${i}">ส่ง</button></div></div>`;
 }
 function renderFeedPage(){
   const v=S.feedView||'feed';
@@ -1789,17 +1772,16 @@ function renderFeedPage(){
 }
 function renderFeed(){
   const el=$('#feedBody');if(!el)return;
-  if(!SOC.feed){el.innerHTML='<div class="panel"><div class="hint">กำลังโหลดฟีด…</div></div>';ensureFeed();return}
+  if(!SOC.feed){el.innerHTML='<div class="panel"><div class="hint">กำลังโหลด…</div></div>';ensureFeed();return}
   if(Date.now()-SOC.ts>60000)ensureFeed();
   const F=SOC.feed;
   const drafts={};$$('[data-cmi]').forEach(i=>{if(i.value)drafts[i.dataset.cmi]=i.value});
   let h='';
-  if(F.admin)h+=`<div class="panel sec"><h3>🛠 แอดมิน: จัดการฟีด</h3><div class="mrow" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><button class="btn primary" id="fdPost">✍️ โพสต์ประกาศ</button><button class="btn primary" id="fdCh">🎯 สร้าง Challenge</button><button class="btn" id="fdMng">📋 จัดการโพสต์/Challenge เดิม</button></div><div class="hint" style="margin-top:6px">โพสต์เรื่อง TOP SALE สถิติต่อเนื่อง ยอดพุ่ง และทีมนำ ระบบสร้างให้อัตโนมัติจากยอดขาย ไม่ต้องพิมพ์</div></div>`;
-  h+=F.items.length?F.items.map(itemHTML).join(''):'<div class="panel"><div class="empty">ยังไม่มีความเคลื่อนไหว — เมื่อมียอดขายรายวัน ระบบจะสร้างโพสต์ให้เองครับ</div></div>';
-  h+=`<div class="hint" style="text-align:center;margin:10px">ข้อมูล ณ วันที่ ${THFULL(F.day)} · ฟีดแสดง 40 รายการล่าสุด · กดชื่อหรือรูปเพื่อดูโปรไฟล์</div>`;
+  if(F.canPost)h+=`<div class="panel sec" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn primary" id="fdPost">✍️ โพสต์หัวข้อใหม่</button><span class="hint">Senior และแอดมินโพสต์ได้ · พนักงานทุกคนแสดงความคิดเห็น ❤️ หรือ 👍 ได้</span></div>`;
+  h+=F.items.length?F.items.map(itemHTML).join(''):`<div class="panel"><div class="empty">ยังไม่มีหัวข้อ${F.canPost?' — กด “✍️ โพสต์หัวข้อใหม่” เพื่อเริ่มได้เลย':''}</div></div>`;
   el.innerHTML=h;
   Object.keys(drafts).forEach(k=>{const i=$(`[data-cmi="${k}"]`);if(i)i.value=drafts[k]});
-  if(F.admin){$('#fdPost').onclick=()=>postModal();$('#fdCh').onclick=()=>chModal();$('#fdMng').onclick=mngModal}
+  if(F.canPost)$('#fdPost').onclick=()=>postModal();
 }
 async function updCm(i){
   const x=SOC.feed.items[i],w=$('#cmw'+i);if(!w)return;
@@ -1816,41 +1798,21 @@ document.addEventListener('click',async e=>{
   const t=e.target;if(!t.closest)return;
   const pf=t.closest('[data-pf]');if(pf){e.preventDefault();openProfile(pf.dataset.pf);return}
   const s=t.closest('[data-cms]');if(s){sendCm(+s.dataset.cms);return}
+  const pe=t.closest('[data-pe]');if(pe){postModal(SOC.feed.items[+pe.dataset.pe]);return}
+  const pdl=t.closest('[data-pd]');if(pdl){const it=SOC.feed.items[+pdl.dataset.pd];if(!confirm('ลบโพสต์นี้?'))return;try{await api('postDelete',{id:it.key.slice(2)});toast('🗑 ลบแล้ว');ensureFeed(true)}catch(er){toast('⚠️ '+esc(er.message))}return}
   const l=t.closest('[data-cml]');if(l){const i=+l.dataset.cml,x=SOC.feed.items[i];try{const r=await api('commentList',{key:x.key});x.cm=r.list;x.cn=r.list.length;updCm(i)}catch(er){toast('⚠️ '+esc(er.message))}return}
   const d=t.closest('[data-cd]');if(d){if(!confirm('ลบคอมเมนต์นี้?'))return;try{await api('commentDel',{id:d.dataset.cd});SOC.feed.items.forEach(x=>{const n=x.cm.length;x.cm=x.cm.filter(c=>c.id!==d.dataset.cd);if(x.cm.length<n)x.cn=Math.max(0,(x.cn||1)-1)});SOC.feed.items.forEach((x,i)=>updCm(i))}catch(er){toast('⚠️ '+esc(er.message))}}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.cmi!==undefined)sendCm(+e.target.dataset.cmi)});
 /* ---- แอดมิน: โพสต์ประกาศ / Challenge ---- */
 function postModal(p){
-  p=p||{};let img='',keep=!!p.id;
-  openModal(`<h2>${p.id?'✏️ แก้ไขโพสต์':'✍️ โพสต์ประกาศ'}</h2><div class="fld"><label>หัวข้อ</label><input id="poT" maxlength="120" value="${esc(p.title||'')}"></div><div class="fld"><label>ข้อความ</label><textarea id="poB" rows="5" maxlength="2000">${esc(p.body||'')}</textarea></div>
-   <div class="fld"><label>รูปภาพ (ไม่บังคับ · ระบบย่อให้อัตโนมัติ)</label><label class="btn" style="cursor:pointer">📷 เลือกรูป<input type="file" accept="image/*" hidden id="poF"></label> <span class="hint" id="poFn">${p.hasImg?'มีรูปเดิมอยู่ (เลือกใหม่เพื่อเปลี่ยน)':''}</span> <button class="btn sm" id="poRm" ${p.hasImg?'':'hidden'}>ลบรูป</button></div>
-   <label class="chk"><input type="checkbox" id="poP" ${p.pinned?'checked':''}> 📌 ปักหมุดไว้บนสุด</label><div id="poE" class="err"></div><div class="mrow"><button class="btn primary" id="poGo">${p.id?'บันทึก':'โพสต์'}</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
+  p=p||{};const edit=!!p.key,pid=edit?p.key.slice(2):'';let img='',keep=edit&&!!p.img;
+  openModal(`<h2>${edit?'✏️ แก้ไขโพสต์':'✍️ โพสต์หัวข้อใหม่'}</h2><div class="fld"><label>หัวข้อ</label><input id="poT" maxlength="120" value="${esc(p.title||'')}" placeholder="เช่น ชวนทุกคนแชร์เทคนิคปิดการขายสัปดาห์นี้"></div><div class="fld"><label>ข้อความ</label><textarea id="poB" rows="6" maxlength="2000" placeholder="พิมพ์รายละเอียดที่อยากให้ทุกคนมาคุยกัน…">${esc(p.body||'')}</textarea></div>
+   <div class="fld"><label>รูปภาพ (ไม่บังคับ · ระบบย่อให้อัตโนมัติ)</label><label class="btn" style="cursor:pointer">📷 เลือกรูป<input type="file" accept="image/*" hidden id="poF"></label> <span class="hint" id="poFn">${keep?'มีรูปเดิมอยู่ (เลือกใหม่เพื่อเปลี่ยน)':''}</span> <button class="btn sm" id="poRm" ${keep?'':'hidden'}>ลบรูป</button></div>
+   ${SOC.feed.admin?`<label class="chk"><input type="checkbox" id="poP" ${p.pinned?'checked':''}> 📌 ปักหมุดไว้บนสุด</label>`:''}<div id="poE" class="err"></div><div class="mrow"><button class="btn primary" id="poGo">${edit?'บันทึก':'โพสต์'}</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
   $('#poF').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{img=await imgResize(f,560,46000);keep=false;$('#poFn').textContent='✅ เลือกรูปแล้ว';$('#poRm').hidden=false}catch(er){$('#poE').textContent=er.message}};
   $('#poRm').onclick=()=>{img='';keep=false;$('#poFn').textContent='ลบรูปแล้ว';$('#poRm').hidden=true};
-  $('#poGo').onclick=async()=>{$('#poGo').disabled=true;try{await api('postSave',{id:p.id||'',title:$('#poT').value,body:$('#poB').value,img,keepImg:!!(p.id&&keep),pinned:$('#poP').checked});closeModal();toast('✅ บันทึกแล้ว');SOC.adm=null;ensureFeed(true)}catch(er){$('#poE').textContent=er.message;$('#poGo').disabled=false}};
-}
-function chModal(c){
-  c=c||{};
-  openModal(`<h2>${c.id?'✏️ แก้ไข Challenge':'🎯 สร้าง Challenge'}</h2><div class="fld"><label>ชื่อ Challenge</label><input id="chT" maxlength="120" value="${esc(c.title||'')}" placeholder="เช่น ศึกชิงเจ้ายอดขายสัปดาห์นี้"></div>
-   <div class="fld"><label>รายละเอียด / กติกา</label><textarea id="chD" rows="3" maxlength="600">${esc(c.desc||'')}</textarea></div>
-   <div class="row2"><div class="fld"><label>วัดผลด้วย</label><select id="chM"><option value="amount" ${c.metric!=='sub'?'selected':''}>ยอดขาย (฿)</option><option value="sub" ${c.metric==='sub'?'selected':''}>SUB</option></select></div>
-   <div class="fld"><label>แข่งแบบ</label><select id="chO"><option value="agent" ${c.mode!=='team'?'selected':''}>รายบุคคล</option><option value="team" ${c.mode==='team'?'selected':''}>ทีมต่อทีม</option></select></div></div>
-   <div class="row2"><div class="fld"><label>วันเริ่ม</label><input type="date" id="chS" value="${esc(c.start||today)}"></div><div class="fld"><label>วันสิ้นสุด</label><input type="date" id="chE" value="${esc(c.end||today)}"></div></div>
-   <div class="fld"><label>รางวัล (ไม่บังคับ)</label><input id="chP" maxlength="160" value="${esc(c.prize||'')}"></div><div id="chErr" class="err"></div>
-   <div class="mrow"><button class="btn primary" id="chGo">${c.id?'บันทึก':'สร้าง'}</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
-  $('#chGo').onclick=async()=>{$('#chGo').disabled=true;try{await api('challengeSave',{id:c.id||'',title:$('#chT').value,desc:$('#chD').value,metric:$('#chM').value,mode:$('#chO').value,start:$('#chS').value,end:$('#chE').value,prize:$('#chP').value});closeModal();toast('✅ บันทึกแล้ว');SOC.adm=null;ensureFeed(true)}catch(er){$('#chErr').textContent=er.message;$('#chGo').disabled=false}};
-}
-async function mngModal(){
-  openModal('<h2>📋 โพสต์ / Challenge</h2><div class="hint">กำลังโหลด…</div>');
-  let A;try{A=await api('adminSocial',{})}catch(e){$('#mbox').innerHTML=`<h2>📋 โพสต์ / Challenge</h2><div class="err">${esc(e.message)}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`;return}
-  SOC.adm=A;
-  $('#mbox').innerHTML=`<h2>📋 โพสต์ / Challenge</h2><h3 style="margin:8px 0">📢 ประกาศ</h3><div class="mlist">${A.posts.length?A.posts.map(p=>`<div class="rule" style="display:flex;gap:6px;justify-content:space-between;align-items:center"><span>${p.pinned?'📌 ':''}${esc(p.title||p.body.slice(0,40)||'(รูป)')} <small class="hint">${tsTxt(p.ts)}</small></span><span><button class="btn sm" data-pe="${esc(p.id)}">แก้ไข</button> <button class="btn sm danger" data-pd="${esc(p.id)}">ลบ</button></span></div>`).join(''):'<div class="empty">ยังไม่มี</div>'}</div>
-   <h3 style="margin:10px 0 8px">🎯 Challenge</h3><div class="mlist">${A.challenges.length?A.challenges.map(c=>`<div class="rule" style="display:flex;gap:6px;justify-content:space-between;align-items:center"><span>${esc(c.title)} <small class="hint">${THFULL(c.start)} – ${THFULL(c.end)}</small></span><span><button class="btn sm" data-ce="${esc(c.id)}">แก้ไข</button> <button class="btn sm danger" data-cx="${esc(c.id)}">ลบ</button></span></div>`).join(''):'<div class="empty">ยังไม่มี</div>'}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`;
-  $$('[data-pe]').forEach(b=>b.onclick=()=>postModal(A.posts.find(p=>p.id===b.dataset.pe)));
-  $$('[data-ce]').forEach(b=>b.onclick=()=>chModal(A.challenges.find(c=>c.id===b.dataset.ce)));
-  $$('[data-pd]').forEach(b=>b.onclick=async()=>{if(!confirm('ลบโพสต์นี้?'))return;try{await api('postDelete',{id:b.dataset.pd});toast('🗑 ลบแล้ว');ensureFeed(true);mngModal()}catch(e){toast('⚠️ '+esc(e.message))}});
-  $$('[data-cx]').forEach(b=>b.onclick=async()=>{if(!confirm('ลบ Challenge นี้?'))return;try{await api('challengeDelete',{id:b.dataset.cx});toast('🗑 ลบแล้ว');ensureFeed(true);mngModal()}catch(e){toast('⚠️ '+esc(e.message))}});
+  $('#poGo').onclick=async()=>{$('#poGo').disabled=true;try{await api('postSave',{id:pid,title:$('#poT').value,body:$('#poB').value,img,keepImg:!!(edit&&keep),pinned:$('#poP')?$('#poP').checked:false});closeModal();toast('✅ บันทึกแล้ว');ensureFeed(true)}catch(er){$('#poE').textContent=er.message;$('#poGo').disabled=false}};
 }
 /* ---- โปรไฟล์ Agent ---- */
 function sparkBars(ser,labels,col){
@@ -1892,6 +1854,97 @@ function heatHTML(heat,day){
   return `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start"><div><div style="display:flex;gap:3px"><div class="hcol hlab">${nm.map(x=>`<i class="hc" style="background:none;font-size:10px;color:var(--mute);font-style:normal;width:auto;line-height:16px">${x}</i>`).join('')}</div>${cells.join('')}</div><div class="hint" style="margin-top:4px">ล่าสุด ${WK} สัปดาห์ · สีเข้ม = ยอดขายรวมทั้งทีมสูง</div></div>
    <div style="flex:1;min-width:200px"><div class="hint" style="margin-bottom:4px">ยอดเฉลี่ยตามวันในสัปดาห์${avg[best]>0?` · ขายดีสุด <b>วัน${nm[best].replace('.','')}</b>`:''}</div>${avg.map((v,i)=>`<div class="chr"><span class="chn" style="width:28px">${nm[i]}</span><span class="chbar"><i style="width:${Math.max(2,Math.round(v/am*100))}%;${i===best&&v>0?'background:#f0b90b':''}"></i></span><b class="num" style="min-width:70px;text-align:right">${v>0?'฿'+fmt(v):'-'}</b></div>`).join('')}</div></div>`;
 }
+/* ---------- 🎯 วิเคราะห์เชิงความน่าจะเป็น: 7 "วันที่มียอดขาย" ล่าสุด ---------- */
+const normCdf=z=>{const t=1/(1+.2316419*Math.abs(z)),d=.3989423*Math.exp(-z*z/2),p=d*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p};
+const pctS=x=>Math.round(Math.max(0,Math.min(1,x))*100)+'%';
+function dayPt(id,k){
+  const k0=1-(D.diffPct==null?5:D.diffPct)/100;
+  if(D.pointSource==='sales'){const b=DB[id]&&DB[id].point;return ((b&&b.D[k])||0)*k0}
+  let s=0;(PSBY[id]||[]).forEach(r=>{if(r.per===k)s+=PTV(r)});return s*k0;
+}
+function salesDays(){
+  const set={};MEM.filter(AG).forEach(m=>{const b=DB[m.id]&&DB[m.id].amount;if(b)Object.keys(b.D).forEach(k=>{if(b.D[k]>0&&k<=(D.asOf||today))set[k]=(set[k]||0)+b.D[k]})});
+  return Object.keys(set).sort();
+}
+const dAmt=(id,k)=>((DB[id]&&DB[id].amount.D[k])||0),dSub=(id,k)=>((DB[id]&&DB[id].sub.D[k])||0);
+const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0,sd=a=>{if(a.length<2)return 0;const m=mean(a);return Math.sqrt(a.reduce((s,x)=>s+(x-m)*(x-m),0)/(a.length-1))};
+function slope(a){const n=a.length;if(n<3)return 0;const mx=(n-1)/2,my=mean(a);let nu=0,de=0;a.forEach((y,i)=>{nu+=(i-mx)*(y-my);de+=(i-mx)*(i-mx)});return de?nu/de:0}
+function insMeCalc(who){
+  const days=salesDays(),L=days.slice(-7),Pv=days.slice(-14,-7);if(L.length<2)return null;
+  const team=AGM(),single=who&&who!=='team'?memOf(who):null,ids=single?[single.id]:team.map(m=>m.id);
+  const sum=(arr,f)=>arr.map(k=>ids.reduce((s,id)=>s+f(id,k),0));
+  const A=sum(L,dAmt),P=sum(L,dayPt),S=sum(L,dSub),A0=sum(Pv,dAmt);
+  const nAg=Math.max(1,team.length),teamAvgPerAgent=mean(L.map(k=>team.reduce((s,m)=>s+dAmt(m.id,k),0)))/nAg;
+  const tot=A.reduce((a,b)=>a+b,0),avg=mean(A),active=single?A.filter(v=>v>0).length:L.length,tot0=A0.reduce((a,b)=>a+b,0);
+  const bi=A.indexOf(Math.max(...A)),wd=L.map(k=>U(k).getUTCDay());
+  const r={single,ids,L,A,P,S,tot,avg,tot0,chg:tot0>0?(tot/tot0-1)*100:null,bi,best:{k:L[bi],v:A[bi]},active,n:L.length,
+    cv:avg>0?sd(A)/avg:0,slope:slope(A),slopePct:avg>0?slope(A)/avg*100:0,teamAvgPerAgent};
+  // ความน่าจะเป็น (นับจากความถี่ + ปรับ Laplace)
+  r.pSale=(active+1)/(L.length+2);
+  r.pAboveSelf=A.filter(v=>v>=avg&&v>0).length/L.length;
+  r.pAboveTeam=single?A.filter(v=>v>=teamAvgPerAgent&&v>0).length/L.length:null;
+  // ค่าคอม: โอกาสถึงขั้นถัดไปสิ้นเดือน (เฉพาะรายบุคคล)
+  r.tier=null;
+  if(single&&D.tiers&&D.tiers.length){
+    const ym=today.slice(0,7),el=autoElapsed(ym),ef=effDays(single.id,ym,el),pointNow=monthPoint(single.id,ym),rem=Math.max(0,ef.total-ef.elapsed);
+    const m=mean(P),s=sd(P),dim=monthDays(ym),cur=comCalc(pointNow,ef.elapsed,ef.total,null),ti=cur.tier.i,T=D.tiers;
+    const x=T[ti]&&T[ti].upTo!=null?T[ti].upTo+1:null;        // เกณฑ์ขั้นถัดไป (Runrate)
+    const need=x==null?null:x*ef.total/dim;                   // POINT รวมที่ต้องมีสิ้นเดือน
+    const mu=pointNow+rem*m,sg=s*Math.sqrt(rem);
+    r.tier={pointNow,rem,m,s,cur,next:x==null?null:T[ti+1],need,reqPerDay:rem>0&&need!=null?Math.max(0,(need-pointNow)/rem):null,
+      p:need==null?null:(rem===0?(pointNow>=need?1:0):(sg>0?1-normCdf((need-mu)/sg):(mu>=need?1:0))),
+      lo:mu-1.28*sg,mid:mu,hi:mu+1.28*sg,dim,total:ef.total,run:mu/Math.max(1,ef.total)*dim};
+  }
+  // วันในสัปดาห์: ความน่าจะเป็นที่มียอด (ย้อนหลัง 8 สัปดาห์ นับเฉพาะวันที่ทีมมียอด)
+  const h=days.slice(-40),W=[0,1,2,3,4,5,6].map(()=>({n:0,hit:0,sum:0}));
+  h.forEach(k=>{const w=U(k).getUTCDay(),v=ids.reduce((s,id)=>s+dAmt(id,k),0);W[w].n++;if(v>0)W[w].hit++;W[w].sum+=v});
+  r.W=W.map(o=>({n:o.n,p:o.n?(o.hit+1)/(o.n+2):null,avg:o.n?o.sum/o.n:0}));
+  // สินค้า (เฉพาะแถวรายวัน) : 7 วันล่าสุด เทียบ 7 วันก่อนหน้า + เทียบสัดส่วนกับทีม
+  const inL=new Set(L),inP=new Set(Pv),ps=(set,idset)=>{const o={};PS.forEach(rw=>{if(!set.has(rw.per)||!idset.has(rw.m))return;o[rw.p]=(o[rw.p]||0)+rw.a});return o};
+  const idset=new Set(ids),tset=new Set(team.map(m=>m.id)),pL=ps(inL,idset),pP=ps(inP,idset),tL=ps(inL,tset),sm=o=>Object.values(o).reduce((a,b)=>a+b,0),sL=sm(pL),sT=sm(tL);
+  r.prods=Object.keys({...pL,...tL}).map(id=>({id,a:pL[id]||0,b:pP[id]||0,share:sL?(pL[id]||0)/sL:0,tshare:sT?(tL[id]||0)/sT:0})).filter(x=>x.a>0||x.tshare>0).sort((x,y)=>y.a-x.a||y.tshare-x.tshare);
+  r.hasProd=sL>0||sT>0;
+  return r;
+}
+function insMeHTML(){
+  const me=D.me,who=SOC.who||(AG(me)&&!D.isAdmin?me.id:'team'),R=insMeCalc(who),f0=x=>fmt(x),mn=x=>'฿'+fmt(x);
+  const opts=`<option value="team" ${who==='team'?'selected':''}>👥 ทั้งทีมที่เลือก (เฉลี่ยรวม)</option>`+AGM().map(m=>`<option value="${esc(m.id)}" ${who===m.id?'selected':''}>${esc(m.name)}${m.nick?' ('+esc(m.nick)+')':''}${m.id===me.id?' ← ฉัน':''}</option>`).join('');
+  let h=`<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>🎯 วิเคราะห์เชิงความน่าจะเป็น · 7 วันที่มียอดขายล่าสุด</span><select id="imWho">${opts}</select></h3>`;
+  if(!R){return h+'<div class="empty">ยังมีวันที่มียอดขายไม่พอ (ต้องมีอย่างน้อย 2 วัน) — เมื่อแอดมินบันทึกยอดรายวันเพิ่ม ระบบจะวิเคราะห์ให้อัตโนมัติ</div></div>'}
+  const nm=R.single?(R.single.nick||R.single.name):'ทีม',mx=Math.max(1,...R.A),WD=['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+  const trend=R.slopePct>5?['📈 ขาขึ้น','up']:R.slopePct<-5?['📉 ขาลง','dn']:['➡️ ทรงตัว','flat'];
+  h+=`<div class="hint" style="margin-bottom:8px">วิเคราะห์จาก ${R.n} วันที่มียอดขายล่าสุด (${dShort(R.L[0])} – ${dShort(R.L[R.n-1])}) · ไม่นับวันหยุดที่ไม่มีการบันทึกยอด</div>
+   <div class="stats"><div class="stat"><small>ยอดรวม 7 วัน</small><b>${mn(R.tot)}</b></div><div class="stat"><small>เฉลี่ย/วัน</small><b>${mn(R.avg)}</b></div><div class="stat"><small>เทียบ 7 วันก่อนหน้า</small><b class="${R.chg==null?'':R.chg>=0?'up':'dn'}">${R.chg==null?'–':(R.chg>=0?'▲ +':'▼ ')+R.chg.toFixed(1)+'%'}</b></div><div class="stat"><small>แนวโน้ม</small><b class="${trend[1]}">${trend[0]}</b></div><div class="stat"><small>วันที่ขายดีสุด</small><b>${WD[U(R.best.k).getUTCDay()]} ${dShort(R.best.k)}</b></div><div class="stat"><small>ความสม่ำเสมอ</small><b>${R.cv<.4?'สูง':R.cv<.8?'ปานกลาง':'ผันผวน'}</b></div></div>
+   <div style="display:flex;gap:4px;align-items:flex-end;height:96px;margin:12px 0 2px">${R.A.map((v,i)=>`<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%" title="${esc(dShort(R.L[i]))}: ${mn(v)}"><small class="hint num" style="font-size:10px">${compact(v)}</small><div style="width:100%;max-width:46px;height:${Math.max(2,v/mx*68)}px;background:${i===R.bi?'#f0b90b':v>=R.avg?'var(--up)':'#848e9c'};border-radius:4px 4px 0 0"></div></div>`).join('')}</div>
+   <div style="display:flex;gap:4px">${R.L.map(k=>`<div style="flex:1;text-align:center;font-size:10px;color:var(--mute)">${WD[U(k).getUTCDay()]}<br>${+k.slice(8)}</div>`).join('')}</div>
+   <div class="hint" style="margin:2px 0 10px">แท่งเหลือง = วันที่ขายดีสุด · เขียว = สูงกว่าค่าเฉลี่ยของ${esc(nm)} · เทา = ต่ำกว่า</div>`;
+  // ความน่าจะเป็น
+  const pb=(l,p,sub)=>`<div class="fcb"><small>${l}</small><div class="num" style="font-size:24px;font-weight:800;color:${p>=.7?'var(--up)':p>=.4?'#f0b90b':'var(--down)'}">${pctS(p)}</div><div class="chbar" style="margin:4px 0"><i style="width:${Math.round(p*100)}%"></i></div><div class="hint">${sub}</div></div>`;
+  h+=`<h4 style="margin:6px 0">🎲 โอกาสทางสถิติ</h4><div class="fcg">${pb('โอกาสมียอดขายในวันถัดไป',R.pSale,`${R.single?'ขายได้ '+R.active+'/'+R.n+' วัน':'ทีมมียอดทุกวัน'} (ปรับค่าด้วย Laplace)`)}${pb('โอกาสทำยอดสูงกว่าค่าเฉลี่ยของตัวเอง',R.pAboveSelf,`${Math.round(R.pAboveSelf*R.n)}/${R.n} วันที่เกินเฉลี่ย ${mn(R.avg)}`)}${R.pAboveTeam!=null?pb('โอกาสทำยอดสูงกว่าค่าเฉลี่ยทีมต่อคน',R.pAboveTeam,`เฉลี่ยทีมต่อคน ${mn(R.teamAvgPerAgent)}/วัน`):''}</div>`;
+  if(R.tier){const T=R.tier,tn=T.next;
+    h+=`<h4 style="margin:12px 0 6px">💰 โอกาสถึงขั้นค่าคอมถัดไปสิ้นเดือน</h4><div class="fcb" style="margin-bottom:6px">${T.cur?`<div>ตอนนี้ Runrate <b class="num">${fmt(T.cur.run)}</b> POINT → ขั้น <b>${T.cur.tier.rate}%</b> · POINT สะสม <b class="num">${fmt(T.pointNow)}</b> · เหลืออีก <b>${T.rem}</b> วันทำงาน</div>`:''}
+     ${T.p==null?`<div class="up" style="margin-top:4px">🏆 อยู่ขั้นสูงสุดแล้ว — รักษาระดับไว้!</div>`:`<div style="margin-top:6px">เกณฑ์ขั้นถัดไป <b>${tn?tn.rate+'%':''}</b> ต้องมี Runrate ≥ <b class="num">${fmt(D.tiers[T.cur.tier.i].upTo+1)}</b> (≈ POINT รวมเดือนนี้ <b class="num">${fmt(T.need)}</b>) → ต้องทำเฉลี่ยวันละ <b class="num">${fmt(T.reqPerDay)}</b> POINT (ช่วง 7 วันล่าสุดทำได้ <b class="num">${fmt(T.m)}</b>/วัน)</div>
+     <div class="num" style="font-size:26px;font-weight:800;margin-top:4px;color:${T.p>=.7?'var(--up)':T.p>=.4?'#f0b90b':'var(--down)'}">${pctS(T.p)} <span class="hint" style="font-size:12px;font-weight:400">โอกาสถึงขั้นถัดไป</span></div>`}
+     <div class="hint" style="margin-top:6px">คาดการณ์ POINT สิ้นเดือน (ช่วงความเชื่อมั่น ~80%): <b class="num">${fmt(Math.max(T.pointNow,T.lo))}</b> – <b class="num">${fmt(T.hi)}</b> · กลาง ๆ <b class="num">${fmt(T.mid)}</b></div></div>`}
+  // วันที่ควรลุย
+  const W=R.W.map((o,i)=>({i,...o})).filter(o=>o.n>=2),bw=W.slice().sort((a,b)=>b.avg-a.avg),mxw=Math.max(1,...W.map(o=>o.avg));
+  if(W.length)h+=`<h4 style="margin:12px 0 6px">📅 วันไหนขายดี (ย้อนหลังประมาณ 8 สัปดาห์)</h4>${W.map(o=>`<div class="chr"><span class="chn" style="width:34px">${WD[o.i]}</span><span class="chbar"><i style="width:${Math.max(2,Math.round(o.avg/mxw*100))}%;${o.i===bw[0].i?'background:#f0b90b':''}"></i></span><b class="num" style="min-width:84px;text-align:right">${mn(o.avg)}</b><span class="hint num" style="min-width:70px;text-align:right">มียอด ${pctS(o.p)}</span></div>`).join('')}`;
+  // สินค้า
+  if(R.hasProd){const rows=R.prods.slice(0,8),opp=R.prods.filter(x=>R.single&&x.tshare-x.share>=.05).slice(0,3),hot=R.prods.filter(x=>x.b>0&&x.a>x.b*1.2).sort((a,b)=>b.a/b.b-a.a/a.b)[0];
+    h+=`<h4 style="margin:12px 0 6px">🛍 สินค้า (${R.single?'เทียบสัดส่วนกับทีม':'7 วันล่าสุด'})</h4>${rows.map(x=>`<div class="chr"><span class="chnm" style="min-width:120px">${esc(prodName(x.id))}</span><span class="chbar"><i style="width:${Math.max(2,Math.round(x.share*100))}%"></i></span><b class="num" style="min-width:78px;text-align:right">${mn(x.a)}</b><span class="hint num" style="min-width:96px;text-align:right">${pctS(x.share)}${R.single?` · ทีม ${pctS(x.tshare)}`:''}${x.b>0?` · ${x.a>=x.b?'▲':'▼'}${Math.abs(Math.round((x.a/x.b-1)*100))}%`:''}</span></div>`).join('')}`}
+  else h+=`<div class="hint" style="margin-top:10px">ℹ️ ยังไม่มีข้อมูลสินค้ารายวัน (ชีต ProductSales ต้องบันทึก period เป็นรายวัน เช่น 2026-10-20) จึงยังวิเคราะห์สินค้าไม่ได้</div>`;
+  // แนวทาง
+  const tips=[];
+  tips.push(`${R.single?'คุณ':'ทีม'}ขายได้เฉลี่ย ${mn(R.avg)}/วัน ${trend[1]==='up'?'และแนวโน้มกำลังดีขึ้น 📈':trend[1]==='dn'?'แต่แนวโน้มเริ่มลดลง ลองโทรเพิ่มในช่วงที่ทำยอดได้ดี 📉':'ค่อนข้างทรงตัว'}`);
+  if(R.W.length){const b=R.W.map((o,i)=>({i,...o})).filter(o=>o.n>=2).sort((a,b)=>b.avg-a.avg)[0];if(b&&b.avg>0)tips.push(`วัน${['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'][b.i]} เป็นวันที่ทำยอดเฉลี่ยสูงสุด (${mn(b.avg)}) — วางแผนโทรหาลูกค้าสำคัญไว้วันนั้น`)}
+  if(R.single&&R.pAboveTeam!=null&&R.pAboveTeam<.5)tips.push(`ยอดต่อวันของคุณต่ำกว่าเฉลี่ยทีมในหลายวัน ลองดูสินค้า/วิธีของคนที่ขายดีในหน้า 🏆 อันดับ`);
+  if(R.tier&&R.tier.p!=null){const T=R.tier;tips.push(T.p>=.7?`มีโอกาสสูงที่จะถึงขั้นค่าคอมถัดไป รักษาจังหวะวันละ ${fmt(T.reqPerDay)} POINT ไว้`:T.p>=.4?`ยังลุ้นขั้นค่าคอมถัดไปได้ ต้องเร่งเป็นวันละ ${fmt(T.reqPerDay)} POINT (ตอนนี้ ${fmt(T.m)})`:`ขั้นถัดไปต้องเร่งมาก (วันละ ${fmt(T.reqPerDay)} POINT) ลองเน้นสินค้าที่ POINT สูงเพื่อไล่ให้ทัน`)}
+  if(R.hasProd&&R.single){const opp=R.prods.filter(x=>x.tshare-x.share>=.05).slice(0,2);if(opp.length)tips.push(`ทีมขาย ${opp.map(x=>prodName(x.id)).join(', ')} ได้สัดส่วนสูงกว่าคุณ — โอกาสเสนอสินค้านี้เพิ่ม`)}
+  h+=`<div class="panel" style="margin-top:12px;background:var(--panel2)"><b>🧭 แนวทางการขาย</b><ul class="insl" style="margin-top:6px">${tips.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>
+   <div class="hint" style="margin-top:8px">⚠️ เป็นการประมาณทางสถิติจากข้อมูล ${R.n} วันล่าสุดเท่านั้น (ใช้ความถี่ ค่าเฉลี่ย และการแจกแจงปกติ) ไม่ใช่การรับประกันผลลัพธ์ · ยิ่งมีวันที่บันทึกยอดมาก ตัวเลขยิ่งน่าเชื่อถือ</div></div>`;
+  return h;
+}
+
 function renderIns(){
   const el=$('#insBody');if(!el)return;
   if(!SOC.ins){el.innerHTML='<div class="panel"><div class="hint">กำลังวิเคราะห์ข้อมูล…</div></div>';ensureIns();return}
@@ -1906,6 +1959,7 @@ function renderIns(){
   let h=`<div class="panel sec"><h3>💡 Insight ประจำสัปดาห์ (สร้างอัตโนมัติจากยอดขาย)</h3>
     ${chg===null?'':`<div class="insbig"><span class="num ${chg>=0?'up':'dn'}" style="font-size:30px;font-weight:800">${chg>=0?'▲':'▼'} ${Math.abs(chg)}%</span><span class="hint">ยอดขายรวม 7 วันล่าสุดเทียบ 7 วันก่อนหน้า<br>฿${fmt(I.totP)} → ฿${fmt(I.totL)}</span></div>`}
     <ul class="insl">${I.lines.map(l=>`<li>${esc(l)}</li>`).join('')}</ul></div>`;
+  h+=insMeHTML();
   h+=`<div class="panel sec"><h3>🔮 พยากรณ์สิ้นเดือน ${ymLabel(ym)} (Run Rate)</h3><div style="margin-bottom:8px">${teamSelHTML('inTeam')}<span class="hint"> นับถึงวันที่ ${elC}/${dim} · หักวันลา/วันหยุดแล้ว · ${ag.length} Agent</span></div>
     <div class="fcg">${fc('ยอดขาย',A0,A1,'฿')}${fc('POINT',P0,P1,'')}${fc('SUB',S0,S1,'')}</div><div class="hint" style="margin-top:6px">เป็นการประมาณจากความเร็วที่ขายได้ตอนนี้ ไม่ใช่ตัวเลขรับประกัน</div></div>`;
   h+=`<div class="panel sec"><h3>🗓 Heatmap ยอดขายรายวัน</h3>${Object.keys(I.heat||{}).length?heatHTML(I.heat,I.day):'<div class="empty">ยังไม่มียอดขายรายวัน (บันทึกที่ชีต SalesDaily)</div>'}</div>`;
@@ -1916,6 +1970,7 @@ function renderIns(){
   h+=`<div class="hint" style="text-align:center;margin:8px">ข้อมูล ณ ${THFULL(I.day)} · นับเฉพาะ Agent</div>`;
   el.innerHTML=h;
   bindTeamSel('inTeam',renderIns);
+  if($('#imWho'))$('#imWho').onchange=e=>{SOC.who=e.target.value;renderIns()};
 }
 /* ---- 🔔 แจ้งเตือนสังคม ---- */
 const socSeen=()=>+LS.get('sb_soc')||0;
@@ -2587,13 +2642,13 @@ function inboxUnread(){return (D.inbox||[]).filter(i=>i.k==='pend'||i.k==='sla'|
 function renderBell(){const n=inboxUnread(),b=$('#bellN');b.hidden=!n;b.textContent=n>99?'99+':n}
 function openInbox(){
   const L=(D.inbox||[]).concat((SOC.noti||[]).map(i=>Object.assign({tone:''},i))).sort((a,b)=>b.ts-a.ts);
-  openModal(`<h2>🔔 แจ้งเตือน</h2><div class="mlist">${L.length?L.map(i=>`<div class="ibi ${i.tone}" data-ib="${esc(i.go)}"><span>${{leave:'🙋',pend:'📝',cmp:'🗂',like:'❤️',cm:'💬',post:'📢',ch:'🎯'}[i.k]||'⏰'}</span><div>${esc(i.text)}<small>${tsTxt(i.ts)}</small></div></div>`).join(''):'<div class="empty">ไม่มีแจ้งเตือน</div>'}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`);
-  $$('[data-ib]').forEach(x=>x.onclick=()=>{closeModal();if(x.dataset.ib==='feed')goTab('feed');else goTab('svc:'+(x.dataset.ib==='leave'?'leave':'cmp'))});
+  openModal(`<h2>🔔 แจ้งเตือน</h2><div class="mlist">${L.length?L.map(i=>`<div class="ibi ${i.tone}" data-ib="${esc(i.go)}"><span>${{leave:'🙋',pend:'📝',cmp:'🗂',like:'❤️',cm:'💬',post:'📢'}[i.k]||'⏰'}</span><div>${esc(i.text)}<small>${tsTxt(i.ts)}</small></div></div>`).join(''):'<div class="empty">ไม่มีแจ้งเตือน</div>'}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`);
+  $$('[data-ib]').forEach(x=>x.onclick=()=>{closeModal();if(x.dataset.ib==='feed'){S.feedView='feed';goTab('feed')}else goTab('svc:'+(x.dataset.ib==='leave'?'leave':'cmp'))});
   LS.set('sb_inb',String(nowMs()));LS.set('sb_soc',String(nowMs()));renderBell();renderBnav();
 }
 $('#bellBtn').onclick=()=>D&&openInbox();
 /* ---------- เมนู: ลำดับ/ซ่อน ตั้งโดยแอดมิน (config menuOrder) ---------- */
-const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['feed','🌐','ฟีด','🌐 ฟีด & Feedback'],['ins','📊','Insight','📊 Insight'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
+const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['feed','💬','หัวข้อ','💬 หัวข้อ & Feedback'],['ins','📊','Insight','📊 Insight'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
 function menuList(raw){   // คืน [{id,show}] ตามลำดับที่ตั้ง (ที่ไม่ได้ระบุต่อท้ายตามค่าเริ่มต้น)
   const L=[],seen={};String(raw==null?((D.v5&&D.v5.cfg&&D.v5.cfg.menu)||''):raw).split(/[,;\s]+/).filter(Boolean).forEach(x=>{const h=x[0]==='-',id=h?x.slice(1):x;if(seen[id]||!TABDEF.some(t=>t[0]===id))return;seen[id]=1;L.push({id,show:!(h&&id!=='dash'&&id!=='admin')})});
   TABDEF.forEach(t=>{if(!seen[t[0]])L.push({id:t[0],show:true})});return L}
