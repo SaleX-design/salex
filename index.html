@@ -1665,32 +1665,36 @@ const SPK='sx_spot_';
 function spAvatar(id,name,sz){const ph=(S.spot&&S.spot.photos||{})[id],m=memOf(id)||{},col=m.team?tcol(m.team):'#f0b90b';
   return ph?`<img class="sav" src="${ph}" alt="" style="width:${sz}px;height:${sz}px">`:`<span class="sav" style="width:${sz}px;height:${sz}px;background:${col};font-size:${Math.round(sz*.4)}px">${esc(String(name||'?').slice(0,2).toUpperCase())}</span>`}
 function spLikes(p){return `<span data-lkw="${esc(p.key)}"><button class="lkb ${p.mHeart?'on':''}" data-lk="${esc(p.key)}|heart">❤️ <b>${p.heart}</b></button><button class="lkb ${p.mLike?'on':''}" data-lk="${esc(p.key)}|like">👍 <b>${p.like}</b></button></span>`}
-const spLabel=p=>p.kind==='d'?'ประจำวัน '+dShort(p.period):'ประจำเดือน '+THMON[+p.period.slice(5)-1]+' '+(+p.period.slice(0,4)+543);
+const spYm=ym=>THMON[+ym.slice(5)-1]+' '+(+ym.slice(0,4)+543);
+const spLabel=p=>(p.kind==='i'?'Improvement ':'ประจำเดือน ')+spYm(p.period);
+const spVal=p=>p.kind==='i'?`+฿${fmt(p.v)}`:`฿${fmt(p.v)}`;
+const spMed=r=>['🥇','🥈','🥉','4️⃣','5️⃣'][r-1]||r;
+const spSub=p=>p.kind==='i'?`${p.pct>=0?'+':''}${p.pct}% · ฿${fmt(p.prev)} → ฿${fmt(p.cur)}${p.est?' (≈ประมาณ)':''}`:'';
 async function ensureSpot(force){
   if(!D)return;
   if(force||!S.spot||Date.now()-S.spot.ts>120000){try{const r=await api('spotlight',{});S.spot=Object.assign(r,{ts:Date.now()})}catch(e){if(!S.spot)return}}
   if(S.tab==='dash')renderSpotBanner();else if(S.tab==='rank')renderSpotTab(true);
   spPopupOnce();
 }
-function spTop(kind){return S.spot&&S.spot.posts.find(p=>p.kind===kind&&p.cat==='all')}
+function spTop(kind){return S.spot&&S.spot.posts.find(p=>p.kind===kind&&p.cat==='all'&&p.rank===1)}
 function renderSpotBanner(){
   const el=$('#spotBanner');if(!el)return;
   let hide=false;try{hide=sessionStorage.getItem('sx_spb')===(S.spot&&S.spot.day)}catch(e){}
-  const d=spTop('d'),m=spTop('m');
-  if(!S.spot||hide||(!d&&!m)){el.innerHTML='';return}
-  const chip=(p,t)=>p?`<div class="spotchip">${spAvatar(p.m,p.name,56)}<div><div class="st">🏆 TOP SALE ${t} · ${spLabel(p).replace(/^ประจำ(วัน|เดือน) /,'')}</div><div class="sn">${esc(p.name)} <span class="sv">฿${fmt(p.v)}</span></div><div>${spLikes(p)}</div></div></div>`:'';
-  el.innerHTML=`<div class="spotbn"><span class="sbx" id="spbX" title="ซ่อนวันนี้">✕</span>${chip(d,'ประจำวัน')}${chip(m,'ประจำเดือน')}<div style="display:flex;align-items:center"><button class="btn sm" id="spbAll">🛍 ดูแยกตามสินค้า →</button></div></div>`;
+  const m=spTop('m'),i=spTop('i');
+  if(!S.spot||hide||(!m&&!i)){el.innerHTML='';return}
+  const chip=(p,t)=>p?`<div class="spotchip">${spAvatar(p.m,p.name,56)}<div><div class="st">🏆 ${t} · ${spYm(p.period)}</div><div class="sn">${esc(p.name)} <span class="sv">${spVal(p)}</span></div>${p.kind==='i'?`<div class="hint">${esc(spSub(p))}</div>`:''}<div>${spLikes(p)}</div></div></div>`:'';
+  el.innerHTML=`<div class="spotbn"><span class="sbx" id="spbX" title="ซ่อนวันนี้">✕</span>${chip(m,'TOP SALE ประจำเดือน')}${chip(i,'TOP SALE Improvement')}<div style="display:flex;align-items:center"><button class="btn sm" id="spbAll">🏆 ดูอันดับ 1-5 และแยกตามสินค้า →</button></div></div>`;
   $('#spbX').onclick=()=>{try{sessionStorage.setItem('sx_spb',S.spot.day)}catch(e){}el.innerHTML=''};
   $('#spbAll').onclick=()=>goTab('rank');
 }
 function spPopupOnce(){
   if(!S.spot||S.spotPop||S.tab==='rank'||!$('#modal').hidden)return;
-  const d=spTop('d'),m=spTop('m');if(!d&&!m)return;
+  const m=spTop('m'),i=spTop('i');if(!m&&!i)return;
   const k=SPK+D.me.id;let seen='';try{seen=localStorage.getItem(k)||''}catch(e){}
   if(seen===S.spot.day)return;S.spotPop=1;
   try{localStorage.setItem(k,S.spot.day)}catch(e){}
-  const card=(p,t)=>p?`<div class="spcard big" style="align-items:center;text-align:center">${spAvatar(p.m,p.name,92)}<div class="st" style="color:#f0b90b;font-weight:700">🏆 TOP SALE ${t}</div><div style="font-size:20px;font-weight:800">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)} · ${spLabel(p)}</div><div class="num up" style="font-size:22px;font-weight:800">฿${fmt(p.v)}</div><div>${spLikes(p)}</div></div>`:'';
-  openModal(`<h2 style="text-align:center">🎉 ขอแสดงความยินดี! 🎉</h2><div class="spgrid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${card(d,'ประจำวัน')}${card(m,'ประจำเดือน')}</div><div class="hint" style="text-align:center;margin:8px 0">กดหัวใจ ❤️ หรือไลก์ 👍 ให้กำลังใจเพื่อนร่วมงานได้เลย</div><div class="mrow"><button class="btn primary" id="spGo">ดูแยกตามสินค้า</button><button class="btn" onclick="closeModal()">ปิด</button></div>`);
+  const card=(p,t)=>p?`<div class="spcard big" style="align-items:center;text-align:center">${spAvatar(p.m,p.name,92)}<div class="st" style="color:#f0b90b;font-weight:700">🏆 ${t}</div><div style="font-size:20px;font-weight:800">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)} · ${spLabel(p)}</div><div class="num up" style="font-size:22px;font-weight:800">${spVal(p)}</div>${p.kind==='i'?`<div class="hint">${esc(spSub(p))}</div>`:''}<div>${spLikes(p)}</div></div>`:'';
+  openModal(`<h2 style="text-align:center">🎉 ขอแสดงความยินดี! 🎉</h2><div class="spgrid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${card(m,'TOP SALE ประจำเดือน')}${card(i,'TOP SALE Improvement')}</div><div class="hint" style="text-align:center;margin:8px 0">กดหัวใจ ❤️ หรือไลก์ 👍 ให้กำลังใจเพื่อนร่วมงานได้เลย</div><div class="mrow"><button class="btn primary" id="spGo">ดูอันดับ 1-5</button><button class="btn" onclick="closeModal()">ปิด</button></div>`);
   $('#spGo').onclick=()=>{closeModal();goTab('rank')};
 }
 document.addEventListener('click',async e=>{
@@ -1711,13 +1715,17 @@ function renderSpotTab(fromEnsure){
   const el=$('#spotBody');if(!el)return;
   if(!S.spot){el.innerHTML='<div class="panel"><div class="hint">กำลังโหลด…</div></div>';if(!fromEnsure)ensureSpot();return}
   if(!fromEnsure&&Date.now()-S.spot.ts>120000){ensureSpot();}
-  const P=S.spot.posts,adm=!!S.spot.canPhoto;
-  const sec=(kind,title)=>{
-    const all=P.find(p=>p.kind===kind&&p.cat==='all'),rest=P.filter(p=>p.kind===kind&&p.cat!=='all');
-    const card=(p,big)=>`<div class="spcard ${big?'big':''}" style="${big?'align-items:center;text-align:center':''}">${spAvatar(p.m,p.name,big?96:56)}<div class="st" style="color:#f0b90b;font-weight:700;font-size:12px">🏆 ${esc(p.catName)}</div><div style="font-weight:800;font-size:${big?20:15}px">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)}</div><div class="num up" style="font-weight:800;font-size:${big?22:16}px">฿${fmt(p.v)}</div>${p.q?`<div class="hint">${fmt(p.q)} ชิ้น</div>`:''}<div>${spLikes(p)}</div>${adm?`<label class="btn sm" style="cursor:pointer">📷 ใส่/เปลี่ยนรูป<input type="file" accept="image/*" hidden data-ph="${esc(p.m)}"></label>`:''}</div>`;
-    return `<div class="panel sec"><h3>🏆 ${title} · ${esc(spLabel({kind,period:kind==='d'?S.spot.day:S.spot.ym}))}</h3>${all?`<div style="max-width:320px;margin:0 auto 10px">${card(all,true)}</div>`:'<div class="empty">ยังไม่มีข้อมูลยอดขายของช่วงนี้</div>'}${rest.length?`<div class="hint" style="margin:6px 0">🛍 TOP SALE แยกตามสินค้า</div><div class="spgrid">${rest.map(p=>card(p,false)).join('')}</div>`:''}</div>`};
-  let h=sec('d','TOP SALE ประจำวัน')+sec('m','TOP SALE ประจำเดือน');
-  if(adm)h+=`<div class="panel sec"><h3>📷 รูปประจำตัว Agent (แอดมิน)</h3><div class="hint" style="margin-bottom:8px">ใส่รูปให้ Agent คนใดก็ได้ ระบบย่อรูปให้อัตโนมัติ (ตัดเป็นสี่เหลี่ยมจัตุรัสจากกลางภาพ) · รูปจะแสดงที่แบนเนอร์ ป๊อปอัป และหน้านี้ เมื่อคนนั้นเป็น TOP SALE</div>
+  const SP=S.spot,P=SP.posts,adm=!!SP.canPhoto,ph=p=>adm?`<label class="btn sm" style="cursor:pointer">📷 ใส่/เปลี่ยนรูป<input type="file" accept="image/*" hidden data-ph="${esc(p.m)}"></label>`:'';
+  const card=(p,big)=>`<div class="spcard ${big?'big':''}" style="${big?'align-items:center;text-align:center':''}"><div style="font-size:${big?26:20}px">${spMed(p.rank)}</div>${spAvatar(p.m,p.name,big?96:60)}<div style="font-weight:800;font-size:${big?20:15}px">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)}</div><div class="num up" style="font-weight:800;font-size:${big?22:17}px">${spVal(p)}</div>${p.kind==='i'?`<div class="hint">${esc(spSub(p))}</div>`:(p.q?`<div class="hint">${fmt(p.q)} ชิ้น</div>`:'')}<div>${spLikes(p)}</div>${ph(p)}</div>`;
+  const list=(kind,title,sub)=>{
+    const L=P.filter(p=>p.kind===kind&&p.cat==='all').sort((a,b)=>a.rank-b.rank);
+    return `<div class="panel sec"><h3>${title}</h3><div class="hint" style="margin-bottom:8px">${sub}</div>${L.length?`<div style="max-width:320px;margin:0 auto 10px">${card(L[0],true)}</div>${L.length>1?`<div class="spgrid">${L.slice(1).map(p=>card(p,false)).join('')}</div>`:''}`:`<div class="empty">${kind==='i'?'ยังไม่มีคนที่ยอดเพิ่มขึ้นจากช่วงเดียวกันของเดือนก่อน (ต้องมียอดเดือนก่อนเพื่อเทียบ)':'ยังไม่มีข้อมูลยอดขายของเดือนนี้'}</div>`}</div>`};
+  const dEnd=dShort(SP.day),mini=(p,t)=>p?`<div class="spcard" style="flex:1;min-width:200px"><div class="st" style="color:#f0b90b;font-weight:700;font-size:12px">${t}</div><div style="display:flex;gap:8px;align-items:center">${spAvatar(p.m,p.name,48)}<div><div style="font-weight:800">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)}</div></div></div><div class="num up" style="font-weight:800;font-size:17px">${spVal(p)}</div>${p.kind==='i'?`<div class="hint">${esc(spSub(p))}</div>`:(p.q?`<div class="hint">${fmt(p.q)} ชิ้น</div>`:'')}<div>${spLikes(p)}</div>${ph(p)}</div>`:`<div class="spcard" style="flex:1;min-width:200px"><div class="st" style="color:var(--mute);font-weight:700;font-size:12px">${t}</div><div class="hint">ยังไม่มีข้อมูล</div></div>`;
+  const cats=[...new Set(P.filter(p=>p.cat!=='all').map(p=>p.cat))].sort((a,b)=>String(P.find(p=>p.cat===a).catName).localeCompare(String(P.find(p=>p.cat===b).catName)));
+  let h=list('m',`🏆 TOP SALE ประจำเดือน · ${spYm(SP.ym)}`,`ยอดขายสะสมตั้งแต่วันที่ 1 ถึง ${dEnd} · อันดับ 1–5 (นับเฉพาะ Agent)`)+
+    list('i',`📈 TOP SALE Improvement · ${spYm(SP.ym)}`,`เทียบยอดสะสมวันที่ 1–${SP.n} ของเดือนนี้ กับช่วงเดียวกันของ ${spYm(SP.pym)} · เรียงตามยอดที่เพิ่มขึ้น (฿) · อันดับ 1–5`)+
+    `<div class="panel sec"><h3>🛍 TOP SALE และ Improvement แยกตามสินค้า (อย่างละ 1 อันดับ)</h3>${cats.length?cats.map(c=>{const nm=P.find(p=>p.cat===c).catName;return `<div style="margin:10px 0"><div style="font-weight:800;margin-bottom:4px">🛍 ${esc(nm)}</div><div style="display:flex;gap:10px;flex-wrap:wrap">${mini(P.find(p=>p.cat===c&&p.kind==='m'),'🏆 TOP SALE')}${mini(P.find(p=>p.cat===c&&p.kind==='i'),'📈 Improvement')}</div></div>`}).join(''):'<div class="empty">ยังไม่มียอดขายรายสินค้าของเดือนนี้ (บันทึกที่ชีต ProductSales)</div>'}</div>`;
+  if(adm)h+=`<div class="panel sec"><h3>📷 รูปประจำตัว Agent (แอดมิน)</h3><div class="hint" style="margin-bottom:8px">ใส่รูปให้ Agent คนใดก็ได้ ระบบย่อรูปให้อัตโนมัติ (ตัดเป็นสี่เหลี่ยมจัตุรัสจากกลางภาพ) · รูปจะแสดงที่แบนเนอร์ ป๊อปอัป และหน้านี้ เมื่อคนนั้นติดอันดับ</div>
     <div class="mrow" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><select id="phWho">${MEM.filter(AG).map(m=>`<option value="${esc(m.id)}">${esc(m.name)}${m.nick?' ('+esc(m.nick)+')':''}</option>`).join('')}</select><label class="btn primary" style="cursor:pointer">📷 เลือกรูป<input type="file" accept="image/*" hidden id="phFile"></label><button class="btn danger" id="phDel">🗑 ลบรูปคนนี้</button></div><div id="phErr" class="err"></div></div>`;
   el.innerHTML=h;
   const send=async(id,file)=>{try{const img=file?await spResize(file):'';await api('photoSet',{m:id,img});toast(img?'✅ บันทึกรูปแล้ว':'🗑 ลบรูปแล้ว');await ensureSpot(true)}catch(e){const x=$('#phErr');if(x)x.textContent=e.message;toast('⚠️ '+esc(e.message))}};
