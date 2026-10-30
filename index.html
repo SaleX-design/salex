@@ -124,6 +124,10 @@ html,body{overflow-x:hidden}
 .share i{display:block;height:100%}
 
 
+/* tips */
+.tipstrip{display:flex;gap:10px;align-items:center;margin:0 0 14px;padding:10px 12px;border-radius:12px;border:1px solid #f0b90b55;background:var(--panel);cursor:pointer}
+.tipscr{margin:10px 0;padding:10px 12px;border-left:3px solid #f0b90b;background:var(--panel2);border-radius:0 10px 10px 0;display:grid;gap:6px}.tipscr>span{font-size:12px;color:#f0b90b;font-weight:700}.tipscr .btn{justify-self:start}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{padding:5px 12px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:13px;color:var(--text);cursor:pointer}.chip.on{border-color:var(--up);color:var(--up);background:#0ecb8118}
 /* social */
 .plk{color:var(--text);font-weight:700;cursor:pointer;text-decoration:none}.plk:hover{color:var(--up);text-decoration:underline}
 .up{color:var(--up)}.dn{color:var(--down)}
@@ -443,6 +447,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
     <button class="tabbtn" data-tab="run" id="runTab" hidden>🚀 Run Rate</button>
     <button class="tabbtn" data-tab="feed">💬 หัวข้อ &amp; Feedback</button>
     <button class="tabbtn" data-tab="ins">📊 Insight</button>
+    <button class="tabbtn" data-tab="tips">💡 เทคนิคขาย</button>
     <button class="tabbtn" data-tab="svc">🗂 ลา/ร้องเรียน</button>
     <button class="tabbtn" data-tab="game">🎮 เกม</button>
     <button class="tabbtn" data-tab="admin" id="adminTab" hidden>🛠 แอดมิน</button>
@@ -461,6 +466,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 <!-- DASHBOARD -->
 <section id="tab-dash">
   <div id="spotBanner"></div>
+  <div id="tipDay"></div>
   <div class="topstats" id="topStats"></div>
   <div class="topstats c3" id="comStrip"></div>
   <div class="topstats c2" id="svcStrip"></div>
@@ -567,6 +573,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 <section id="tab-prod" hidden><div class="rkctl" id="prCtl"></div><div id="prBody"></div></section>
 <!-- TALK TIME -->
 <section id="tab-feed" hidden><div class="rkctl"><div class="seg" id="feedSeg"><button data-v="feed">💬 หัวข้อสนทนา</button><button data-v="fb">💬 Feedback ถึงแอดมิน</button></div></div><div id="feedBody"></div><div id="fbBody" hidden></div></section>
+<section id="tab-tips" hidden><div id="tipsBody"></div></section>
 <section id="tab-ins" hidden><div id="insBody"></div></section>
 <section id="tab-run" hidden><div class="rkctl" id="runCtl"></div><div id="runBody"></div></section>
 <section id="tab-talk" hidden><div class="rkctl" id="tkCtl"></div><div id="tkBody"></div></section>
@@ -1701,7 +1708,7 @@ document.addEventListener('click',async e=>{
   const b=e.target.closest&&e.target.closest('[data-lk]');if(!b)return;
   const [key,r]=b.dataset.lk.split('|');if(b.dataset.busy)return;b.dataset.busy='1';
   try{const x=await api('spotLike',{key,r});
-    [S.spot&&S.spot.posts,SOC.feed&&SOC.feed.items].forEach(L=>{const p=L&&L.find(z=>z.key===key);if(p){if(r==='heart'){p.heart=x.count;p.mHeart=x.on}else{p.like=x.count;p.mLike=x.on}}});
+    [S.spot&&S.spot.posts,SOC.feed&&SOC.feed.items,TP.d&&TP.d.tips].forEach(L=>{const p=L&&L.find(z=>z.key===key);if(p){if(r==='heart'){p.heart=x.count;p.mHeart=x.on}else{p.like=x.count;p.mLike=x.on}}});
     document.querySelectorAll(`[data-lk="${key}|${r}"]`).forEach(el=>{el.classList.toggle('on',x.on);el.querySelector('b').textContent=x.count})}
   catch(err){toast('⚠️ '+esc(err.message))}finally{delete b.dataset.busy}
 });
@@ -1831,6 +1838,13 @@ function postModal(p){
   $('#poGo').onclick=async()=>{$('#poGo').disabled=true;try{await api('postSave',{id:pid,title:$('#poT').value,body:$('#poB').value,img,keepImg:!!(edit&&keep),pinned:$('#poP')?$('#poP').checked:false});closeModal();toast('✅ บันทึกแล้ว');ensureFeed(true)}catch(er){$('#poE').textContent=er.message;$('#poGo').disabled=false}};
 }
 /* ---- โปรไฟล์ Agent ---- */
+function gradeHTML(id){
+  const ym=curYM(),g=gradeInfo(id,ym);
+  if(!g)return `<div class="panel" style="margin:10px 0;padding:10px"><b>🏅 เกรดประสิทธิภาพการขาย</b> <span class="hint">ยังไม่มีเกรดของเดือนนี้</span></div>`;
+  const p=gradeInfo(id,addMonths(ym,-1)),up=p&&GN.indexOf(g[0])<GN.indexOf(p[0]),dn=p&&GN.indexOf(g[0])>GN.indexOf(p[0]);
+  return `<div class="panel" style="margin:10px 0;padding:12px;display:flex;gap:14px;align-items:center;flex-wrap:wrap"><div style="font-size:44px;line-height:1">${gradeBadge(g[0]).replace('gb ','gb xl ')}</div>
+    <div style="flex:1;min-width:180px"><b>🏅 เกรดประสิทธิภาพการขาย · ${THMON[+ym.slice(5)-1]}</b><div class="hint">${g[1]}% เทียบค่าเฉลี่ย (${GLBL[g[0]]})${up?' · <b class="up">▲ ขึ้นจากเกรด '+p[0]+'</b>':dn?' · <b class="down">▼ ลงจากเกรด '+p[0]+'</b>':p?' · เท่าเดือนก่อน':''}</div></div></div>`;
+}
 function sparkBars(ser,labels,col){
   const W=320,H=70,mx=Math.max(1,...ser),bw=W/ser.length;
   return `<svg viewBox="0 0 ${W} ${H+4}" width="100%" height="${H+4}" preserveAspectRatio="none" style="display:block">${ser.map((v,i)=>`<rect x="${(i*bw+1).toFixed(1)}" y="${(H-v/mx*H).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${Math.max(v>0?2:0,v/mx*H).toFixed(1)}" rx="1.5" fill="${col}" opacity="${v>0?.9:.15}"><title>${THFULL(labels[i])}: ฿${fmt(v)}</title></rect>`).join('')}</svg>`}
@@ -1839,8 +1853,9 @@ async function openProfile(id){
   openModal('<h2>👤 โปรไฟล์</h2><div class="hint">กำลังโหลด…</div>');
   let P;try{P=await api('profile',{m:id})}catch(e){$('#mbox').innerHTML=`<h2>👤 โปรไฟล์</h2><div class="empty">${esc(e.message)}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`;return}
   const col=P.color||tcol(P.team)||'#0ecb81',st=P.stat,mxp=P.prods.length?P.prods[0].a:1;
-  $('#mbox').innerHTML=`<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">${sAv(P.m,P.name,128,P.photo).replace(/data-pf="[^"]*"/,'').replace('cursor:pointer','')}<div><div style="font-size:22px;font-weight:800">${esc(P.name)}</div><div class="hint">${esc(P.teamName)} · ข้อมูล ${ymLabel(P.ym)}</div>
+  $('#mbox').innerHTML=`<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">${sAv(P.m,P.name,128,P.photo).replace(/data-pf="[^"]*"/,'').replace('cursor:pointer','')}<div><div style="font-size:22px;font-weight:800">${esc(P.name)} ${gradeBadge(gradeOfId(P.m,curYM()))}</div><div class="hint">${esc(P.teamName)} · ข้อมูล ${ymLabel(P.ym)}</div>
      <div style="margin-top:4px">${st.rank?`<span class="role">อันดับ ${st.rank}/${P.nAgents}</span> `:''}<span class="role">❤️ ${P.hearts}</span> <span class="role">👍 ${P.likes}</span></div></div></div>
+   ${gradeHTML(P.m)}
    <div class="pst"><div><small>ยอดขายเดือนนี้</small><b class="num">฿${fmt(st.amt)}</b></div><div><small>POINT</small><b class="num">${fmt(st.pt)}</b></div><div><small>SUB</small><b class="num">${fmt(st.sub)}</b></div><div><small>ขายต่อเนื่อง</small><b class="num">${st.streak} วัน</b></div><div><small>TOP SALE รายวัน</small><b class="num">${st.dayWins} ครั้ง</b></div></div>
    <h3 style="margin:10px 0 6px">🏅 เหรียญรางวัล</h3>${P.badges.length?`<div class="bgs">${P.badges.map(b=>`<div class="bgi" title="${esc(b.d)}"><span>${b.e}</span><b>${esc(b.n)}</b><small>${esc(b.d)}</small></div>`).join('')}</div>`:'<div class="hint">ยังไม่มีเหรียญ — ขายต่อเนื่อง 3 วัน หรือขึ้นอันดับ Top 3 เพื่อรับเหรียญแรก 🔥</div>'}
    <h3 style="margin:10px 0 6px">📈 ยอดขาย 30 วันล่าสุด</h3>${sparkBars(st.ser,P.labels,col)}<div class="hint" style="display:flex;justify-content:space-between"><span>${THFULL(P.labels[0])}</span><span>${THFULL(P.labels[29])}</span></div>
@@ -1995,6 +2010,75 @@ async function ensureNoti(){
   if(!D||(SOC.noti&&Date.now()-SOC.nts<180000)||SOC.nbusy)return;
   SOC.nbusy=1;try{SOC.noti=(await api('notify',{})).list;SOC.nts=Date.now();renderBell();renderBnav()}catch(e){if(!SOC.noti)SOC.noti=[]}finally{SOC.nbusy=0}
 }
+
+/* =====================================================================
+   💡 เทคนิคการขาย — Senior/แอดมินเขียน · ทุกคนอ่าน คัดลอกประโยค ❤️ 👍
+   ===================================================================== */
+const TP={d:null,ts:0,cat:'',q:'',prod:''};
+async function ensureTips(force){
+  if(!D)return;
+  if(force||!TP.d||Date.now()-TP.ts>600000){try{TP.d=await api('tips',{});TP.ts=Date.now()}catch(e){if(!TP.d){const el=$('#tipsBody');if(el&&S.tab==='tips')el.innerHTML=`<div class="panel"><div class="err">${esc(e.message)}</div></div>`;return}}}
+  if(S.tab==='tips')renderTips();else if(S.tab==='dash')renderTipStrip();
+}
+function tipOfDay(){
+  const L=(TP.d&&TP.d.tips)||[];if(!L.length)return null;
+  const d=U(today),n=Math.floor((d-Date.UTC(d.getUTCFullYear(),0,0))/864e5);
+  return L[n%L.length];
+}
+function renderTipStrip(){
+  const el=$('#tipDay');if(!el)return;const t=tipOfDay();
+  if(!t){el.innerHTML='';return}
+  el.innerHTML=`<div class="tipstrip" id="tipGo"><span style="font-size:20px">💡</span><div style="flex:1;min-width:0"><div class="hint">เทคนิคการขายวันนี้ · ${esc(t.cat)}</div><div style="font-weight:700">${esc(t.title)}</div></div><span class="btn sm">ดูทั้งหมด →</span></div>`;
+  $('#tipGo').onclick=()=>goTab('tips');
+}
+function tipCard(t,i,open){
+  const scr=t.script?`<div class="tipscr"><span>💬 ตัวอย่างประโยค</span><div style="white-space:pre-wrap">${esc(t.script)}</div><button class="btn sm" data-tcp="${i}">📋 คัดลอกประโยค</button></div>`:'';
+  return `<div class="panel fcard ${open?'tipopen':''}" data-ti="${i}"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="role">${esc(t.cat)}</span>${t.product?`<span class="role">🛍 ${esc(t.product)}</span>`:''}${t.pinned?'<span class="role">📌 แนะนำ</span>':''}<span class="hint" style="margin-left:auto">${esc(t.byName||'')}</span>${t.can?`<span class="pmn"><a data-tpe="${i}" title="แก้ไข">✏️</a> <a data-tpd="${i}" title="ลบ">🗑</a></span>`:''}</div>
+   <div style="font-weight:800;font-size:17px;margin:8px 0 4px">${esc(t.title)}</div><div style="white-space:pre-wrap">${esc(t.body)}</div>${scr}
+   <div class="fact">${spLikes(t)}<span class="hint">กด 👍 ถ้าเทคนิคนี้เอาไปใช้ได้จริง</span></div></div>`;
+}
+function renderTips(){
+  const el=$('#tipsBody');if(!el)return;
+  if(!TP.d){el.innerHTML='<div class="panel"><div class="hint">กำลังโหลด…</div></div>';ensureTips();return}
+  if(Date.now()-TP.ts>600000)ensureTips();
+  const T=TP.d,all=T.tips,q=TP.q.trim().toLowerCase();
+  const prods=[...new Set(all.map(t=>t.product).filter(Boolean))].sort();
+  const L=all.filter(t=>(!TP.cat||t.cat===TP.cat)&&(!TP.prod||t.product===TP.prod)&&(!q||(t.title+' '+t.body+' '+t.script).toLowerCase().includes(q)));
+  const dayT=tipOfDay();
+  let h='';
+  if(T.needSetup)h+=`<div class="panel"><div class="empty">⚠️ ยังไม่มีชีต Tips — ให้แอดมินรันฟังก์ชัน <b>setup</b> ใน Apps Script หนึ่งครั้ง แล้วรีเฟรชหน้านี้</div></div>`;
+  if(dayT&&!TP.cat&&!q&&!TP.prod)h+=`<div class="panel sec" style="border-color:#f0b90b66;background:linear-gradient(135deg,#2a2208,#14181e)"><h3>💡 เทคนิคการขายวันนี้</h3>${tipCard(dayT,all.indexOf(dayT),true).replace('panel fcard','').replace('class="  tipopen"','')}</div>`;
+  h+=`<div class="panel sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="tpQ" type="search" placeholder="🔎 ค้นหาเทคนิค เช่น แพง, ปิดการขาย…" value="${esc(TP.q)}" style="flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--text)">${prods.length?`<select id="tpP"><option value="">🛍 ทุกสินค้า</option>${prods.map(p=>`<option ${TP.prod===p?'selected':''}>${esc(p)}</option>`).join('')}</select>`:''}${T.canPost?`<button class="btn primary" id="tpAdd">✍️ เพิ่มเทคนิค</button>`:''}</div>
+   <div class="chips" style="margin-top:10px">${['',...T.cats].map(c=>`<button class="chip ${TP.cat===c?'on':''}" data-tc="${esc(c)}">${c?esc(c):'ทั้งหมด'}</button>`).join('')}</div></div>`;
+  h+=L.length?L.map(t=>tipCard(t,all.indexOf(t),false)).join(''):'<div class="panel"><div class="empty">ไม่พบเทคนิคที่ตรงกับที่ค้นหา</div></div>';
+  h+=`<div class="hint" style="text-align:center;margin:10px">เทคนิคเขียนโดย Senior/แอดมิน · ใช้เป็นแนวทาง ปรับให้เข้ากับลูกค้าและสไตล์ของตัวเอง</div>`;
+  const keepQ=document.activeElement&&document.activeElement.id==='tpQ';
+  el.innerHTML=h;
+  const qi=$('#tpQ');qi.oninput=e=>{TP.q=e.target.value;clearTimeout(TP.tm);TP.tm=setTimeout(()=>{renderTips();const n=$('#tpQ');if(n){n.focus();n.setSelectionRange(n.value.length,n.value.length)}},250)};
+  if(keepQ){qi.focus();qi.setSelectionRange(qi.value.length,qi.value.length)}
+  if($('#tpP'))$('#tpP').onchange=e=>{TP.prod=e.target.value;renderTips()};
+  $$('[data-tc]').forEach(b=>b.onclick=()=>{TP.cat=b.dataset.tc;renderTips()});
+  if($('#tpAdd'))$('#tpAdd').onclick=()=>tipModal();
+}
+function tipModal(t){
+  t=t||{};const T=TP.d,edit=!!t.id,adm=!!D.isAdmin;
+  const pl=(T.products||[]).map(p=>p.name);
+  openModal(`<h2>${edit?'✏️ แก้ไขเทคนิค':'✍️ เพิ่มเทคนิคการขาย'}</h2>
+   <div class="row2"><div class="fld"><label>หมวด</label><select id="tmC">${T.cats.map(c=>`<option ${t.cat===c?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+   <div class="fld"><label>สินค้าที่เกี่ยวข้อง (ไม่บังคับ)</label><select id="tmP"><option value="">— ทุกสินค้า —</option>${pl.map(p=>`<option ${t.product===p?'selected':''}>${esc(p)}</option>`).join('')}</select></div></div>
+   <div class="fld"><label>หัวข้อ</label><input id="tmT" maxlength="120" value="${esc(t.title||'')}" placeholder="เช่น รับมือ “แพงไป” อย่างไร"></div>
+   <div class="fld"><label>รายละเอียด / ขั้นตอน (เขียนเป็นข้อ ๆ ให้อ่านง่าย)</label><textarea id="tmB" rows="6" maxlength="2000">${esc(t.body||'')}</textarea></div>
+   <div class="fld"><label>ตัวอย่างประโยคที่พูดได้เลย (ไม่บังคับ)</label><textarea id="tmS" rows="3" maxlength="600">${esc(t.script||'')}</textarea></div>
+   ${adm?`<label class="chk"><input type="checkbox" id="tmPin" ${t.pinned?'checked':''}> 📌 ปักหมุดเป็นเทคนิคแนะนำ</label>`:''}
+   <div id="tmE" class="err"></div><div class="mrow"><button class="btn primary" id="tmGo">${edit?'บันทึก':'เพิ่ม'}</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
+  $('#tmGo').onclick=async()=>{$('#tmGo').disabled=true;try{await api('tipSave',{id:t.id||'',cat:$('#tmC').value,product:$('#tmP').value,title:$('#tmT').value,body:$('#tmB').value,script:$('#tmS').value,pinned:$('#tmPin')?$('#tmPin').checked:false});closeModal();toast('✅ บันทึกเทคนิคแล้ว');ensureTips(true)}catch(e){$('#tmE').textContent=e.message;$('#tmGo').disabled=false}};
+}
+document.addEventListener('click',async e=>{
+  const t=e.target;if(!t.closest||!TP.d)return;
+  const cp=t.closest('[data-tcp]');if(cp){const x=TP.d.tips[+cp.dataset.tcp];try{await navigator.clipboard.writeText(x.script);toast('📋 คัดลอกประโยคแล้ว')}catch(er){toast('⚠️ คัดลอกไม่ได้ ลองเลือกข้อความแล้วคัดลอกเอง')}return}
+  const pe=t.closest('[data-tpe]');if(pe){tipModal(TP.d.tips[+pe.dataset.tpe]);return}
+  const pd=t.closest('[data-tpd]');if(pd){const x=TP.d.tips[+pd.dataset.tpd];if(!confirm('ลบเทคนิคนี้?'))return;try{await api('tipDelete',{id:x.id});toast('🗑 ลบแล้ว');ensureTips(true)}catch(er){toast('⚠️ '+esc(er.message))}}
+});
 
 /* ---------- Feedback: Agent ส่งได้ · แอดมินอ่านได้คนเดียว ---------- */
 const FBC=['ทั่วไป','ระบบ / เว็บ SALE X','สวัสดิการ / รางวัล','ทีม / หัวหน้า','ค่าคอม / เป้าหมาย','อื่นๆ'];
@@ -2223,9 +2307,9 @@ function render(){
   if(S.tab==='spot')S.tab='rank';if(S.tab==='fb'){S.tab='feed';S.feedView='fb'}
   if(S.tab==='admin'&&!D.isAdmin)S.tab='dash';
   if(S.tab==='run'&&!D.canSeeAll)S.tab='dash';
-  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
+  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins','tips'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
   $$('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab));
-  if(S.tab==='dash'){rebuildProd();syncControls();renderTop();renderComStrip();renderSvcStrip();renderNews();renderQuote();renderChart();renderBoard();renderDashMix();ensureSpot()}
+  if(S.tab==='dash'){rebuildProd();syncControls();renderTop();renderComStrip();renderSvcStrip();renderNews();renderQuote();renderChart();renderBoard();renderDashMix();ensureSpot();ensureTips()}
   else if(S.tab==='rank'){renderRank();renderSpotTab()}
   else if(S.tab==='com')renderCom();
   else if(S.tab==='road')renderRoad();
@@ -2235,6 +2319,7 @@ function render(){
   else if(S.tab==='run')renderRun();
   else if(S.tab==='feed')renderFeedPage();
   else if(S.tab==='ins')renderIns();
+  else if(S.tab==='tips')renderTips();
   else if(S.tab==='svc')renderSvc();
   else if(S.tab==='game'){if(S.tab!==LASTTAB)GM=null;renderGame()}
   else renderAdmin();
@@ -2664,7 +2749,7 @@ function openInbox(){
 }
 $('#bellBtn').onclick=()=>D&&openInbox();
 /* ---------- เมนู: ลำดับ/ซ่อน ตั้งโดยแอดมิน (config menuOrder) ---------- */
-const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['feed','💬','หัวข้อ','💬 หัวข้อ & Feedback'],['ins','📊','Insight','📊 Insight'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
+const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['feed','💬','หัวข้อ','💬 หัวข้อ & Feedback'],['ins','📊','Insight','📊 Insight'],['tips','💡','เทคนิค','💡 เทคนิคขาย'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
 function menuList(raw){   // คืน [{id,show}] ตามลำดับที่ตั้ง (ที่ไม่ได้ระบุต่อท้ายตามค่าเริ่มต้น)
   const L=[],seen={};String(raw==null?((D.v5&&D.v5.cfg&&D.v5.cfg.menu)||''):raw).split(/[,;\s]+/).filter(Boolean).forEach(x=>{const h=x[0]==='-',id=h?x.slice(1):x;if(seen[id]||!TABDEF.some(t=>t[0]===id))return;seen[id]=1;L.push({id,show:!(h&&id!=='dash'&&id!=='admin')})});
   TABDEF.forEach(t=>{if(!seen[t[0]])L.push({id:t[0],show:true})});return L}
