@@ -438,6 +438,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
   <div class="spacer"></div>
   <nav class="tabs" id="tabs">
     <button class="tabbtn on" data-tab="dash">📈 ยอดขาย</button>
+    <button class="tabbtn" data-tab="prof">👤 PROFILE</button>
     <button class="tabbtn" data-tab="rank">🏆 อันดับ &amp; TOP SALE</button>
     <button class="tabbtn" data-tab="com">💸 คอม</button>
     <button class="tabbtn" data-tab="road">🎁 ROAD MAP &amp; รางวัล</button>
@@ -574,6 +575,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 <!-- TALK TIME -->
 <section id="tab-feed" hidden><div class="rkctl"><div class="seg" id="feedSeg"><button data-v="feed">💬 หัวข้อสนทนา</button><button data-v="fb">💬 Feedback ถึงแอดมิน</button></div></div><div id="feedBody"></div><div id="fbBody" hidden></div></section>
 <section id="tab-tips" hidden><div id="tipsBody"></div></section>
+<section id="tab-prof" hidden><div id="profBody"></div></section>
 <section id="tab-ins" hidden><div id="insBody"></div></section>
 <section id="tab-run" hidden><div class="rkctl" id="runCtl"></div><div id="runBody"></div></section>
 <section id="tab-talk" hidden><div class="rkctl" id="tkCtl"></div><div id="tkBody"></div></section>
@@ -1848,22 +1850,66 @@ function gradeHTML(id){
 function sparkBars(ser,labels,col){
   const W=320,H=70,mx=Math.max(1,...ser),bw=W/ser.length;
   return `<svg viewBox="0 0 ${W} ${H+4}" width="100%" height="${H+4}" preserveAspectRatio="none" style="display:block">${ser.map((v,i)=>`<rect x="${(i*bw+1).toFixed(1)}" y="${(H-v/mx*H).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${Math.max(v>0?2:0,v/mx*H).toFixed(1)}" rx="1.5" fill="${col}" opacity="${v>0?.9:.15}"><title>${THFULL(labels[i])}: ฿${fmt(v)}</title></rect>`).join('')}</svg>`}
-async function openProfile(id){
-  if(!id)return;
-  openModal('<h2>👤 โปรไฟล์</h2><div class="hint">กำลังโหลด…</div>');
-  let P;try{P=await api('profile',{m:id})}catch(e){$('#mbox').innerHTML=`<h2>👤 โปรไฟล์</h2><div class="empty">${esc(e.message)}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`;return}
+function profileInner(P){
   const col=P.color||tcol(P.team)||'#0ecb81',st=P.stat,mxp=P.prods.length?P.prods[0].a:1;
-  $('#mbox').innerHTML=`<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">${sAv(P.m,P.name,128,P.photo).replace(/data-pf="[^"]*"/,'').replace('cursor:pointer','')}<div><div style="font-size:22px;font-weight:800">${esc(P.name)} ${gradeBadge(gradeOfId(P.m,curYM()))}</div><div class="hint">${esc(P.teamName)} · ข้อมูล ${ymLabel(P.ym)}</div>
+    return `<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">${sAv(P.m,P.name,128,P.photo).replace(/data-pf="[^"]*"/,'').replace('cursor:pointer','')}<div class="nopf"><div style="font-size:22px;font-weight:800">${esc(P.name)} ${gradeBadge(gradeOfId(P.m,curYM()))}</div><div class="hint">${esc(P.teamName)} · ข้อมูล ${ymLabel(P.ym)}</div>
      <div style="margin-top:4px">${st.rank?`<span class="role">อันดับ ${st.rank}/${P.nAgents}</span> `:''}<span class="role">❤️ ${P.hearts}</span> <span class="role">👍 ${P.likes}</span></div></div></div>
    ${gradeHTML(P.m)}
    <div class="pst"><div><small>ยอดขายเดือนนี้</small><b class="num">฿${fmt(st.amt)}</b></div><div><small>POINT</small><b class="num">${fmt(st.pt)}</b></div><div><small>SUB</small><b class="num">${fmt(st.sub)}</b></div><div><small>ขายต่อเนื่อง</small><b class="num">${st.streak} วัน</b></div><div><small>TOP SALE รายวัน</small><b class="num">${st.dayWins} ครั้ง</b></div></div>
    <h3 style="margin:10px 0 6px">🏅 เหรียญรางวัล</h3>${P.badges.length?`<div class="bgs">${P.badges.map(b=>`<div class="bgi" title="${esc(b.d)}"><span>${b.e}</span><b>${esc(b.n)}</b><small>${esc(b.d)}</small></div>`).join('')}</div>`:'<div class="hint">ยังไม่มีเหรียญ — ขายต่อเนื่อง 3 วัน หรือขึ้นอันดับ Top 3 เพื่อรับเหรียญแรก 🔥</div>'}
    <h3 style="margin:10px 0 6px">📈 ยอดขาย 30 วันล่าสุด</h3>${sparkBars(st.ser,P.labels,col)}<div class="hint" style="display:flex;justify-content:space-between"><span>${THFULL(P.labels[0])}</span><span>${THFULL(P.labels[29])}</span></div>
    <h3 style="margin:10px 0 6px">🛍 สินค้าที่ขายเดือนนี้</h3>${P.prods.length?P.prods.slice(0,8).map(p=>`<div class="chr"><span class="chnm" style="min-width:110px">${esc(p.name)}</span><span class="chbar"><i style="width:${Math.max(4,Math.round(p.a/mxp*100))}%"></i></span><b class="num">฿${fmt(p.a)}</b></div>`).join(''):'<div class="hint">ยังไม่มีข้อมูลแยกสินค้า</div>'}
-   ${P.canPhoto?`<div style="margin-top:10px"><label class="btn sm" style="cursor:pointer">📷 ใส่/เปลี่ยนรูป<input type="file" accept="image/*" hidden id="pfPh"></label></div>`:''}
-   <div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`;
-  if(P.canPhoto)$('#pfPh').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const img=await spResize(f);await api('photoSet',{m:P.m,img});toast('✅ บันทึกรูปแล้ว');if(S.spot)S.spot.ts=0;await ensureFeed(true);openProfile(P.m)}catch(er){toast('⚠️ '+esc(er.message))}};
+   ${P.canPhoto?`<div style="margin-top:10px"><label class="btn sm" style="cursor:pointer">📷 ใส่/เปลี่ยนรูป<input type="file" accept="image/*" hidden id="pfPh"></label></div>`:''}`;
 }
+function bindProfile(P,again){
+  if(P.canPhoto)$('#pfPh').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const img=await spResize(f);await api('photoSet',{m:P.m,img});toast('✅ บันทึกรูปแล้ว');if(S.spot)S.spot.ts=0;await ensureFeed(true);again()}catch(er){toast('⚠️ '+esc(er.message))}};
+}
+async function openProfile(id){
+  if(!id)return;
+  openModal('<h2>👤 โปรไฟล์</h2><div class="hint">กำลังโหลด…</div>');
+  let P;try{P=await api('profile',{m:id})}catch(e){$('#mbox').innerHTML=`<h2>👤 โปรไฟล์</h2><div class="empty">${esc(e.message)}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`;return}
+  $('#mbox').innerHTML=profileInner(P)+`<div class="mrow"><button class="btn primary" onclick="closeModal();goProf('${esc(P.m)}')">👤 เปิดหน้า PROFILE เต็ม</button><button class="btn" onclick="closeModal()">ปิด</button></div>`;
+  bindProfile(P,()=>openProfile(P.m));
+}
+/* ---- เมนู PROFILE (หน้าเต็ม) ---- */
+function goProf(id){S.profId=id;S.tab='prof';render();scrollTo(0,0)}
+async function renderProfPage(){
+  const el=$('#profBody');if(!el)return;
+  const ags=MEM.filter(AG).slice().sort((a,b)=>String(a.nick||a.name).localeCompare(String(b.nick||b.name),'th'));
+  if(!S.profId||!ags.some(m=>m.id===S.profId))S.profId=(ags.some(m=>m.id===D.me.id)?D.me.id:(ags[0]&&ags[0].id))||'';
+  const id=S.profId,tk=(S.profTk=(S.profTk||0)+1),isMe=ags.some(m=>m.id===D.me.id);
+  el.innerHTML=`<div class="panel sec"><h3>👤 PROFILE พนักงาน</h3><div class="row2"><div class="fld" style="margin:0"><label>เลือกพนักงาน</label><select id="profSel">${TEAMS.map(t=>{const l=ags.filter(m=>m.team===t.id);return l.length?`<optgroup label="${esc(t.name)}">${l.map(m=>`<option value="${esc(m.id)}" ${m.id===id?'selected':''}>${esc(m.nick||m.name)}${m.nick&&m.name!==m.nick?' ('+esc(m.name)+')':''}</option>`).join('')}</optgroup>`:''}).join('')}</select></div>${id!==D.me.id&&isMe?'<div style="align-self:end"><button class="btn sm" id="profMe">กลับไปโปรไฟล์ของฉัน</button></div>':''}</div></div><div id="profCard" class="panel sec"><div class="hint">กำลังโหลด…</div></div>`;
+  $('#profSel').onchange=e=>{S.profId=e.target.value;renderProfPage()};
+  const pm=$('#profMe');if(pm)pm.onclick=()=>{S.profId=D.me.id;renderProfPage()};
+  if(!id){$('#profCard').innerHTML='<div class="empty">ไม่พบพนักงาน</div>';return}
+  let P;try{P=await api('profile',{m:id})}catch(e){if(tk===S.profTk&&$('#profCard'))$('#profCard').innerHTML=`<div class="empty">${esc(e.message)}</div>`;return}
+  if(tk!==S.profTk||S.tab!=='prof'||!$('#profCard'))return;
+  $('#profCard').innerHTML=profileInner(P);bindProfile(P,renderProfPage);
+}
+/* ---- กดชื่อพนักงานที่ไหนก็เปิดโปรไฟล์ได้: ครอบชื่อที่พบในทุกเมนูให้เป็นลิงก์อัตโนมัติ ---- */
+let PFMAP=null,PFBUSY=false;
+function pfMap(){
+  const c={},m={};MEM.filter(AG).forEach(x=>[x.name,x.nick].forEach(n=>{n=String(n||'').trim();if(n.length>1)(c[n]=c[n]||new Set()).add(x.id)}));
+  Object.keys(c).forEach(n=>{if(c[n].size===1)m[n]=[...c[n]][0]});return m}
+function linkNames(){
+  if(PFBUSY||!D)return;PFBUSY=true;
+  try{
+    if(!PFMAP||PFMAP._n!==MEM.length){PFMAP=pfMap();PFMAP._n=MEM.length}
+    const SKIP={SCRIPT:1,STYLE:1,OPTION:1,SELECT:1,TEXTAREA:1,INPUT:1,BUTTON:1,A:1,TITLE:1};
+    const roots=[$('#modal')&&!$('#modal').hidden?$('#mbox'):null,...$$('main section:not([hidden])')].filter(Boolean);
+    roots.forEach(r=>{
+      const w=document.createTreeWalker(r,NodeFilter.SHOW_TEXT,null),hit=[];let n;
+      while(n=w.nextNode()){
+        const t=n.nodeValue.trim();if(t.length<2||t.length>60)continue;const id=PFMAP[t];if(!id)continue;
+        const p=n.parentElement;if(!p||SKIP[p.tagName.toUpperCase()]||p.closest('[data-pf],.nopf,a,button,select,svg,h1'))continue;
+        hit.push([n,id])}
+      hit.forEach(([n,id])=>{const v=n.nodeValue,lead=v.match(/^\s*/)[0],trail=v.match(/\s*$/)[0],a=document.createElement('a');
+        a.className='plk';a.dataset.pf=id;a.textContent=v.trim();const f=document.createDocumentFragment();
+        if(lead)f.appendChild(document.createTextNode(lead));f.appendChild(a);if(trail)f.appendChild(document.createTextNode(trail));n.parentNode.replaceChild(f,n)})
+    })
+  }catch(e){}finally{PFBUSY=false}
+}
+let PFT=0;new MutationObserver(()=>{if(PFBUSY)return;clearTimeout(PFT);PFT=setTimeout(linkNames,120)}).observe(document.body,{childList:true,subtree:true,characterData:true});
 /* ---- 📊 Insight ---- */
 async function ensureIns(force){
   if(!D)return;
@@ -2307,7 +2353,7 @@ function render(){
   if(S.tab==='spot')S.tab='rank';if(S.tab==='fb'){S.tab='feed';S.feedView='fb'}
   if(S.tab==='admin'&&!D.isAdmin)S.tab='dash';
   if(S.tab==='run'&&!D.canSeeAll)S.tab='dash';
-  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins','tips'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
+  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins','tips','prof'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
   $$('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab));
   if(S.tab==='dash'){rebuildProd();syncControls();renderTop();renderComStrip();renderSvcStrip();renderNews();renderQuote();renderChart();renderBoard();renderDashMix();ensureSpot();ensureTips()}
   else if(S.tab==='rank'){renderRank();renderSpotTab()}
@@ -2320,6 +2366,7 @@ function render(){
   else if(S.tab==='feed')renderFeedPage();
   else if(S.tab==='ins')renderIns();
   else if(S.tab==='tips')renderTips();
+  else if(S.tab==='prof')renderProfPage();
   else if(S.tab==='svc')renderSvc();
   else if(S.tab==='game'){if(S.tab!==LASTTAB)GM=null;renderGame()}
   else renderAdmin();
@@ -2749,7 +2796,7 @@ function openInbox(){
 }
 $('#bellBtn').onclick=()=>D&&openInbox();
 /* ---------- เมนู: ลำดับ/ซ่อน ตั้งโดยแอดมิน (config menuOrder) ---------- */
-const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['feed','💬','หัวข้อ','💬 หัวข้อ & Feedback'],['ins','📊','Insight','📊 Insight'],['tips','💡','เทคนิค','💡 เทคนิคขาย'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
+const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['prof','👤','PROFILE','👤 PROFILE'],['feed','💬','หัวข้อ','💬 หัวข้อ & Feedback'],['ins','📊','Insight','📊 Insight'],['tips','💡','เทคนิค','💡 เทคนิคขาย'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
 function menuList(raw){   // คืน [{id,show}] ตามลำดับที่ตั้ง (ที่ไม่ได้ระบุต่อท้ายตามค่าเริ่มต้น)
   const L=[],seen={};String(raw==null?((D.v5&&D.v5.cfg&&D.v5.cfg.menu)||''):raw).split(/[,;\s]+/).filter(Boolean).forEach(x=>{const h=x[0]==='-',id=h?x.slice(1):x;if(seen[id]||!TABDEF.some(t=>t[0]===id))return;seen[id]=1;L.push({id,show:!(h&&id!=='dash'&&id!=='admin')})});
   TABDEF.forEach(t=>{if(!seen[t[0]])L.push({id:t[0],show:true})});return L}
