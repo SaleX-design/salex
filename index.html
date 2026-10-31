@@ -2445,10 +2445,12 @@ const onLeaveOn=(id,k)=>leavesOf(id).find(L=>L.s<=k&&L.e>=k)||null;
 
 /* ---------- Talk Time ---------- */
 const TTM=id=>(D.talk&&D.talk[id])||{};
+const TKOFF=()=>{const v=D.v5&&D.v5.cfg&&D.v5.cfg.talkOff;return v==null||isNaN(+v)?60:+v};
 function talkCell(id,k){
   if(k>today)return {s:'FUT'};
   const L=onLeaveOn(id,k),m=TTM(id)[k];
   if(L&&!L.h)return {s:'LEAVE'};
+  if(m!=null&&m<TKOFF())return {s:'OFF',low:true,raw:m};   // Talk Time ต่ำกว่าเกณฑ์วันหยุด (ค่าเริ่มต้น 60 นาที) = ถือว่าหยุดงาน ไม่นำมานับ/คำนวณ
   if(m!=null)return {s:m>=D.v5.cfg.talkMin?'PASS':'FAIL',m};
   if(!isWorkDay(k))return {s:'OFF'};
   return {s:'NA'};
@@ -2546,6 +2548,51 @@ function parseTalkLines(txt){
     const rest=p.filter(x=>x!==d);rows.push({day:d,m:rest[0],minutes:rest[1]});});
   return rows;
 }
+
+/* ---- กราฟ Talk Time: แท่งเทียน / เส้น / แท่ง × รายวัน / รายเดือน ---- */
+function tkSeries(ids,per,ym){
+  const out=[],dayVals=k=>{const v=[];ids.forEach(id=>{const c=talkCell(id,k);if(c.m!=null)v.push(c.m)});return v};
+  if(per==='day'){const dim=monthDays(ym);for(let d=1;d<=dim;d++){const k=ym+'-'+pad(d);if(k>today)break;const v=dayVals(k);
+    out.push({lab:String(d),full:dayTxt(k),n:v.length,avg:v.length?mean(v):null,hi:v.length?Math.max(...v):null,lo:v.length?Math.min(...v):null})}}
+  else{[-2,-1,0].forEach(o=>{const m=addMonths(curYM(),o),dim=monthDays(m),dv=[];let sum=0,n=0;
+    for(let d=1;d<=dim;d++){const k=m+'-'+pad(d);if(k>today)break;const v=dayVals(k);if(v.length){dv.push(mean(v));v.forEach(x=>{sum+=x;n++})}}
+    out.push({lab:THMON[+m.slice(5)-1],full:THMON[+m.slice(5)-1]+' '+(+m.slice(0,4)+543),n:dv.length,avg:n?sum/n:null,hi:dv.length?Math.max(...dv):null,lo:dv.length?Math.min(...dv):null})})}
+  return out;
+}
+function drawTalkChart(ids,ym){
+  const C=S.tkc,el=$('#tkChart');if(!el)return;
+  const P=tkSeries(ids,C.per,ym),N=P.length,cfg=D.v5.cfg;
+  if(!N||!P.some(p=>p.avg!=null)){el.innerHTML='<div class="empty">ยังไม่มีข้อมูล Talk Time ที่นับได้ในช่วงนี้</div>';$('#tkLg').innerHTML='';return}
+  const W=Math.max(300,el.clientWidth||800),H=260,pl=46,pr=12,pt=12,pb=28,iw=W-pl-pr,ih=H-pt-pb,step=iw/N;
+  const mx=Math.max(cfg.talkMin,...P.map(p=>Math.max(p.hi||0,p.avg||0))),ymax=niceMax(mx*1.08);
+  const X=i=>pl+step*(i+.5),Y=v=>pt+ih-(v/ymax)*ih,fh=v=>(v/60).toFixed(1);
+  let g='';
+  for(let i=0;i<=5;i++){const v=ymax*i/5,y=Y(v);g+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="#222c37" stroke-dasharray="3 5"/><text x="${pl-6}" y="${y+4}" text-anchor="end" font-size="11" fill="#848e9c" font-family="JetBrains Mono,monospace">${fh(v)}</text>`}
+  const every=Math.ceil(N/(W<520?8:16));
+  P.forEach((p,i)=>{if(i%every===(N-1)%every)g+=`<text x="${X(i)}" y="${H-8}" text-anchor="middle" font-size="11" fill="#848e9c">${p.lab}</text>`});
+  g+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(cfg.talkMin)}" y2="${Y(cfg.talkMin)}" stroke="#f0b90b" stroke-dasharray="6 4" opacity=".8"/><text x="${W-pr-2}" y="${Y(cfg.talkMin)-4}" text-anchor="end" font-size="10" fill="#f0b90b">เกณฑ์ ${fh(cfg.talkMin)} ชม.</text>`;
+  const tip=p=>p.avg==null?`${p.full}: ไม่มีข้อมูล`:`${p.full}\nเฉลี่ย ${hms(p.avg)}${C.per==='day'?'':' ต่อวัน'}\nสูงสุด ${hms(p.hi)} · ต่ำสุด ${hms(p.lo)}\n${C.per==='day'?p.n+' คน':p.n+' วันที่นับได้'}`;
+  let defs='';
+  if(C.type==='candle'){
+    const bw=Math.max(3,Math.min(26,step*0.7));let prev=null;
+    P.forEach((p,i)=>{if(p.avg==null)return;const o=prev==null?p.avg:prev,c=p.avg,col=c>=o?'#0ecb81':'#f6465d',yT=Y(Math.max(o,c)),yB=Y(Math.min(o,c));
+      g+=`<line x1="${X(i)}" x2="${X(i)}" y1="${Y(p.hi)}" y2="${Y(p.lo)}" stroke="${col}" stroke-width="1.5"/><rect x="${X(i)-bw/2}" y="${yT}" width="${bw}" height="${Math.max(1.5,yB-yT)}" rx="1.5" fill="${col}"/>`;prev=c});
+  }else if(C.type==='bar'){
+    const bw=Math.max(3,Math.min(38,step*0.78));
+    P.forEach((p,i)=>{if(p.avg==null)return;const y=Y(p.avg),col=p.avg>=cfg.talkMin?'#0ecb81':'#f6465d';g+=`<rect x="${X(i)-bw/2}" y="${y}" width="${bw}" height="${Math.max(1,pt+ih-y)}" rx="2" fill="${col}" opacity=".85"/>`});
+  }else{
+    const segs=[];let cur=[];P.forEach((p,i)=>{if(p.avg==null){if(cur.length)segs.push(cur);cur=[]}else cur.push([i,p.avg])});if(cur.length)segs.push(cur);
+    segs.forEach((sg,j)=>{const pts=sg.map(([i,v])=>`${X(i)},${Y(v)}`).join(' ');
+      if(sg.length>1){defs+=`<linearGradient id="tkg${j}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0ecb81" stop-opacity=".3"/><stop offset="1" stop-color="#0ecb81" stop-opacity="0"/></linearGradient>`;g+=`<polygon points="${X(sg[0][0])},${pt+ih} ${pts} ${X(sg[sg.length-1][0])},${pt+ih}" fill="url(#tkg${j})"/>`}
+      g+=`<polyline points="${pts}" fill="none" stroke="#0ecb81" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+      if(sg.length===1)g+=`<circle cx="${X(sg[0][0])}" cy="${Y(sg[0][1])}" r="3.5" fill="#0ecb81"/>`});
+    const lp=[...P].reverse().findIndex(p=>p.avg!=null);if(lp>=0){const i=N-1-lp;g+=`<circle cx="${X(i)}" cy="${Y(P[i].avg)}" r="4.5" fill="#0ecb81"/>`}
+  }
+  P.forEach((p,i)=>{g+=`<rect x="${pl+step*i}" y="${pt}" width="${step}" height="${ih}" fill="transparent"><title>${esc(tip(p))}</title></rect>`});
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><defs>${defs}</defs>${g}</svg>`;
+  const last=[...P].reverse().find(p=>p.avg!=null);
+  $('#tkLg').innerHTML=(C.type==='candle'?'🕯 เขียว = ค่าเฉลี่ยเพิ่มจากช่วงก่อนหน้า · แดง = ลดลง · ไส้เทียน = สูงสุด–ต่ำสุด · ':'')+`เส้นประเหลือง = เกณฑ์ผ่าน · แกนตั้งเป็นชั่วโมง · ล่าสุด <b>${hms(last.avg)}</b> ชม.:นาที${C.per==='month'?' (ข้อมูลย้อนหลัง 3 เดือน)':''} · วางเมาส์/แตะแท่งเพื่อดูรายละเอียด`;
+}
 function renderTalk(){
   const T=S.tk||(S.tk={ym:curYM()}),ym=T.ym,dim=monthDays(ym),cfg=D.v5.cfg,mgr=D.canManage,minYM=addMonths(curYM(),-2);
   $('#tkCtl').innerHTML=`<input type="month" id="tkM" min="${minYM}" max="${curYM()}" value="${ym}"><span class="hint">เกณฑ์ผ่าน ≥ <b>${hms(cfg.talkMin)}</b> ชม.:นาที/วัน (${cfg.talkMin} นาที) · ข้อมูลย้อนหลังได้ 3 เดือน</span>${teamSelHTML('tkTeam')}`;
@@ -2564,8 +2611,15 @@ function renderTalk(){
       <div class="hint" style="margin:6px 0">1 บรรทัด = 1 รายการ รูปแบบ <b>วันที่, รหัสพนักงาน, นาที</b> เช่น <code>${today}, m2, 210</code> (ครั้งละไม่เกิน 500 บรรทัด)</div>
       <textarea id="tkBulk" rows="5" placeholder="${today}, m2, 210&#10;${today}, m3, 95"></textarea><div class="mrow" style="justify-content:flex-start"><button class="btn" id="tkBulkGo">นำเข้า</button></div></details>
     <div id="tkErr" class="err"></div><div class="hint">💡 หรือแตะช่องในตารางด้านล่างเพื่อแก้ไขนาทีของวันนั้นโดยตรง</div></div>`;
+  const C=S.tkc||(S.tkc={type:'candle',per:'day',who:'all'});if(C.who!=='all'&&!ids.includes(C.who))C.who='all';
+  h+=`<div class="panel sec"><h3>📈 กราฟ Talk Time เฉลี่ย (ชม./วัน) <span class="hint" style="font-weight:400">นับเฉพาะวันที่ ≥ ${TKOFF()} นาที ไม่รวมวันลา</span></h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+      <div class="seg" id="tkcT">${[['candle','🕯 แท่งเทียน'],['line','📈 เส้น'],['bar','📊 แท่ง']].map(([k,l])=>`<button data-v="${k}" class="${C.type===k?'on':''}">${l}</button>`).join('')}</div>
+      <div class="seg" id="tkcP">${[['day','รายวัน'],['month','รายเดือน']].map(([k,l])=>`<button data-v="${k}" class="${C.per===k?'on':''}">${l}</button>`).join('')}</div>
+      <select id="tkcW"><option value="all">👥 ทุกคนที่แสดง (เฉลี่ย)</option>${ids.map(id=>`<option value="${esc(id)}" ${C.who===id?'selected':''}>${esc(memName(id))}</option>`).join('')}</select></div>
+    <div id="tkChart" style="width:100%"></div><div id="tkLg" class="hint" style="margin-top:4px"></div></div>`;
   h+=`<div class="panel"><h3>📅 ตาราง Talk Time · ${THMON[+ym.slice(5)-1]} ${+ym.slice(0,4)+543}</h3>
-    <div class="tklg"><span><i style="background:#0ecb8133;border:1px solid #0ecb81"></i>ผ่านเกณฑ์</span><span><i style="background:#f6465d33;border:1px solid #f6465d"></i>ต่ำกว่าเกณฑ์</span><span><i style="background:#b388ff2e;border:1px solid #b388ff"></i>ลา</span><span><i style="background:#11161c;border:1px solid #2a3541"></i>วันหยุด</span><span><i style="background:transparent;border:1px solid #2a3541"></i>NA ไม่มีข้อมูล</span></div>
+    <div class="tklg"><span><i style="background:#0ecb8133;border:1px solid #0ecb81"></i>ผ่านเกณฑ์</span><span><i style="background:#f6465d33;border:1px solid #f6465d"></i>ต่ำกว่าเกณฑ์</span><span><i style="background:#b388ff2e;border:1px solid #b388ff"></i>ลา</span><span><i style="background:#11161c;border:1px solid #2a3541"></i>วันหยุด (รวมวันที่ Talk Time &lt; ${TKOFF()} นาที)</span><span><i style="background:transparent;border:1px solid #2a3541"></i>NA ไม่มีข้อมูล</span></div>
     <div class="tkwrap"><table class="tkm"><thead><tr><th class="n">ชื่อ</th>${Array.from({length:dim},(_,i)=>{const k=ym+'-'+pad(i+1);return `<th title="${dayTxt(k)}"${k===today?' style="color:var(--flat)"':''}>${i+1}<br><span style="font-weight:400;opacity:.6">${WDN[U(k).getUTCDay()]}</span></th>`}).join('')}<th class="a">เฉลี่ย</th><th class="a">ผ่าน</th></tr></thead><tbody>`;
   const teamsShown=TEAMS.filter(t=>ids.some(id=>memOf(id).team===t.id));
   teamsShown.forEach(t=>{
@@ -2577,12 +2631,15 @@ function renderTalk(){
     tids.forEach(id=>{
       const m=memOf(id),sm=talkSum(id,ym);
       h+=`<tr class="${id===D.me.id?'me':''}"><td class="n" title="${esc(m.name)}">${esc(m.nick||m.name)}${gradeFor(id,ym)}</td>${Array.from({length:dim},(_,i)=>{const k=ym+'-'+pad(i+1),c=talkCell(id,k);
-        const txt=c.s==='LEAVE'?'ลา':c.m!=null?hms(c.m):c.s==='NA'?'·':'';
-        return `<td class="${c.s}${mgr&&c.s!=='FUT'?' cl':''}" ${mgr&&c.s!=='FUT'?`data-tc="${esc(id)}|${k}"`:''} title="${dayTxt(k)}${c.m!=null?' · '+hms(c.m)+' ชม. ('+Math.round(c.m)+' นาที)':''}${c.s==='LEAVE'?' · ลา':''}">${txt}</td>`}).join('')}<td class="a ${sm.avg==null?'':sm.avg>=cfg.talkMin?'PASS':'FAIL'}">${sm.avg==null?'–':hms(sm.avg)}</td><td class="a">${sm.pass}/${sm.n}</td></tr>`;
+        const txt=c.s==='LEAVE'?'ลา':c.low?'หยุด':c.m!=null?hms(c.m):c.s==='NA'?'·':'';
+        return `<td class="${c.s}${mgr&&c.s!=='FUT'?' cl':''}" ${mgr&&c.s!=='FUT'?`data-tc="${esc(id)}|${k}"`:''} title="${dayTxt(k)}${c.m!=null?' · '+hms(c.m)+' ชม. ('+Math.round(c.m)+' นาที)':''}${c.low?' · Talk Time '+Math.round(c.raw)+' นาที ต่ำกว่า '+TKOFF()+' นาที → นับเป็นวันหยุด':''}${c.s==='LEAVE'?' · ลา':''}">${txt}</td>`}).join('')}<td class="a ${sm.avg==null?'':sm.avg>=cfg.talkMin?'PASS':'FAIL'}">${sm.avg==null?'–':hms(sm.avg)}</td><td class="a">${sm.pass}/${sm.n}</td></tr>`;
     });
   });
-  h+=`</tbody></table></div><div class="hint" style="margin-top:8px">เฉลี่ย = ค่าเฉลี่ยนาทีของวันที่มีข้อมูล (ไม่รวมวันลาและ NA) · แถว “(เฉลี่ย)” คือค่าเฉลี่ยของทั้งทีมในแต่ละวัน</div></div>`;
+  h+=`</tbody></table></div><div class="hint" style="margin-top:8px">เฉลี่ย = ค่าเฉลี่ยนาทีของวันที่มีข้อมูล (ไม่รวมวันลา, NA และวันที่ Talk Time ต่ำกว่า ${TKOFF()} นาที ซึ่งถือเป็นวันหยุด) · แถว “(เฉลี่ย)” คือค่าเฉลี่ยของทั้งทีมในแต่ละวัน</div></div>`;
   $('#tkBody').innerHTML=h;
+  drawTalkChart(C.who==='all'?ids:[C.who],ym);
+  $$('#tkcT button').forEach(b=>b.onclick=()=>{C.type=b.dataset.v;renderTalk()});$$('#tkcP button').forEach(b=>b.onclick=()=>{C.per=b.dataset.v;renderTalk()});
+  $('#tkcW').onchange=e=>{C.who=e.target.value;renderTalk()};
   const send=async rows=>{try{const r=await api('talkSet',{rows});toast(`✅ บันทึก Talk Time ${r.saved} รายการ`);await load();render()}catch(e){if($('#tkErr'))$('#tkErr').textContent=e.message;else toast('⚠️ '+esc(e.message))}};
   if(mgr){
     $('#tkGo').onclick=()=>send([{day:$('#tkDay').value,m:$('#tkWho').value,minutes:$('#tkMin').value}]);
@@ -2835,6 +2892,7 @@ function admOps(el){
     <button class="btn primary" id="oCal">บันทึกปฏิทิน</button></div>
   <div class="panel sec"><h3>⏱ Talk Time · 🏅 เกรด · 🗂 ร้องเรียน</h3><div class="row2">
     <div class="fld" style="margin:0"><label>เกณฑ์ Talk Time ผ่าน (นาที/วัน)</label><input type="number" id="oTm" min="0" max="1440" value="${v.talkMin}"></div>
+    <div class="fld" style="margin:0"><label>Talk Time ต่ำกว่า (นาที) = ถือเป็นวันหยุด ไม่นำมาคำนวณ</label><input type="number" id="oTo" min="0" max="1440" value="${v.talkOff==null?60:v.talkOff}"></div>
     <div class="fld" style="margin:0"><label>วิธีคิดเกรด</label><select id="oGb"><option value="perday">POINT ต่อวันทำงานจริง (หักวันลา) — แนะนำ</option><option value="total">POINT รวมทั้งเดือน</option></select></div>
     <div class="fld" style="margin:0"><label>SLA Low (ชม.)</label><input type="number" id="oS1" min="1" value="${v.slaLow}"></div><div class="fld" style="margin:0"><label>SLA Medium (ชม.)</label><input type="number" id="oS2" min="1" value="${v.slaMedium}"></div>
     <div class="fld" style="margin:0"><label>SLA High (ชม.)</label><input type="number" id="oS3" min="1" value="${v.slaHigh}"></div><div class="fld" style="margin:0"><label>SLA Critical (ชม.)</label><input type="number" id="oS4" min="1" value="${v.slaCritical}"></div>
@@ -2855,7 +2913,7 @@ function admOps(el){
   $('#oGb').value=v.gradeBasis;
   const save=async(body,msg)=>{try{await api('setConfig5',body);ADM.content=null;ADM.editWheel=null;ADM.editMenu=null;GM=null;toast('✅ '+msg);await load();render()}catch(e){$('#oErr').textContent=e.message;toast('⚠️ '+esc(e.message))}};
   $('#oCal').onclick=()=>save({weekOff:$$('[data-wo]').filter(x=>x.checked).map(x=>x.dataset.wo).join(','),holidays:$('#oHol').value.replace(/\n/g,',')},'บันทึกปฏิทินแล้ว — Runrate/คอม คำนวณใหม่ทันที');
-  $('#oSv').onclick=()=>save({talkMin:+$('#oTm').value,gradeBasis:$('#oGb').value,slaLow:+$('#oS1').value,slaMedium:+$('#oS2').value,slaHigh:+$('#oS3').value,slaCritical:+$('#oS4').value,penCritical:+$('#oP1').value,penSla:+$('#oP2').value,complaintCats:$('#oCats').value},'บันทึกแล้ว');
+  $('#oSv').onclick=()=>save({talkMin:+$('#oTm').value,talkOff:+$('#oTo').value,gradeBasis:$('#oGb').value,slaLow:+$('#oS1').value,slaMedium:+$('#oS2').value,slaHigh:+$('#oS3').value,slaCritical:+$('#oS4').value,penCritical:+$('#oP1').value,penSla:+$('#oP2').value,complaintCats:$('#oCats').value},'บันทึกแล้ว');
   const grabW=()=>wheel.map((_,i)=>({l:document.querySelector(`[data-wl="${i}"]`).value,t:+document.querySelector(`[data-wt="${i}"]`).value||0,k:+document.querySelector(`[data-wk="${i}"]`).value||0,w:+document.querySelector(`[data-ww="${i}"]`).value||0}));
   $('#wAdd').onclick=()=>{const w=grabW();w.push({l:'+3 TOKEN',t:3,k:0,w:10});ADM.editWheel=w;render()};
   $$('[data-wx]').forEach(b=>b.onclick=()=>{const w=grabW();w.splice(+b.dataset.wx,1);ADM.editWheel=w;render()});
