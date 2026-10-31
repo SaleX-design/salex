@@ -593,6 +593,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
     <button data-a="rw">🎁 จัดการรางวัล</button>
     <button data-a="prod">🏷 สินค้า/Skill</button>
     <button data-a="ops">⚙️ งานบริการ/เกม</button>
+    <button data-a="live">👥 ออนไลน์</button>
     <button data-a="audit">ตรวจข้อมูล</button>
     <button data-a="set">ตั้งค่า</button>
   </div>
@@ -1194,8 +1195,30 @@ async function renderAdmin(){
   else if(S.adm==='rw'){if(!ADM.content)await admLoad('content');admRewards(body)}
   else if(S.adm==='prod'){if(!ADM.content)await admLoad('content');if(!ADM.psales)await admLoad('psales');admProducts(body)}
   else if(S.adm==='ops'){if(!ADM.content)await admLoad('content');admOps(body)}
+  else if(S.adm==='live'){admLive(body)}
   else if(S.adm==='audit'){await admLoad('audit');admAudit(body)}
   else{if(!ADM.content)await admLoad('content');admSettings(body)}
+}
+
+/* ---- 👥 ออนไลน์ตอนนี้ (เฉพาะแอดมิน) ---- */
+let LIVE_T=0;
+async function admLive(body){
+  clearInterval(LIVE_T);body.innerHTML='<div class="panel"><div class="hint">กำลังโหลด…</div></div>';
+  const draw=async()=>{
+    if(S.tab!=='admin'||S.adm!=='live'||!$('#admBody')){clearInterval(LIVE_T);return}
+    let P;try{P=await api('presence')}catch(e){body.innerHTML=`<div class="panel"><div class="err">${esc(e.message)}</div></div>`;return}
+    const mx=Math.max(1,...P.hourly),h0=Math.max(0,P.hourly.findIndex(v=>v>0)),h1=Math.min(23,Math.max(h0+6,23-[...P.hourly].reverse().findIndex(v=>v>0)));
+    const hrs=[];for(let h=Math.min(h0,6);h<=Math.max(h1,20);h++)hrs.push(h);
+    body.innerHTML=`<div class="topstats c3" style="margin-bottom:12px"><div class="tcell up"><small>🟢 ออนไลน์ตอนนี้</small><div class="tv">${P.online} <span style="font-size:14px;color:var(--mute)">คน</span></div><div class="ts">เปิดหน้าเว็บอยู่ภายใน 3 นาทีที่ผ่านมา</div></div>
+      <div class="tcell"><small>📅 เข้าใช้วันนี้</small><div class="tv">${P.today} <span style="font-size:14px;color:var(--mute)">/ ${P.total} คน</span></div><div class="ts">นับทุกคนที่เปิดหน้าเว็บอย่างน้อย 1 ครั้ง</div></div>
+      <div class="tcell"><small>🕒 เวลาเซิร์ฟเวอร์</small><div class="tv">${esc(P.now)}</div><div class="ts">รีเฟรชอัตโนมัติทุก 30 วินาที</div></div></div>
+    ${P.noSheet?'<div class="panel"><div class="err">ยังไม่มีชีต Presence — ให้รันฟังก์ชัน setup ใน Apps Script ก่อน (ตอนนี้ดูได้เฉพาะคนออนไลน์ปัจจุบัน ยังไม่มีประวัติรายชั่วโมง)</div></div>':''}
+    <div class="panel sec"><h3>📊 จำนวนคนที่ใช้งานแต่ละชั่วโมง (วันนี้)</h3><div style="display:flex;gap:3px;align-items:flex-end;height:110px">${hrs.map(h=>`<div style="flex:1;text-align:center;font-size:10px;color:var(--mute)" title="${pad(h)}:00 น. · ${P.hourly[h]} คน"><div style="font-size:10px">${P.hourly[h]||''}</div><div style="height:${Math.round(P.hourly[h]/mx*80)}px;min-height:${P.hourly[h]?2:0}px;background:var(--up);border-radius:3px 3px 0 0;opacity:.85"></div>${pad(h)}</div>`).join('')}</div><div class="hint" style="margin-top:4px">นับคนที่เปิดหน้าเว็บอย่างน้อย 1 ครั้งในชั่วโมงนั้น</div></div>
+    <div class="panel sec"><h3>👥 รายชื่อผู้ใช้งานวันนี้ (${P.list.length} คน)</h3>${P.list.length?`<div class="tblwrap" style="max-height:420px;overflow:auto"><table class="atbl"><thead><tr><th>สถานะ</th><th>ชื่อ</th><th>ทีม</th><th class="r">เข้าครั้งแรก</th><th class="r">ล่าสุด</th></tr></thead><tbody>${P.list.map(x=>`<tr><td>${x.online?'<span class="up">🟢 ออนไลน์</span>':'<span class="hint">⚪ ออกแล้ว</span>'}</td><td>${esc(x.name)}${x.role?` <span class="role">${esc(ROLE[x.role]||x.role)}</span>`:''}</td><td class="hint">${esc((teamOf(x.team)||{}).name||x.team)}</td><td class="r num">${esc(x.first)||'–'}</td><td class="r num">${esc(x.last)||'–'}${x.online&&x.ago!=null?` <span class="hint">(${x.ago<60?x.ago+' วิ':Math.round(x.ago/60)+' นาที'}ที่แล้ว)</span>`:''}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">ยังไม่มีผู้ใช้งานวันนี้</div>'}</div>
+    <div class="panel sec"><h3>📈 ย้อนหลัง 7 วัน</h3>${P.hist.length?`<table class="atbl"><thead><tr><th>วันที่</th><th class="r">จำนวนผู้ใช้</th><th class="r">ช่วงที่คนใช้มากสุด</th></tr></thead><tbody>${P.hist.slice().reverse().map(x=>`<tr><td>${dShort(x.d)}</td><td class="r num">${x.n} คน</td><td class="r num">${x.peak!==''?pad(+x.peak)+':00 น. ('+x.peakN+' คน)':'–'}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">ยังไม่มีประวัติ — จะเริ่มเก็บตั้งแต่เปิดใช้เวอร์ชันนี้</div>'}
+    <div class="hint" style="margin-top:6px">ข้อมูลนี้เห็นเฉพาะแอดมิน · ระบบนับเมื่อหน้าเว็บเปิดและแสดงอยู่ (ถ้าสลับไปแท็บอื่นหรือปิดจอ จะไม่นับ) · เวลาเป็นเวลาไทย</div></div>`;
+  };
+  await draw();LIVE_T=setInterval(draw,30000);
 }
 function memName(id){const m=memOf(id);return m?`${m.name} (${m.tick})`:id}
 function periodInput(type){
@@ -2599,10 +2622,14 @@ function renderTalk(){
   bindTeamSel('tkTeam',renderTalk);
   $('#tkM').onchange=e=>{if(e.target.value&&e.target.value>=minYM&&e.target.value<=curYM()){T.ym=e.target.value;renderTalk()}};
   const ids=MEM.filter(m=>AG(m)&&teamOk(m)).sort((a,b)=>(a.team>b.team?1:a.team<b.team?-1:0)||(a.nick||a.name).localeCompare(b.nick||b.name,'th')).map(m=>m.id);
-  const my=talkSum(D.me.id,ym);
-  let h=`<div class="topstats c3" style="margin-bottom:14px"><div class="tcell ${my.avg==null?'':my.avg>=cfg.talkMin?'up':'down'}"><small>⏱ ค่าเฉลี่ยของคุณ</small><div class="tv">${my.avg==null?'–':hms(my.avg)} <span style="font-size:14px;color:var(--mute)">ชม:นาที/วัน</span></div><div class="ts">นับเฉพาะวันที่มีข้อมูล ไม่รวมวันลา</div></div>
-    <div class="tcell up"><small>✅ ผ่านเกณฑ์</small><div class="tv">${my.pass} <span style="font-size:14px;color:var(--mute)">วัน</span></div><div class="ts">ต่ำกว่าเกณฑ์ ${my.fail} วัน</div></div>
-    <div class="tcell" style="--acc:var(--purple)"><small>🏖 วันลา (ไม่นับเป็นวันขาด)</small><div class="tv" style="color:var(--purple)">${my.leave} <span style="font-size:14px;color:var(--mute)">วัน</span></div><div class="ts">ลาที่อนุมัติแล้วจะแสดงเป็น “ลา” อัตโนมัติ</div></div></div>`;
+  let my=talkSum(D.me.id,ym),grp=false;
+  if(!my.n&&!my.leave&&!AG(memOf(D.me.id)||{})){   // แอดมิน/Senior ไม่มี Talk Time ของตัวเอง → สรุปรวมของคนที่แสดงอยู่แทน
+    const g={n:0,sum:0,pass:0,fail:0,leave:0};ids.forEach(id=>{const x=talkSum(id,ym);if(x.n){g.sum+=x.avg*x.n;g.n+=x.n}g.pass+=x.pass;g.fail+=x.fail;g.leave+=x.leave});
+    my={avg:g.n?g.sum/g.n:null,n:g.n,pass:g.pass,fail:g.fail,leave:g.leave};grp=true}
+  const who=grp?'ของทุกคนที่แสดง':'ของคุณ',un=grp?'วัน-คน':'วัน';
+  let h=`<div class="topstats c3" style="margin-bottom:14px"><div class="tcell ${my.avg==null?'':my.avg>=cfg.talkMin?'up':'down'}"><small>⏱ ค่าเฉลี่ย${who}</small><div class="tv">${my.avg==null?'–':hms(my.avg)} <span style="font-size:14px;color:var(--mute)">ชม:นาที/วัน</span></div><div class="ts">นับเฉพาะวันที่มีข้อมูล ไม่รวมวันลา</div></div>
+    <div class="tcell up"><small>✅ ผ่านเกณฑ์</small><div class="tv">${my.pass} <span style="font-size:14px;color:var(--mute)">${un}</span></div><div class="ts">ต่ำกว่าเกณฑ์ ${my.fail} ${un}</div></div>
+    <div class="tcell" style="--acc:var(--purple)"><small>🏖 วันลา (ไม่นับเป็นวันขาด)</small><div class="tv" style="color:var(--purple)">${my.leave} <span style="font-size:14px;color:var(--mute)">${un}</span></div><div class="ts">ลาที่อนุมัติแล้วจะแสดงเป็น “ลา” อัตโนมัติ</div></div></div>`;
   if(mgr)h+=`<div class="panel sec"><h3>✏️ บันทึก Talk Time (Leader / แอดมิน)</h3>
     <div class="row2"><div class="fld" style="margin:0"><label>พนักงาน</label><select id="tkWho">${MEM.map(m=>`<option value="${esc(m.id)}">${esc(m.name)} (${esc(m.tick)})</option>`).join('')}</select></div>
       <div class="fld" style="margin:0"><label>วันที่</label><input type="date" id="tkDay" max="${today}" value="${today}"></div>
