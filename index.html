@@ -458,7 +458,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
   <div class="userchip" id="userChip"></div>
 </header>
 
-<div class="tape"><div class="tape-in" id="tape"></div></div>
+<div class="tape" style="position:relative"><div class="tape-in" id="tape"></div><button id="tapeSpd" class="btn sm" title="ปรับความเร็วแถบตัวเลข" style="position:absolute;right:6px;top:5px;padding:0 8px;height:26px;opacity:.85;background:#0b0f14ee"></button></div>
 
 <main>
 <div id="bcast"></div>
@@ -810,14 +810,18 @@ function renderHeader(){
   $('#banner').innerHTML=`<span>📡 ข้อมูลยอดขายอัปเดตถึง <b>${D.asOf?dShort(D.asOf):'— ยังไม่มีข้อมูล'}</b> · โหลดล่าสุด ${age}</span><span>${D.visibility==='self'?'🔒 คุณเห็นเฉพาะข้อมูลของตัวเอง':D.visibility==='team'?'👥 เห็นข้อมูลภายในทีม':'👀 เห็นข้อมูลทุกคน'}${D.isAdmin?' · (แอดมินเห็นทุกคน)':''}</span>`;
 }
 let LASTLOAD=null;
+const TSPD=[{n:'⏸ หยุด',v:0},{n:'🐢 ช้ามาก',v:15},{n:'🚶 ช้า',v:30},{n:'🏃 ปกติ',v:60},{n:'🐇 เร็ว',v:110}];
+function tapeSpd(){let i=2;try{const x=localStorage.getItem('sx_tape');if(x!==null&&TSPD[+x])i=+x}catch(e){}return Object.assign({i},TSPD[i])}
+function tapeUi(){const b=$('#tapeSpd');if(!b)return;const t=tapeSpd();b.textContent=t.n;
+  b.onclick=()=>{const n=(t.i+1)%TSPD.length;try{localStorage.setItem('sx_tape',n)}catch(e){}renderTicker()}}
 function renderTicker(){
   const items=[];
   if(MEM.length>1){items.push({code:'ALL',ids:MEM.map(m=>m.id)});TEAMS.forEach(t=>items.push({code:'T-'+t.id,ids:memIds(t.id)}))}
   MEM.forEach(m=>items.push({code:m.tick,ids:[m.id]}));
   let h='';items.forEach(it=>{const p=perf(it.ids);if(!p.known||(!p.cur&&!p.prev))return;h+=`<span class="tk"><b>${esc(it.code)}</b><span class="${cls(p.diff)}">${p.known?fv(p.cur):'–'}</span><span class="${cls(p.diff)}">${arrow(p.diff)} ${pctTxt(p.pct)}</span></span>`});
   if(!h)h=`<span class="tk"><b>SALE X</b><span class="flat">ยังไม่มีข้อมูลยอดขายในช่วงนี้ — ลองเปลี่ยนวันที่หรือกด “รายเดือน”</span></span>`;
-  const el=$('#tape');el.innerHTML=h+h;const SPD=30,dur=Math.max(60,Math.round((el.scrollWidth/2)/SPD));   // ความเร็วคงที่ ~30 px/วินาที (เลขน้อย=ช้า) ไม่ขึ้นกับจำนวนพนักงาน
-  el.style.animationDuration=dur+'s';el.style.animationDelay='-'+((Date.now()/1000)%dur).toFixed(2)+'s';
+  const el=$('#tape');el.innerHTML=h+h;const SPD=tapeSpd().v,dur=Math.max(8,Math.round((el.scrollWidth/2)/(SPD||30)));   // ความเร็วคงที่ ~30 px/วินาที (เลขน้อย=ช้า) ไม่ขึ้นกับจำนวนพนักงาน
+  el.style.animationDuration=dur+'s';el.style.animationDelay='-'+((Date.now()/1000)%dur).toFixed(2)+'s';el.style.animationPlayState=SPD?'':'paused';tapeUi();
 }
 setInterval(()=>{const n=new Date();$('#clock').textContent=`${n.getDate()} ${THMON[n.getMonth()]} ${n.getFullYear()+543} · ${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`},1000);
 
