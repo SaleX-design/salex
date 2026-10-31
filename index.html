@@ -1724,6 +1724,28 @@ function renderSpotBanner(){
   $('#spbX').onclick=()=>{try{sessionStorage.setItem('sx_spb',S.spot.day)}catch(e){}el.innerHTML=''};
   $('#spbAll').onclick=()=>goTab('rank');
 }
+/* ---- 📢 ประกาศ/โพสต์หัวข้อใหม่ เด้งเป็น POP UP ที่หน้าหลัก (ครั้งเดียวต่อโพสต์ต่อคน) ---- */
+const PPK='sx_ppop_';
+async function ensurePostPop(){
+  if(!D||S.ppopDone)return;S.ppopDone=1;
+  await ensureFeed(false);postPopupOnce();
+}
+function ppClose(){closeModal();setTimeout(spPopupOnce,200)}
+function postPopupOnce(){
+  const F=SOC.feed;if(!F||!F.items||S.tab!=='dash'||!$('#modal').hidden)return;
+  let seen={};try{seen=JSON.parse(localStorage.getItem(PPK+D.me.id)||'{}')||{}}catch(e){seen={}}
+  const now=Date.now(),sig=p=>p.key+'@'+p.ts;
+  const c=F.items.filter(p=>!seen[sig(p)]&&(p.pinned||now-p.ts<14*864e5)).sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||b.ts-a.ts)[0];
+  if(!c)return;
+  seen[sig(c)]=now;const ks=Object.keys(seen);if(ks.length>60)ks.sort((a,b)=>seen[a]-seen[b]).slice(0,ks.length-60).forEach(k=>delete seen[k]);
+  try{localStorage.setItem(PPK+D.me.id,JSON.stringify(seen))}catch(e){}
+  const body=String(c.body||''),cut=body.length>500?body.slice(0,500)+'…':body;
+  openModal(`<div style="display:flex;gap:10px;align-items:center">${sAv(c.by,c.name,40)}<div><b>📢 ประกาศจาก ${esc(c.name)}</b>${c.pinned?' <span class="role">📌 ปักหมุด</span>':''}<div class="hint">${sAgo(c.ts)}</div></div></div>
+    <h2 style="margin:12px 0 6px">${esc(c.title)}</h2>${cut?`<div style="white-space:pre-wrap;word-break:break-word">${esc(cut)}</div>`:''}
+    ${c.img?`<img src="${c.img}" alt="" style="max-width:100%;max-height:45vh;border-radius:10px;margin-top:10px;display:block">`:''}
+    <div class="mrow"><button class="btn primary" id="ppGo">💬 ดูโพสต์ / แสดงความคิดเห็น</button><button class="btn" id="ppX">ปิด</button></div>`);
+  $('#ppGo').onclick=()=>{closeModal();goTab('feed')};$('#ppX').onclick=ppClose;
+}
 function spPopupOnce(){
   if(!S.spot||S.spotPop||S.tab==='rank'||!$('#modal').hidden)return;
   const m=spTop('m'),i=spTop('i');if(!m&&!i)return;
@@ -2383,7 +2405,7 @@ function render(){
   if(S.tab==='run'&&!D.canSeeAll)S.tab='dash';
   ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins','tips','prof'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
   $$('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab));
-  if(S.tab==='dash'){rebuildProd();syncControls();renderTop();renderComStrip();renderSvcStrip();renderNews();renderQuote();renderChart();renderBoard();renderDashMix();ensureSpot();ensureTips()}
+  if(S.tab==='dash'){rebuildProd();syncControls();renderTop();renderComStrip();renderSvcStrip();renderNews();renderQuote();renderChart();renderBoard();renderDashMix();ensureSpot();ensureTips();ensurePostPop()}
   else if(S.tab==='rank'){renderRank();renderSpotTab()}
   else if(S.tab==='com')renderCom();
   else if(S.tab==='road')renderRoad();
