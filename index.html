@@ -650,7 +650,7 @@ const tsTxt=ts=>{const d=new Date(ts);return `${d.getDate()} ${THMON[d.getMonth(
 /* ---------- toast / modal / confetti ---------- */
 function toast(html,gold){const t=document.createElement('div');t.className='toast'+(gold?' gold':'');t.innerHTML=html;$('#toasts').appendChild(t);setTimeout(()=>{t.style.transition='.4s';t.style.opacity=0;setTimeout(()=>t.remove(),400)},gold?6000:4200)}
 function openModal(html){$('#mbox').innerHTML=html;$('#modal').hidden=false}
-function closeModal(){FORCEPW=false;$('#modal').hidden=true}
+function closeModal(){FORCEPW=false;$('#modal').hidden=true;if(typeof popNext==='function')setTimeout(popNext,350)}
 let FORCEPW=false;
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!FORCEPW)closeModal()});
 addEventListener('keydown',e=>{if(e.key==='Escape'&&!FORCEPW)closeModal()});
@@ -765,6 +765,7 @@ $('#gApi').onclick=()=>{
   u?LS.set('sb_api',u):LS.del('sb_api');LS.del('sb_token');location.reload();
 };
 async function enter(mustChange){
+  S.ppopDone=0;S.popQ=null;S.popI=0;S.spotPop=0;   // เริ่มคิว POP UP ใหม่ทุกครั้งที่ Log in / รีเฟรช
   const d=await load();
   $('#gate').hidden=true;render();
   if(d.mustChange||mustChange)openPwModal(true);
@@ -1711,7 +1712,7 @@ async function ensureSpot(force){
   if(!D)return;
   if(force||!S.spot||Date.now()-S.spot.ts>120000){try{const r=await api('spotlight',{});S.spot=Object.assign(r,{ts:Date.now()})}catch(e){if(!S.spot)return}}
   if(S.tab==='dash')renderSpotBanner();else if(S.tab==='rank')renderSpotTab(true);
-  spPopupOnce();
+  if(S.tab==='dash')popNext();else spPopupOnce();
 }
 function spTop(kind){return S.spot&&S.spot.pym&&S.spot.posts.find(p=>p.kind===kind&&p.cat==='all'&&p.rank===1)}
 function renderSpotBanner(){
@@ -1726,32 +1727,31 @@ function renderSpotBanner(){
 }
 /* ---- 📢 ประกาศ/โพสต์หัวข้อใหม่ เด้งเป็น POP UP ที่หน้าหลัก (ครั้งเดียวต่อโพสต์ต่อคน) ---- */
 const PPK='sx_ppop_';
-async function ensurePostPop(){
-  if(!D||S.ppopDone)return;S.ppopDone=1;
-  await ensureFeed(false);postPopupOnce();
+function ensurePostPop(){if(!D||S.ppopDone)return;S.ppopDone=1;popNext()}
+/* คิว POP UP หน้าหลัก: โพสต์ → TOP SALE สลับกันทีละอัน (แต่ละอันเด้งครั้งเดียว) เมื่อปิดอันหนึ่งแล้วอันถัดไปจะตามมา */
+async function popNext(){
+  if(!D||!TOKEN||S.tab!=='dash'||!$('#modal').hidden||FORCEPW)return;
+  try{await ensureFeed(false)}catch(e){}
+  if(!$('#modal').hidden||S.tab!=='dash')return;
+  postPopupOnce();
+  if($('#modal').hidden)spPopupOnce();
 }
-function ppClose(){closeModal();setTimeout(spPopupOnce,200)}
+function ppClose(){closeModal()}
 function postPopupOnce(){
   const F=SOC.feed;if(!F||!F.items||S.tab!=='dash'||!$('#modal').hidden)return;
-  let seen={};try{seen=JSON.parse(localStorage.getItem(PPK+D.me.id)||'{}')||{}}catch(e){seen={}}
-  const now=Date.now(),sig=p=>p.key+'@'+p.ts;
-  const c=F.items.filter(p=>!seen[sig(p)]&&(p.pinned||now-p.ts<14*864e5)).sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||b.ts-a.ts)[0];
-  if(!c)return;
-  seen[sig(c)]=now;const ks=Object.keys(seen);if(ks.length>60)ks.sort((a,b)=>seen[a]-seen[b]).slice(0,ks.length-60).forEach(k=>delete seen[k]);
-  try{localStorage.setItem(PPK+D.me.id,JSON.stringify(seen))}catch(e){}
-  const body=String(c.body||''),cut=body.length>500?body.slice(0,500)+'…':body;
-  openModal(`<div style="display:flex;gap:10px;align-items:center">${sAv(c.by,c.name,40)}<div><b>📢 ประกาศจาก ${esc(c.name)}</b>${c.pinned?' <span class="role">📌 ปักหมุด</span>':''}<div class="hint">${sAgo(c.ts)}</div></div></div>
+  if(!S.popQ)S.popQ=F.items.filter(p=>p.pinned).sort((a,b)=>b.ts-a.ts).slice(0,5);   // เฉพาะโพสต์ที่ปักหมุด · โพสต์ปกติไม่เด้ง
+  const c=S.popQ[S.popI||0];if(!c)return;S.popI=(S.popI||0)+1;
+  const n=S.popQ.length,body=String(c.body||''),cut=body.length>500?body.slice(0,500)+'…':body;
+  openModal(`<div style="display:flex;gap:10px;align-items:center">${sAv(c.by,c.name,40)}<div style="flex:1"><b>📢 ประกาศจาก ${esc(c.name)}</b> <span class="role">📌 ปักหมุด</span><div class="hint">${sAgo(c.ts)}${n>1?` · ประกาศ ${S.popI}/${n}`:''}</div></div></div>
     <h2 style="margin:12px 0 6px">${esc(c.title)}</h2>${cut?`<div style="white-space:pre-wrap;word-break:break-word">${esc(cut)}</div>`:''}
     ${c.img?`<img src="${c.img}" alt="" style="max-width:100%;max-height:45vh;border-radius:10px;margin-top:10px;display:block">`:''}
-    <div class="mrow"><button class="btn primary" id="ppGo">💬 ดูโพสต์ / แสดงความคิดเห็น</button><button class="btn" id="ppX">ปิด</button></div>`);
-  $('#ppGo').onclick=()=>{closeModal();goTab('feed')};$('#ppX').onclick=ppClose;
+    <div class="mrow"><button class="btn primary" id="ppGo">💬 ดูโพสต์ / แสดงความคิดเห็น</button><button class="btn" id="ppX">${S.popI<n?'ถัดไป ▶':'ปิด'}</button></div>`);
+  $('#ppGo').onclick=()=>{S.popQ=[];closeModal();goTab('feed')};$('#ppX').onclick=ppClose;
 }
 function spPopupOnce(){
   if(!S.spot||S.spotPop||S.tab==='rank'||!$('#modal').hidden)return;
   const m=spTop('m'),i=spTop('i');if(!m&&!i)return;
-  const k=SPK+D.me.id;let seen='';try{seen=localStorage.getItem(k)||''}catch(e){}
-  if(seen===S.spot.day)return;S.spotPop=1;
-  try{localStorage.setItem(k,S.spot.day)}catch(e){}
+  S.spotPop=1;   // เด้งทุกครั้งที่ Log in / รีเฟรช (ครั้งเดียวต่อการโหลดหน้า)
   const card=(p,t)=>p?`<div class="spcard big" style="align-items:center;text-align:center">${spAvatar(p.m,p.name,170)}<div class="st" style="color:#f0b90b;font-weight:700">🏆 ${t}</div><div style="font-size:20px;font-weight:800">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)} · ${spLabel(p)}</div><div class="num up" style="font-size:22px;font-weight:800">${spVal(p)}</div>${p.kind==='i'?`<div class="hint">${esc(spSub(p))}</div>`:''}<div>${spLikes(p)}</div></div>`:'';
   openModal(`<h2 style="text-align:center">🎉 ขอแสดงความยินดี! 🎉</h2><div class="spgrid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${card(m,'TOP SALE ประจำเดือน')}${card(i,'TOP SALE Improvement')}</div><div class="hint" style="text-align:center;margin:8px 0">กดหัวใจ ❤️ หรือไลก์ 👍 ให้กำลังใจเพื่อนร่วมงานได้เลย</div><div class="mrow"><button class="btn primary" id="spGo">ดูอันดับ 1-5</button><button class="btn" onclick="closeModal()">ปิด</button></div>`);
   $('#spGo').onclick=()=>{closeModal();goTab('rank')};
