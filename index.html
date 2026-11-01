@@ -2172,6 +2172,7 @@ async function ensureScripts(force){
   try{SC.d=await api('scripts',{});SC.ts=Date.now();SC.err=''}catch(e){SC.err=e.message}
   if(S.tab==='script')renderScript();
 }
+const SCCOL={pitch:'#40c4ff',benefit:'#b388ff',object:'#ff8a50',value:'#f0b90b',second:'#ff6e9c',reconfirm:'#0ecb81'};
 function scPName(id){const p=((SC.d||{}).products||[]).find(x=>x.id===id);return p?p.name:id}
 function scCard(x,adm){
   const gen=!x.product,body=esc(x.body).replace(/\n/g,'<br>');
@@ -2179,8 +2180,9 @@ function scCard(x,adm){
   const tools=`<button class="btn sm" data-sccp="${esc(x.id)}">📋 คัดลอก</button>${adm?`<button class="btn sm" data-scedit="${esc(x.id)}">✏️</button><button class="btn sm" data-scdel="${esc(x.id)}">🗑</button>`:''}`;
   const head=`<b>${esc(x.title)}</b>${gen?' <span class="hint" style="font-size:11px;border:1px solid var(--line);border-radius:999px;padding:1px 8px">ทั่วไป</span>':''}`;
   const inner=`<div class="scbody" style="font-size:18px;line-height:1.75;margin:10px 0">${body}</div><div style="display:flex;gap:6px;flex-wrap:wrap">${alt}${tools}</div>`;
-  if(x.stage==='object')return `<details class="panel" style="margin-bottom:8px" open><summary style="cursor:pointer;font-size:17px">${head}</summary>${inner}</details>`;
-  return `<div class="panel" style="margin-bottom:8px;font-size:17px">${head}${inner}</div>`;
+  const cs='margin-bottom:8px;background:color-mix(in srgb,var(--sc) 9%,var(--panel));border:1px solid color-mix(in srgb,var(--sc) 35%,var(--line))';
+  if(x.stage==='object')return `<details class="panel" style="${cs}" open><summary style="cursor:pointer;font-size:17px">${head}</summary>${inner}</details>`;
+  return `<div class="panel" style="${cs};font-size:17px">${head}${inner}</div>`;
 }
 function renderScript(){
   const el=$('#scriptBody');if(!el)return;
@@ -2193,10 +2195,10 @@ function renderScript(){
   let h='';
   if(T.needSetup)h+='<div class="panel"><div class="empty">⚠️ ยังไม่มีชีต Scripts — ให้แอดมินรันฟังก์ชัน <b>setup</b> ใน Apps Script หนึ่งครั้ง แล้วรีเฟรชหน้านี้</div></div>';
   h+=`<div class="panel sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="scP" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--text);font-size:16px"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${T.products.map(p=>`<option value="${esc(p.id)}" ${p.id===SC.prod?'selected':''}>${esc(p.name)}</option>`).join('')}</select><input id="scQ" type="search" placeholder="🔎 ค้นหาสคริปต์…" value="${esc(SC.q)}" style="flex:1;min-width:160px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--text)">${adm?'<button class="btn primary" id="scAdd">➕ เพิ่มสคริปต์</button>':''}</div></div>`;
-  h+='<div class="mrow" id="scBar" style="position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;display:flex;gap:6px;flex-wrap:wrap">'+T.stages.map(s=>`<button class="btn sm" data-scgo="${s.id}">${s.e} ${esc(s.name)}</button>`).join('')+'</div>';
-  T.stages.forEach(s=>{
-    const xs=L.filter(x=>x.stage===s.id);
-    h+=`<div id="sc-${s.id}" style="scroll-margin-top:60px"><h3 style="margin:16px 0 8px">${s.e} ${esc(s.name)}</h3>${xs.length?xs.map(x=>scCard(x,adm)).join(''):'<div class="hint" style="margin-bottom:8px">ยังไม่มีสคริปต์ในขั้นตอนนี้</div>'}</div>`;
+  h+='<div class="mrow" id="scBar" style="justify-content:flex-start;position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;display:flex;gap:6px;flex-wrap:wrap">'+T.stages.map((s,i)=>`<button class="btn sm" data-scgo="${s.id}" style="border:2px solid ${SCCOL[s.id]};background:color-mix(in srgb,${SCCOL[s.id]} 18%,var(--panel2))">${i+1}. ${s.e} ${esc(s.name)}</button>`).join('')+'</div>';
+  T.stages.forEach((s,i)=>{
+    const xs=L.filter(x=>x.stage===s.id),col=SCCOL[s.id]||'#848e9c';
+    h+=`<div id="sc-${s.id}" style="--sc:${col};scroll-margin-top:70px;margin:18px 0;border-left:6px solid ${col};border-radius:10px;background:color-mix(in srgb,${col} 6%,var(--bg));padding:0 0 4px"><div style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:10px;background:color-mix(in srgb,${col} 22%,var(--panel));border-radius:0 10px 0 0"><span style="background:${col};color:#0D1117;font-weight:800;border-radius:999px;padding:3px 12px;font-size:14px;white-space:nowrap">STEP ${i+1}/${T.stages.length}</span><h3 style="margin:0;font-size:20px;color:${col}">${s.e} ${esc(s.name)}</h3></div><div style="padding:0 12px">${xs.length?xs.map(x=>scCard(x,adm)).join(''):'<div class="hint" style="margin-bottom:8px">ยังไม่มีสคริปต์ในขั้นตอนนี้</div>'}</div></div>`;
   });
   el.innerHTML=h;
   $('#scP').onchange=e=>{SC.prod=e.target.value;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}renderScript()};
@@ -2470,7 +2472,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-01.3';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-01.4';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
