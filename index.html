@@ -451,6 +451,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
     <button class="tabbtn" data-tab="feed">💬 หัวข้อ &amp; Feedback</button>
     <button class="tabbtn" data-tab="ins">📊 Insight</button>
     <button class="tabbtn" data-tab="tips">💡 เทคนิคขาย</button>
+    <button class="tabbtn" data-tab="script">📞 สคริปต์ขาย</button>
     <button class="tabbtn" data-tab="svc">🗂 ลา/ร้องเรียน</button>
     <button class="tabbtn" data-tab="game">🎮 เกม</button>
     <button class="tabbtn" data-tab="admin" id="adminTab" hidden>🛠 แอดมิน</button>
@@ -577,6 +578,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 <!-- TALK TIME -->
 <section id="tab-feed" hidden><div class="rkctl"><div class="seg" id="feedSeg"><button data-v="feed">💬 หัวข้อสนทนา</button><button data-v="fb">💬 Feedback ถึงแอดมิน</button></div></div><div id="feedBody"></div><div id="fbBody" hidden></div></section>
 <section id="tab-tips" hidden><div id="tipsBody"></div></section>
+<section id="tab-script" hidden><div id="scriptBody"></div></section>
 <section id="tab-prof" hidden><div id="profBody"></div></section>
 <section id="tab-ins" hidden><div id="insBody"></div></section>
 <section id="tab-run" hidden><div class="rkctl" id="runCtl"></div><div id="runBody"></div></section>
@@ -595,12 +597,14 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
     <button data-a="rw">🎁 จัดการรางวัล</button>
     <button data-a="prod">🏷 สินค้า/Skill</button>
     <button data-a="ops">⚙️ งานบริการ/เกม</button>
+    <button data-a="scr">📞 สคริปต์ขาย</button>
     <button data-a="live">👥 ออนไลน์</button>
     <button data-a="audit">ตรวจข้อมูล</button>
     <button data-a="set">ตั้งค่า</button>
   </div>
   <div id="admBody"></div>
 </section>
+<div id="verTag" class="hint" style="text-align:center;padding:14px 12px 90px;opacity:.7"></div>
 </main>
 <nav id="bnav"></nav>
 
@@ -1199,6 +1203,7 @@ async function renderAdmin(){
   else if(S.adm==='prod'){if(!ADM.content)await admLoad('content');if(!ADM.psales)await admLoad('psales');admProducts(body)}
   else if(S.adm==='ops'){if(!ADM.content)await admLoad('content');admOps(body)}
   else if(S.adm==='live'){admLive(body)}
+  else if(S.adm==='scr'){await ensureScripts(true);admScripts(body)}
   else if(S.adm==='audit'){await admLoad('audit');admAudit(body)}
   else{if(!ADM.content)await admLoad('content');admSettings(body)}
 }
@@ -2158,6 +2163,73 @@ function renderTips(){
   $$('[data-tc]').forEach(b=>b.onclick=()=>{TP.cat=b.dataset.tc;renderTips()});
   if($('#tpAdd'))$('#tpAdd').onclick=()=>tipModal();
 }
+
+/* ===== 📞 สคริปต์ขาย ===== */
+const SC={d:null,ts:0,q:'',prod:'',err:''};
+try{SC.prod=localStorage.getItem('sx_scprod')||''}catch(e){}
+async function ensureScripts(force){
+  if(!force&&SC.d&&Date.now()-SC.ts<300000)return;
+  try{SC.d=await api('scripts',{});SC.ts=Date.now();SC.err=''}catch(e){SC.err=e.message}
+  if(S.tab==='script')renderScript();
+}
+function scPName(id){const p=((SC.d||{}).products||[]).find(x=>x.id===id);return p?p.name:id}
+function scCard(x,adm){
+  const gen=!x.product,body=esc(x.body).replace(/\n/g,'<br>');
+  const alt=x.stage==='second'&&x.alt?`<button class="btn primary" data-scalt="${esc(x.alt)}">🎁 ไปเสนอ ${esc(scPName(x.alt))} แทน →</button>`:'';
+  const tools=`<button class="btn sm" data-sccp="${esc(x.id)}">📋 คัดลอก</button>${adm?`<button class="btn sm" data-scedit="${esc(x.id)}">✏️</button><button class="btn sm" data-scdel="${esc(x.id)}">🗑</button>`:''}`;
+  const head=`<b>${esc(x.title)}</b>${gen?' <span class="hint" style="font-size:11px;border:1px solid var(--line);border-radius:999px;padding:1px 8px">ทั่วไป</span>':''}`;
+  const inner=`<div class="scbody" style="font-size:18px;line-height:1.75;margin:10px 0">${body}</div><div style="display:flex;gap:6px;flex-wrap:wrap">${alt}${tools}</div>`;
+  if(x.stage==='object')return `<details class="panel" style="margin-bottom:8px" open><summary style="cursor:pointer;font-size:17px">${head}</summary>${inner}</details>`;
+  return `<div class="panel" style="margin-bottom:8px;font-size:17px">${head}${inner}</div>`;
+}
+function renderScript(){
+  const el=$('#scriptBody');if(!el)return;
+  if(!SC.d){el.innerHTML=SC.err?`<div class="panel"><div class="err">${esc(SC.err)}</div></div>`:'<div class="panel"><div class="hint">กำลังโหลด…</div></div>';ensureScripts();return}
+  const T=SC.d,adm=!!T.admin,q=SC.q.trim().toLowerCase();
+  if(SC.prod&&!T.products.some(p=>p.id===SC.prod))SC.prod='';
+  const L=T.items.filter(x=>(!x.product||x.product===SC.prod)&&(!q||(x.title+' '+x.body).toLowerCase().includes(q)));
+  // สคริปต์เฉพาะสินค้าขึ้นก่อนสคริปต์ทั่วไป
+  L.sort((a,b)=>(!!a.product===!!b.product?0:a.product?-1:1));
+  let h='';
+  if(T.needSetup)h+='<div class="panel"><div class="empty">⚠️ ยังไม่มีชีต Scripts — ให้แอดมินรันฟังก์ชัน <b>setup</b> ใน Apps Script หนึ่งครั้ง แล้วรีเฟรชหน้านี้</div></div>';
+  h+=`<div class="panel sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="scP" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--text);font-size:16px"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${T.products.map(p=>`<option value="${esc(p.id)}" ${p.id===SC.prod?'selected':''}>${esc(p.name)}</option>`).join('')}</select><input id="scQ" type="search" placeholder="🔎 ค้นหาสคริปต์…" value="${esc(SC.q)}" style="flex:1;min-width:160px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--text)">${adm?'<button class="btn primary" id="scAdd">➕ เพิ่มสคริปต์</button>':''}</div></div>`;
+  h+='<div class="mrow" id="scBar" style="position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;display:flex;gap:6px;flex-wrap:wrap">'+T.stages.map(s=>`<button class="btn sm" data-scgo="${s.id}">${s.e} ${esc(s.name)}</button>`).join('')+'</div>';
+  T.stages.forEach(s=>{
+    const xs=L.filter(x=>x.stage===s.id);
+    h+=`<div id="sc-${s.id}" style="scroll-margin-top:60px"><h3 style="margin:16px 0 8px">${s.e} ${esc(s.name)}</h3>${xs.length?xs.map(x=>scCard(x,adm)).join(''):'<div class="hint" style="margin-bottom:8px">ยังไม่มีสคริปต์ในขั้นตอนนี้</div>'}</div>`;
+  });
+  el.innerHTML=h;
+  $('#scP').onchange=e=>{SC.prod=e.target.value;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}renderScript()};
+  $('#scQ').oninput=e=>{SC.q=e.target.value;clearTimeout(SC.t);SC.t=setTimeout(()=>{renderScript();const i=$('#scQ');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)};
+  if($('#scAdd'))$('#scAdd').onclick=()=>scriptModal({product:SC.prod});
+}
+function scriptModal(x){
+  x=x||{};const T=SC.d,edit=!!x.id;
+  const po=(sel)=>T.products.map(p=>`<option value="${esc(p.id)}" ${p.id===sel?'selected':''}>${esc(p.name)}</option>`).join('');
+  openModal(`<h2>${edit?'✏️ แก้ไขสคริปต์':'✍️ เพิ่มสคริปต์ขาย'}</h2>
+   <div class="row2"><div class="fld"><label>สินค้า</label><select id="smP"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${po(x.product)}</select></div>
+   <div class="fld"><label>ขั้นตอน</label><select id="smS">${T.stages.map(s=>`<option value="${s.id}" ${x.stage===s.id?'selected':''}>${s.e} ${esc(s.name)}</option>`).join('')}</select></div></div>
+   <div class="fld"><label>หัวข้อ</label><input id="smT" maxlength="120" value="${esc(x.title||'')}" placeholder="เช่น ลูกค้าบอกว่า “แพงไป”"></div>
+   <div class="fld"><label>เนื้อหาสคริปต์ (พนักงานอ่านตามได้เลย)</label><textarea id="smB" rows="8" maxlength="3000">${esc(x.body||'')}</textarea></div>
+   <div class="row2"><div class="fld"><label>Second Offer: เสนอสินค้านี้แทน (เฉพาะขั้นตอน Second Offer)</label><select id="smA"><option value="">— ไม่ระบุ —</option>${po(x.alt)}</select></div>
+   <div class="fld"><label>ลำดับ (เลขน้อยขึ้นก่อน)</label><input id="smO" type="number" min="0" value="${esc(x.order||'')}" placeholder="เว้นว่าง = ต่อท้าย"></div></div>
+   <div id="smE" class="err"></div><div class="mrow"><button class="btn primary" id="smGo">${edit?'บันทึก':'เพิ่ม'}</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
+  $('#smGo').onclick=async()=>{$('#smGo').disabled=true;try{await api('scriptSave',{id:x.id||'',product:$('#smP').value,stage:$('#smS').value,title:$('#smT').value,body:$('#smB').value,alt:$('#smA').value,order:$('#smO').value});closeModal();toast('✅ บันทึกสคริปต์แล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(e){$('#smE').textContent=e.message;$('#smGo').disabled=false}};
+}
+function admScripts(body){
+  const T=SC.d;if(!T){body.innerHTML='<div class="panel"><div class="err">'+esc(SC.err||'โหลดไม่สำเร็จ')+'</div></div>';return}
+  const rows=T.items.map(x=>`<tr><td>${esc(x.product?scPName(x.product):'ทั่วไป')}</td><td>${esc((T.stages.find(s=>s.id===x.stage)||{}).name||x.stage)}</td><td>${esc(x.title)}</td><td style="white-space:nowrap"><button class="btn sm" data-scedit="${esc(x.id)}">✏️</button> <button class="btn sm" data-scdel="${esc(x.id)}">🗑</button></td></tr>`).join('');
+  body.innerHTML=`<div class="panel sec"><h3>📞 สคริปต์ขาย (${T.items.length})</h3><p class="hint">พนักงานทุกคนเห็นที่เมนู 📞 สคริปต์ขาย · ตัวอย่างที่มากับระบบมี [ ] ให้แก้เป็นของจริง หรือลบทิ้งได้</p><button class="btn primary" id="scAdd2">➕ เพิ่มสคริปต์</button><div style="overflow:auto;margin-top:10px"><table><thead><tr><th>สินค้า</th><th>ขั้นตอน</th><th>หัวข้อ</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="4" class="hint">ยังไม่มีสคริปต์</td></tr>'}</tbody></table></div></div>`;
+  $('#scAdd2').onclick=()=>scriptModal({});
+}
+document.addEventListener('click',async e=>{
+  const t=e.target;if(!t.closest||!SC.d)return;
+  const g=t.closest('[data-scgo]');if(g){const s=document.getElementById('sc-'+g.dataset.scgo);if(s)s.scrollIntoView({behavior:'smooth',block:'start'});return}
+  const a=t.closest('[data-scalt]');if(a){SC.prod=a.dataset.scalt;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}renderScript();const s=document.getElementById('sc-pitch');if(s)s.scrollIntoView({behavior:'smooth',block:'start'});toast('🎁 สลับเป็น '+scPName(SC.prod)+' แล้ว');return}
+  const cp=t.closest('[data-sccp]');if(cp){const x=SC.d.items.find(i=>i.id===cp.dataset.sccp);if(x){try{await navigator.clipboard.writeText(x.body);toast('📋 คัดลอกสคริปต์แล้ว')}catch(er){toast('⚠️ คัดลอกไม่ได้ ลองเลือกข้อความแล้วคัดลอกเอง')}}return}
+  const ed=t.closest('[data-scedit]');if(ed){const x=SC.d.items.find(i=>i.id===ed.dataset.scedit);if(x)scriptModal(x);return}
+  const dl=t.closest('[data-scdel]');if(dl){if(!confirm('ลบสคริปต์นี้?'))return;try{await api('scriptDelete',{id:dl.dataset.scdel});toast('🗑 ลบแล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(er){toast('⚠️ '+er.message)}}
+});
 function tipModal(t){
   t=t||{};const T=TP.d,edit=!!t.id,adm=!!D.isAdmin;
   const pl=(T.products||[]).map(p=>p.name);
@@ -2398,14 +2470,18 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
+const FE_BUILD='2026-11-01.3';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+function renderVer(){
+  const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
+  el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
 function render(){
-  if(!D)return;
+  if(!D)return;renderVer();
   const cnt=S.count||DEFN[S.mode];S.ext=buildPeriods(S.mode,S.anchor,cnt+LOOK);S.periods=S.ext.slice(-cnt);
   renderHeader();renderTicker();renderBell();applyMenu();renderBnav();
   if(S.tab==='spot')S.tab='rank';if(S.tab==='fb'){S.tab='feed';S.feedView='fb'}
   if(S.tab==='admin'&&!D.isAdmin)S.tab='dash';
   if(S.tab==='run'&&!D.canSeeAll)S.tab='dash';
-  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins','tips','prof'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
+  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins','tips','prof','script'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
   $$('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab));
   if(S.tab==='dash'){rebuildProd();syncControls();renderTop();renderComStrip();renderSvcStrip();renderNews();renderQuote();renderChart();renderBoard();renderDashMix();ensureSpot();ensureTips();ensurePostPop()}
   else if(S.tab==='rank'){renderRank();renderSpotTab()}
@@ -2418,6 +2494,7 @@ function render(){
   else if(S.tab==='feed')renderFeedPage();
   else if(S.tab==='ins')renderIns();
   else if(S.tab==='tips')renderTips();
+  else if(S.tab==='script')renderScript();
   else if(S.tab==='prof')renderProfPage();
   else if(S.tab==='svc')renderSvc();
   else if(S.tab==='game'){if(S.tab!==LASTTAB)GM=null;renderGame()}
@@ -2909,7 +2986,7 @@ function openInbox(){
 }
 $('#bellBtn').onclick=()=>D&&openInbox();
 /* ---------- เมนู: ลำดับ/ซ่อน ตั้งโดยแอดมิน (config menuOrder) ---------- */
-const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['prof','👤','PROFILE','👤 PROFILE'],['feed','💬','หัวข้อ','💬 หัวข้อ & Feedback'],['ins','📊','Insight','📊 Insight'],['tips','💡','เทคนิค','💡 เทคนิคขาย'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
+const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['prof','👤','PROFILE','👤 PROFILE'],['feed','💬','หัวข้อ','💬 หัวข้อ & Feedback'],['ins','📊','Insight','📊 Insight'],['tips','💡','เทคนิค','💡 เทคนิคขาย'],['script','📞','สคริปต์ขาย','📞 สคริปต์ขาย'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
 function menuList(raw){   // คืน [{id,show}] ตามลำดับที่ตั้ง (ที่ไม่ได้ระบุต่อท้ายตามค่าเริ่มต้น)
   const L=[],seen={};String(raw==null?((D.v5&&D.v5.cfg&&D.v5.cfg.menu)||''):raw).split(/[,;\s]+/).filter(Boolean).forEach(x=>{const h=x[0]==='-',id=h?x.slice(1):x;if(seen[id]||!TABDEF.some(t=>t[0]===id))return;seen[id]=1;L.push({id,show:!(h&&id!=='dash'&&id!=='admin')})});
   TABDEF.forEach(t=>{if(!seen[t[0]])L.push({id:t[0],show:true})});return L}
