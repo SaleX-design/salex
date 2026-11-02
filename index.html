@@ -2174,12 +2174,35 @@ async function ensureScripts(force){
 }
 const SCCOL={pitch:'#40c4ff',benefit:'#b388ff',object:'#ff8a50',value:'#f0b90b',second:'#ff6e9c',reconfirm:'#0ecb81'};
 function scPName(id){const p=((SC.d||{}).products||[]).find(x=>x.id===id);return p?p.name:id}
+
+function scImg(u){u=String(u||'');const m=u.match(/drive\.google\.com\/file\/d\/([\w-]+)/)||u.match(/drive\.google\.com\/(?:open|uc)\?(?:[^#]*&)?id=([\w-]+)/);return m?'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w1000':u}
+function scLines(t){return String(t||'').split(/\n+/).map(s=>s.replace(/^\s*[-•·*]\s*/,'').trim()).filter(Boolean)}
+function scInfoCard(pid,adm,mini){
+  const f=((SC.d||{}).info||{})[pid];
+  if(!f){return adm&&!mini?`<div class="panel sec" style="border:1px dashed var(--line)"><span class="hint">ยังไม่มีข้อมูลสินค้า ${esc(scPName(pid))}</span> <button class="btn sm primary" data-scinfo="${esc(pid)}">➕ เพิ่มรูป/คุณสมบัติ/เงื่อนไข</button></div>`:''}
+  const img=f.image?`<img src="${esc(scImg(f.image))}" alt="${esc(scPName(pid))}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'" style="width:${mini?'110':'240'}px;max-width:36%;height:auto;max-height:${mini?'110':'300'}px;object-fit:contain;border-radius:12px;background:var(--panel2);align-self:flex-start">`:'';
+  const ul=(t,h)=>{const L=scLines(t);return L.length?`<div><b style="font-size:${mini?'15':'17'}px">${h}</b><ul style="margin:4px 0 0 18px;padding:0;font-size:${mini?'15':'18'}px;line-height:1.6">${L.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''};
+  const lk=f.link?`<a class="btn sm primary" href="${esc(f.link)}" target="_blank" rel="noopener noreferrer">🔗 ดูรายละเอียดเต็ม</a>`:'';
+  const ed=adm&&!mini?`<button class="btn sm" data-scinfo="${esc(pid)}">✏️ แก้ข้อมูลสินค้า</button>`:'';
+  return `<div class="panel ${mini?'':'sec'}" style="display:flex;gap:16px;flex-wrap:nowrap;align-items:flex-start;${mini?'margin:8px 0;padding:12px;':''}border-left:6px solid var(--blue)">${img}<div style="flex:1;min-width:0;display:grid;gap:10px"><h3 style="margin:0;font-size:${mini?'18':'22'}px">🛍 ${esc(scPName(pid))}</h3>${ul(f.features,'✨ คุณสมบัติ')}${ul(f.conditions,'📋 เงื่อนไข')}<div style="display:flex;gap:8px;flex-wrap:wrap">${lk}${ed}</div></div></div>`;
+}
+function infoModal(pid){
+  const f=((SC.d||{}).info||{})[pid]||{};
+  openModal(`<h2>🛍 ข้อมูลสินค้า: ${esc(scPName(pid))}</h2>
+   <div class="fld"><label>ลิงก์รูปสินค้า (https://…) — GitHub, Google Drive (แชร์แบบ "ทุกคนที่มีลิงก์") หรือเว็บอื่น</label><input id="ipI" maxlength="600" value="${esc(f.image||'')}" placeholder="https://…/product.png"></div>
+   <div class="fld"><label>คุณสมบัติ (พิมพ์บรรทัดละข้อ)</label><textarea id="ipF" rows="5" maxlength="2000">${esc(f.features||'')}</textarea></div>
+   <div class="fld"><label>เงื่อนไข (พิมพ์บรรทัดละข้อ)</label><textarea id="ipC" rows="5" maxlength="2000">${esc(f.conditions||'')}</textarea></div>
+   <div class="fld"><label>ลิงก์ดูรายละเอียดเต็ม (https://…)</label><input id="ipL" maxlength="600" value="${esc(f.link||'')}" placeholder="https://…"></div>
+   <div id="ipE" class="err"></div><div class="mrow"><button class="btn primary" id="ipGo">บันทึก</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
+  $('#ipGo').onclick=async()=>{$('#ipGo').disabled=true;try{await api('prodInfoSave',{product:pid,image:$('#ipI').value,features:$('#ipF').value,conditions:$('#ipC').value,link:$('#ipL').value});closeModal();toast('✅ บันทึกข้อมูลสินค้าแล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(e){$('#ipE').textContent=e.message;$('#ipGo').disabled=false}};
+}
 function scCard(x,adm){
   const gen=!x.product,body=esc(x.body).replace(/\n/g,'<br>');
   const alt=x.stage==='second'&&x.alt?`<button class="btn primary" data-scalt="${esc(x.alt)}">🎁 ไปเสนอ ${esc(scPName(x.alt))} แทน →</button>`:'';
   const tools=`<button class="btn sm" data-sccp="${esc(x.id)}">📋 คัดลอก</button>${adm?`<button class="btn sm" data-scedit="${esc(x.id)}">✏️</button><button class="btn sm" data-scdel="${esc(x.id)}">🗑</button>`:''}`;
   const head=`<b>${esc(x.title)}</b>${gen?' <span class="hint" style="font-size:11px;border:1px solid var(--line);border-radius:999px;padding:1px 8px">ทั่วไป</span>':''}`;
-  const inner=`<div class="scbody" style="font-size:18px;line-height:1.75;margin:10px 0">${body}</div><div style="display:flex;gap:6px;flex-wrap:wrap">${alt}${tools}</div>`;
+  const altCard=x.stage==='second'&&x.alt?scInfoCard(x.alt,adm,true):'';
+  const inner=`<div class="scbody" style="font-size:18px;line-height:1.75;margin:10px 0">${body}</div>${altCard}<div style="display:flex;gap:6px;flex-wrap:wrap">${alt}${tools}</div>`;
   const cs='margin-bottom:8px;background:color-mix(in srgb,var(--sc) 9%,var(--panel));border:1px solid color-mix(in srgb,var(--sc) 35%,var(--line))';
   if(x.stage==='object')return `<details class="panel" style="${cs}" open><summary style="cursor:pointer;font-size:17px">${head}</summary>${inner}</details>`;
   return `<div class="panel" style="${cs};font-size:17px">${head}${inner}</div>`;
@@ -2195,6 +2218,7 @@ function renderScript(){
   let h='';
   if(T.needSetup)h+='<div class="panel"><div class="empty">⚠️ ยังไม่มีชีต Scripts — ให้แอดมินรันฟังก์ชัน <b>setup</b> ใน Apps Script หนึ่งครั้ง แล้วรีเฟรชหน้านี้</div></div>';
   h+=`<div class="panel sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="scP" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--text);font-size:16px"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${T.products.map(p=>`<option value="${esc(p.id)}" ${p.id===SC.prod?'selected':''}>${esc(p.name)}</option>`).join('')}</select><input id="scQ" type="search" placeholder="🔎 ค้นหาสคริปต์…" value="${esc(SC.q)}" style="flex:1;min-width:160px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--text)">${adm?'<button class="btn primary" id="scAdd">➕ เพิ่มสคริปต์</button>':''}</div></div>`;
+  if(SC.prod)h+=scInfoCard(SC.prod,adm,false);
   h+='<div class="mrow" id="scBar" style="justify-content:flex-start;position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;display:flex;gap:6px;flex-wrap:wrap">'+T.stages.map((s,i)=>`<button class="btn sm" data-scgo="${s.id}" style="border:2px solid ${SCCOL[s.id]};background:color-mix(in srgb,${SCCOL[s.id]} 18%,var(--panel2))">${i+1}. ${s.e} ${esc(s.name)}</button>`).join('')+'</div>';
   T.stages.forEach((s,i)=>{
     const xs=L.filter(x=>x.stage===s.id),col=SCCOL[s.id]||'#848e9c';
@@ -2223,12 +2247,15 @@ function admScripts(body){
   const rows=T.items.map(x=>`<tr><td>${esc(x.product?scPName(x.product):'ทั่วไป')}</td><td>${esc((T.stages.find(s=>s.id===x.stage)||{}).name||x.stage)}</td><td>${esc(x.title)}</td><td style="white-space:nowrap"><button class="btn sm" data-scedit="${esc(x.id)}">✏️</button> <button class="btn sm" data-scdel="${esc(x.id)}">🗑</button></td></tr>`).join('');
   body.innerHTML=`<div class="panel sec"><h3>📞 สคริปต์ขาย (${T.items.length})</h3><p class="hint">พนักงานทุกคนเห็นที่เมนู 📞 สคริปต์ขาย · ตัวอย่างที่มากับระบบมี [ ] ให้แก้เป็นของจริง หรือลบทิ้งได้</p><button class="btn primary" id="scAdd2">➕ เพิ่มสคริปต์</button><div style="overflow:auto;margin-top:10px"><table><thead><tr><th>สินค้า</th><th>ขั้นตอน</th><th>หัวข้อ</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="4" class="hint">ยังไม่มีสคริปต์</td></tr>'}</tbody></table></div></div>`;
   $('#scAdd2').onclick=()=>scriptModal({});
+  const pr=T.products.map(p=>{const f=(T.info||{})[p.id];return `<tr><td>${esc(p.name)}</td><td>${f?(f.image?'🖼 ':'')+(f.features?'✨ ':'')+(f.conditions?'📋 ':'')+(f.link?'🔗':''):'<span class="hint">ยังไม่มี</span>'}</td><td><button class="btn sm" data-scinfo="${esc(p.id)}">✏️</button></td></tr>`}).join('');
+  body.insertAdjacentHTML('beforeend',`<div class="panel sec" style="margin-top:12px"><h3>🛍 ข้อมูลสินค้า (รูป/คุณสมบัติ/เงื่อนไข/ลิงก์)</h3>${T.infoReady?'':'<div class="err">ยังไม่มีชีต ProductInfo — รัน setup ใน Apps Script ก่อน</div>'}<p class="hint">แสดงบนหน้าสคริปต์ขายเมื่อพนักงานเลือกสินค้านั้น และใน Second Offer</p><div style="overflow:auto"><table><thead><tr><th>สินค้า</th><th>มีข้อมูล</th><th></th></tr></thead><tbody>${pr||'<tr><td colspan="3" class="hint">ยังไม่มีสินค้า</td></tr>'}</tbody></table></div></div>`);
 }
 document.addEventListener('click',async e=>{
   const t=e.target;if(!t.closest||!SC.d)return;
   const g=t.closest('[data-scgo]');if(g){const s=document.getElementById('sc-'+g.dataset.scgo);if(s)s.scrollIntoView({behavior:'smooth',block:'start'});return}
   const a=t.closest('[data-scalt]');if(a){SC.prod=a.dataset.scalt;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}renderScript();const s=document.getElementById('sc-pitch');if(s)s.scrollIntoView({behavior:'smooth',block:'start'});toast('🎁 สลับเป็น '+scPName(SC.prod)+' แล้ว');return}
   const cp=t.closest('[data-sccp]');if(cp){const x=SC.d.items.find(i=>i.id===cp.dataset.sccp);if(x){try{await navigator.clipboard.writeText(x.body);toast('📋 คัดลอกสคริปต์แล้ว')}catch(er){toast('⚠️ คัดลอกไม่ได้ ลองเลือกข้อความแล้วคัดลอกเอง')}}return}
+  const inf=t.closest('[data-scinfo]');if(inf){infoModal(inf.dataset.scinfo);return}
   const ed=t.closest('[data-scedit]');if(ed){const x=SC.d.items.find(i=>i.id===ed.dataset.scedit);if(x)scriptModal(x);return}
   const dl=t.closest('[data-scdel]');if(dl){if(!confirm('ลบสคริปต์นี้?'))return;try{await api('scriptDelete',{id:dl.dataset.scdel});toast('🗑 ลบแล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(er){toast('⚠️ '+er.message)}}
 });
@@ -2472,7 +2499,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-02.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-02.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
