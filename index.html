@@ -2472,7 +2472,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-01.4';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-02.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -2760,7 +2760,7 @@ function renderTalk(){
     }
     tids.forEach(id=>{
       const m=memOf(id),sm=talkSum(id,ym);
-      h+=`<tr class="${id===D.me.id?'me':''}"><td class="n" title="${esc(m.name)}">${esc(m.nick||m.name)}${gradeFor(id,ym)}</td>${Array.from({length:dim},(_,i)=>{const k=ym+'-'+pad(i+1),c=talkCell(id,k);
+      h+=`<tr class="${id===D.me.id?'me':''}"><td class="n" title="${esc(m.name)}">${esc(m.nick||m.name)}</td>${Array.from({length:dim},(_,i)=>{const k=ym+'-'+pad(i+1),c=talkCell(id,k);
         const txt=c.s==='LEAVE'?'ลา':c.low?'หยุด':c.m!=null?hms(c.m):c.s==='NA'?'·':'';
         return `<td class="${c.s}${mgr&&c.s!=='FUT'?' cl':''}" ${mgr&&c.s!=='FUT'?`data-tc="${esc(id)}|${k}"`:''} title="${dayTxt(k)}${c.m!=null?' · '+hms(c.m)+' ชม. ('+Math.round(c.m)+' นาที)':''}${c.low?' · Talk Time '+Math.round(c.raw)+' นาที ต่ำกว่า '+TKOFF()+' นาที → นับเป็นวันหยุด':''}${c.s==='LEAVE'?' · ลา':''}">${txt}</td>`}).join('')}<td class="a ${sm.avg==null?'':sm.avg>=cfg.talkMin?'PASS':'FAIL'}">${sm.avg==null?'–':hms(sm.avg)}</td><td class="a">${sm.pass}/${sm.n}</td></tr>`;
     });
