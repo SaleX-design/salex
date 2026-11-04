@@ -1804,39 +1804,50 @@ function renderSpotBanner(){
   $('#spbX').onclick=()=>{try{sessionStorage.setItem('sx_spb',S.spot.day)}catch(e){}el.innerHTML=''};
   $('#spbAll').onclick=()=>goTab('rank');
 }
-/* ---- 📊 ผู้ช่วยส่วนตัว: POP UP เตือนเมื่อ "ผลงานของตัวเอง" ตกลง (POINT / SUB / Talk Time เทียบเดือนก่อนของตัวเอง + เกรดตก) ทุกครั้งที่ Log in / กด F5 ---- */
+/* ---- 📊 ผู้ช่วยส่วนตัว: POP UP เตือนเมื่อสถิติของ "ตัวเอง" (ยอดขาย / POINT / SUB / Talk Time / ค่าคอม) ต่ำกว่าค่าเฉลี่ย หรือตกลงจากเดือนก่อนของตัวเอง
+   แสดงเฉพาะตัวเลขของตัวเอง + "% ของค่าเฉลี่ย" (ไม่แสดงตัวเลขของคนอื่น) · เด้งทุกครั้งที่ Log in / กด F5 ---- */
 const PERF_DROP=5;   // ตกลง ≥ 5% เทียบเดือนก่อนของตัวเอง ถึงเตือน
 function perfCalc(){
   const me=D&&D.me;if(!me||!memOf(me.id)||!AG(memOf(me.id)))return null;   // เฉพาะ Agent (ไม่รวม Senior/แอดมิน)
-  const id=me.id,ym=curYM(),pm=addMonths(ym,-1),el=autoElapsed(ym),cfg=D.v5.cfg,items=[];
-  const eNow=effDays(id,ym,el).elapsed,enough=eNow>=3;   // ต้องมีวันทำงานในเดือนนี้ ≥ 3 วัน ถึงเทียบ (กันเตือนผิดช่วงต้นเดือน)
-  const rate=(met,m,e)=>{const v=DB[id]&&DB[id][met]?DB[id][met].MO[m]:undefined;if(v==null)return null;const d=effDays(id,m,e).elapsed;return d>0?v/d:null};
-  [['point','🎯','POINT ต่อวันทำงาน'],['sub','👤','SUB ต่อวันทำงาน']].forEach(([met,ic,name])=>{
-    const cur=enough?rate(met,ym,el):null,prv=rate(met,pm,monthDays(pm));
-    if(cur==null||prv==null||!(prv>0)){items.push({k:met,ic,name,chg:null,low:false,line:enough?'ยังเปรียบเทียบกับเดือนก่อนไม่ได้ (ยังไม่มีข้อมูล)':'เดือนนี้ยังมีวันทำงานน้อย'});return}
-    const chg=(cur-prv)/prv*100;items.push({k:met,ic,name,chg,low:chg<=-PERF_DROP,line:`เดือนนี้ ${mn2(cur)}/วัน · เดือนก่อน ${mn2(prv)}/วัน`});
+  const id=me.id,ym=curYM(),pm=addMonths(ym,-1),el=autoElapsed(ym),cfg=D.v5.cfg,ag=MEM.filter(AG),items=[];
+  const enough=effDays(id,ym,el).elapsed>=3;   // ต้องมีวันทำงานในเดือนนี้ ≥ 3 วัน ถึงเทียบ (กันเตือนผิดช่วงต้นเดือน)
+  const rateOf=met=>(x,m)=>{const v=DB[x]&&DB[x][met]?DB[x][met].MO[m]:undefined;if(v==null)return null;const d=effDays(x,m,m===ym?el:monthDays(m)).elapsed;return d>0?v/d:null};
+  const comOf=(x,m)=>{if(!D.tiers||!D.tiers.length)return null;const ef=effDays(x,m,m===ym?el:monthDays(m)),pt=monthPoint(x,m);if(!(pt>0)||ef.elapsed<=0)return null;return comCalc(pt,ef.elapsed,ef.total,null).net};
+  const ratioAvg=fn=>{const mine=fn(id,ym);if(!(mine>=0)||mine==null)return null;const o=ag.map(m=>fn(m.id,ym)).filter(v=>v!=null&&v>0);if(o.length<3)return null;return mine/(o.reduce((a,b)=>a+b,0)/o.length)*100};
+  const g=gradeInfo(id,ym),pg=gradeInfo(id,pm),gradeDrop=!!(g&&pg&&GN.indexOf(g[0])>GN.indexOf(pg[0]));
+  const defs=[['amount','💰','ยอดขาย ต่อวันทำงาน',rateOf('amount'),x=>'฿'+fp(x)],['point','🎯','POINT ต่อวันทำงาน',rateOf('point'),mn2],['sub','👤','SUB ต่อวันทำงาน',rateOf('sub'),mn2],['com','💵','ค่าคอมคาดการณ์ (สุทธิ)',comOf,x=>'฿'+fp(x)]];
+  defs.forEach(([k,ic,name,fn,fm])=>{
+    const cur=enough?fn(id,ym):null,prv=fn(id,pm);
+    let chg=null;if(cur!=null&&prv!=null&&prv>0)chg=(cur-prv)/prv*100;
+    let ra=cur!=null?ratioAvg(fn):null;if(k==='point'&&g)ra=g[1];   // POINT ใช้อัตราส่วนจากระบบเกรด (คิดฝั่งเซิร์ฟเวอร์ จากทุกคน)
+    if(cur==null){items.push({k,ic,name,chg:null,ra:null,low:false,line:enough?'ยังไม่มีข้อมูลเดือนนี้':'เดือนนี้ยังมีวันทำงานน้อย'});return}
+    const lowT=chg!=null&&chg<=-PERF_DROP,lowA=ra!=null&&ra<100;
+    items.push({k,ic,name,chg,ra,low:lowT||lowA,line:`เดือนนี้ ${fm(cur)}${k==='com'?'':'/วัน'}${prv!=null?` · เดือนก่อน ${fm(prv)}${k==='com'?'':'/วัน'}`:''}`,why:[lowA?'ต่ำกว่าค่าเฉลี่ย':'',lowT?'ลดลงจากเดือนก่อน':''].filter(Boolean).join(' และ ')});
   });
   const sm=talkSum(id,ym),sp=talkSum(id,pm);
   if(sm.avg!=null&&sm.n>=3){
-    const chg=sp.avg?(sm.avg-sp.avg)/sp.avg*100:null,belowT=sm.avg<cfg.talkMin,drop=chg!=null&&chg<=-PERF_DROP;
-    items.push({k:'talk',ic:'⏱',name:'Talk Time เฉลี่ยต่อวัน',chg,low:belowT||drop,line:`เดือนนี้ ${hms(sm.avg)}${sp.avg?` · เดือนก่อน ${hms(sp.avg)}`:''} · เกณฑ์ผ่าน ${hms(cfg.talkMin)}`,why:[belowT?'ต่ำกว่าเกณฑ์ผ่าน':'',drop?'ลดลงจากเดือนก่อน':''].filter(Boolean).join(' และ ')});
-  }else items.push({k:'talk',ic:'⏱',name:'Talk Time เฉลี่ยต่อวัน',chg:null,low:false,line:'ยังมีข้อมูลเดือนนี้น้อย'});
-  const g=gradeInfo(id,ym),pg=gradeInfo(id,pm),gradeDrop=!!(g&&pg&&GN.indexOf(g[0])>GN.indexOf(pg[0]));
+    const chg=sp.avg?(sm.avg-sp.avg)/sp.avg*100:null,belowT=sm.avg<cfg.talkMin,lowT=chg!=null&&chg<=-PERF_DROP;
+    const avs=ag.map(m=>talkSum(m.id,ym)).filter(x=>x.avg!=null&&x.n>=3),ra=avs.length>=3?sm.avg/(avs.reduce((a,b)=>a+b.avg,0)/avs.length)*100:null,lowA=ra!=null&&ra<100;
+    items.push({k:'talk',ic:'⏱',name:'Talk Time เฉลี่ยต่อวัน',chg,ra,low:belowT||lowT||lowA,line:`เดือนนี้ ${hms(sm.avg)}${sp.avg?` · เดือนก่อน ${hms(sp.avg)}`:''} · เกณฑ์ผ่าน ${hms(cfg.talkMin)}`,why:[belowT?'ต่ำกว่าเกณฑ์ผ่าน':'',lowA?'ต่ำกว่าค่าเฉลี่ย':'',lowT?'ลดลงจากเดือนก่อน':''].filter(Boolean).join(' · ')});
+  }else items.push({k:'talk',ic:'⏱',name:'Talk Time เฉลี่ยต่อวัน',chg:null,ra:null,low:false,line:'ยังมีข้อมูลเดือนนี้น้อย'});
+  items.sort((a,b)=>(b.low?1:0)-(a.low?1:0));
   return {ym,g,pg,gradeDrop,items,low:items.filter(x=>x.low)};
 }
 function perfPopupOnce(){
   if(S.perfPop||!D||!TOKEN||S.tab!=='dash'||!$('#modal').hidden||FORCEPW)return false;
   const P=perfCalc();S.perfPop=1;if(!P||(!P.low.length&&!P.gradeDrop))return false;
-  const g=P.g,gr=g?g[0]:null,mon=THMON[+P.ym.slice(5)-1]+' '+(+P.ym.slice(0,4)+543),nm=esc((D.me.nick||D.me.name||'').toString());
+  const g=P.g,gr=g?g[0]:null,mon=THMON[+P.ym.slice(5)-1]+' '+(+P.ym.slice(0,4)+543),nm=esc(String(D.me.nick||D.me.name||''));
   const gh=gr?`<div style="display:flex;gap:14px;align-items:center;margin:8px 0 12px;padding:12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)"><div style="font-size:54px;line-height:1">${gradeBadge(gr).replace('gb ','gb xl ')}</div><div><div style="font-size:20px;font-weight:800">เกรดของคุณตอนนี้: ${gr}</div><div class="hint">${GLBL[gr]} ของค่าเฉลี่ย · ${mon}</div>${P.pg?`<div style="margin-top:2px;font-weight:700;color:${P.gradeDrop?'var(--down)':'var(--mute)'}">${P.gradeDrop?'▼ ลดลงจากเกรด '+P.pg[0]+' ของเดือนก่อน':'เดือนก่อน เกรด '+P.pg[0]}</div>`:''}</div></div>`:'';
-  const rows=P.items.map(x=>{const col=x.low?'var(--down)':x.chg==null?'var(--mute)':x.chg>=0?'var(--up)':'var(--flat)';
-    const tag=x.chg==null?(x.low?'🔻 ต่ำกว่าเกณฑ์':'–'):`${x.chg>=0?'▲ +':'▼ '}${x.chg.toFixed(1)}%`;
-    return `<div style="display:flex;gap:10px;align-items:center;padding:10px 12px;margin-bottom:8px;border-radius:10px;border:1px solid ${x.low?'var(--down)':'var(--line)'};background:${x.low?'color-mix(in srgb,var(--down) 10%,var(--panel))':'var(--panel)'}"><div style="font-size:26px">${x.ic}</div><div style="flex:1;min-width:0"><b>${esc(x.name)}</b><div class="hint">${esc(x.line)}</div>${x.why?`<div style="font-size:13px;font-weight:700;color:var(--down)">${esc(x.why)}</div>`:''}</div><div style="text-align:right;white-space:nowrap;font-weight:800;font-size:17px;color:${col}">${tag}</div></div>`}).join('');
-  openModal(`<h2 style="text-align:center;margin-bottom:4px">🤖 ผู้ช่วยส่วนตัวของ${nm?' '+nm:'คุณ'}</h2><div class="hint" style="text-align:center">ช่วงนี้ผลงานของคุณมีหัวข้อที่ตกลง · เดือน ${mon} · ข้อมูลล่าสุด ${D.asOf?dShort(D.asOf):'–'}</div>${gh}
-   ${P.low.length?`<div style="margin-bottom:8px;font-weight:700;color:var(--down)">⚠️ ${P.low.length} หัวข้อที่ตกลงเทียบกับตัวคุณเองเมื่อเดือนก่อน</div>`:''}${rows}
-   <div class="hint" style="margin-bottom:6px">เทียบกับผลงานของคุณเองเท่านั้น (ไม่แสดงข้อมูลของคนอื่น) · POINT/SUB คิดต่อวันทำงาน ไม่นับวันลา · เตือนเมื่อตกลงตั้งแต่ ${PERF_DROP}%</div>
-   <div class="mrow"><button class="btn" id="pfJv">🤖 ปรึกษา J.A.R.V.I.S.</button><button class="btn" id="pfSc">📞 ดูสคริปต์ขาย</button><button class="btn primary" id="pfOk">รับทราบ สู้ต่อ 💪</button></div>`);
-  $('#pfOk').onclick=closeModal;$('#pfSc').onclick=()=>{closeModal();goTab('script')};$('#pfJv').onclick=()=>{closeModal();setTimeout(()=>jvToggle(true),400)};
+  const tag=(txt,col)=>`<div style="font-size:14px;font-weight:800;color:${col};white-space:nowrap">${txt}</div>`;
+  const rows=P.items.map(x=>{
+    const t1=x.chg==null?'':tag(`${x.chg>=0?'▲ +':'▼ '}${x.chg.toFixed(1)}% <span style="font-weight:500;font-size:12px">เทียบเดือนก่อน</span>`,x.chg<=-PERF_DROP?'var(--down)':x.chg>=0?'var(--up)':'var(--flat)');
+    const t2=x.ra==null?'':tag(`${x.ra<100?'🔻':'✓'} ${x.ra.toFixed(0)}% <span style="font-weight:500;font-size:12px">ของค่าเฉลี่ย</span>`,x.ra<100?'var(--down)':'var(--up)');
+    return `<div style="display:flex;gap:10px;align-items:center;padding:10px 12px;margin-bottom:8px;border-radius:10px;border:1px solid ${x.low?'var(--down)':'var(--line)'};background:${x.low?'color-mix(in srgb,var(--down) 10%,var(--panel))':'var(--panel)'}"><div style="font-size:26px">${x.ic}</div><div style="flex:1;min-width:0"><b>${esc(x.name)}</b><div class="hint">${esc(x.line)}</div>${x.low&&x.why?`<div style="font-size:13px;font-weight:700;color:var(--down)">⚠️ ${esc(x.why)}</div>`:''}</div><div style="text-align:right">${t2}${t1}${!t1&&!t2?'<span class="hint">–</span>':''}</div></div>`}).join('');
+  openModal(`<h2 style="text-align:center;margin-bottom:4px">🤖 ผู้ช่วยส่วนตัวของ${nm?' '+nm:'คุณ'}</h2><div class="hint" style="text-align:center">เดือน ${mon} · ข้อมูลล่าสุด ${D.asOf?dShort(D.asOf):'–'}</div>${gh}
+   ${P.low.length?`<div style="margin-bottom:8px;font-weight:700;color:var(--down)">⚠️ ${P.low.length} หัวข้อที่ต่ำกว่าค่าเฉลี่ย หรือตกลงจากเดือนก่อนของคุณเอง</div>`:''}${rows}
+   <div class="hint" style="margin-bottom:6px">แสดงเฉพาะตัวเลขของคุณ · ค่าเฉลี่ยแสดงเป็น % ของค่าเฉลี่ยพนักงานที่มีข้อมูล (ไม่แสดงตัวเลขของคนอื่น) · ยอด/POINT/SUB คิดต่อวันทำงาน ไม่นับวันลา · ค่าคอมเป็นยอดคาดการณ์จาก Runrate</div>
+   <div class="mrow"><button class="btn" id="pfJv">🤖 ปรึกษา J.A.R.V.I.S.</button><button class="btn" id="pfSc">📞 ดูสคริปต์ขาย</button><button class="btn" id="pfCm">💸 ดูค่าคอม</button><button class="btn primary" id="pfOk">รับทราบ สู้ต่อ 💪</button></div>`);
+  $('#pfOk').onclick=closeModal;$('#pfSc').onclick=()=>{closeModal();goTab('script')};$('#pfCm').onclick=()=>{closeModal();goTab('com')};$('#pfJv').onclick=()=>{closeModal();setTimeout(()=>jvToggle(true),400)};
   return true;
 }
 /* ---- 📢 ประกาศ/โพสต์หัวข้อใหม่ เด้งเป็น POP UP ที่หน้าหลัก (ครั้งเดียวต่อโพสต์ต่อคน) ---- */
@@ -2583,11 +2594,16 @@ function jvChips(){const c=$('#jvCh');if(!c)return;const L=jvInts();
 function jvProdOpts(){const T=SC.d;if(!T)return'<option value="">— ทุกสินค้า —</option>';return '<option value="">— ทุกสินค้า (ทั่วไป) —</option>'+scOpts(JV.prod)}
 function jvToggle(on){
   JV.open=on===undefined?!JV.open:on;const p=$('#jvPanel');if(!p)return;p.style.display=JV.open?'flex':'none';
-  if(JV.open){if(JV.prod==null)JV.prod=SC.prod||'';jvChips();ensureScripts().then(()=>{const s=$('#jvP');if(s)s.innerHTML=jvProdOpts();jvChips()});jvDraw();setTimeout(()=>{const i=$('#jvQ');if(i)i.focus()},50)}
+  if(JV.open){if(JV.min){JV.min=false;if(JV.lay)JV.lay()}if(JV.prod==null)JV.prod=SC.prod||'';jvChips();ensureScripts().then(()=>{const s=$('#jvP');if(s)s.innerHTML=jvProdOpts();jvChips()});jvDraw();setTimeout(()=>{const i=$('#jvQ');if(i)i.focus()},50)}
 }
 function jvBuild(){
   const st=document.createElement('style');st.textContent=`#jvBtn{position:fixed;left:14px;bottom:14px;z-index:55;width:62px;height:62px;border-radius:50%;border:2px solid #40c4ff;background:radial-gradient(circle at 30% 30%,#0f2a3a,#07121a);color:#40c4ff;font-size:28px;cursor:pointer;box-shadow:0 0 14px #40c4ff66}
 #jvBtn:hover{box-shadow:0 0 22px #40c4ffaa}
+#jvPanel[data-sz=s]{width:min(380px,calc(100vw - 28px));max-height:min(480px,calc(100vh - 100px))}
+#jvPanel[data-sz=l]{width:min(940px,calc(100vw - 28px));height:calc(100vh - 100px);max-height:calc(100vh - 100px)}
+#jvPanel[data-sz=l] .jvch{max-height:300px}
+#jvPanel.jvmin #jvMsg,#jvPanel.jvmin .jvch,#jvPanel.jvmin .jvi{display:none}#jvPanel.jvmin{height:auto;width:min(380px,calc(100vw - 28px))}#jvPanel.jvmin .jvh .hint,#jvPanel.jvmin #jvSzT{display:none}.jvh .hint{white-space:nowrap}.jvh .btn{flex:none;white-space:nowrap}
+.jvh{cursor:pointer;user-select:none}.jvh .btn{cursor:pointer}
 #jvPanel{position:fixed;left:14px;bottom:88px;z-index:55;width:min(560px,calc(100vw - 28px));max-height:min(760px,calc(100vh - 100px));display:none;flex-direction:column;background:var(--panel);border:1px solid #40c4ff88;border-radius:14px;box-shadow:0 8px 32px #000a;overflow:hidden}
 .jvh{display:flex;align-items:center;gap:8px;padding:12px 14px;font-size:17px;background:linear-gradient(90deg,#0f2a3a,var(--panel));border-bottom:1px solid var(--line)}
 .jvh b{color:#40c4ff;letter-spacing:1px}
@@ -2608,10 +2624,15 @@ function jvBuild(){
   document.head.appendChild(st);
   const b=document.createElement('button');b.id='jvBtn';b.title='J.A.R.V.I.S. ผู้ช่วยขาย';b.setAttribute('aria-label','เปิด J.A.R.V.I.S. ผู้ช่วยขาย');b.textContent='🤖';b.onclick=()=>jvToggle();document.body.appendChild(b);
   const p=document.createElement('div');p.id='jvPanel';
-  p.innerHTML=`<div class="jvh"><b>J.A.R.V.I.S.</b><span class="hint" style="flex:1">ผู้ช่วยขาย</span><button class="btn sm" id="jvClr" title="ล้างบทสนทนา">🧹</button><button class="btn sm" id="jvX" aria-label="ปิด">✕</button></div>
+  p.innerHTML=`<div class="jvh"><b>J.A.R.V.I.S.</b><span class="hint" style="flex:1">ผู้ช่วยขาย</span><button class="btn sm" id="jvSz" title="เปลี่ยนขนาด: เล็ก / กลาง / ใหญ่">⤢ <span id="jvSzT">กลาง</span></button><button class="btn sm" id="jvMin" title="ย่อ / ขยาย">➖</button><button class="btn sm" id="jvClr" title="ล้างบทสนทนา">🧹</button><button class="btn sm" id="jvX" aria-label="ปิด">✕</button></div>
    <div id="jvMsg"></div><div class="jvch" id="jvCh"></div>
    <div class="jvi"><select id="jvP" style="flex:1 1 100%"><option value="">— ทุกสินค้า (ทั่วไป) —</option></select><input id="jvQ" maxlength="300" placeholder="ลูกค้าพูดว่า…" style="flex:1;min-width:0"><button class="btn primary" id="jvGo">ส่ง</button></div>`;
   document.body.appendChild(p);
+  const jvLay=()=>{const sz=JV.sz||'m',mn=!!JV.min;p.dataset.sz=sz;p.classList.toggle('jvmin',mn);$('#jvSzT').textContent={s:'เล็ก',m:'กลาง',l:'ใหญ่'}[sz];$('#jvMin').textContent=mn?'🔼':'➖';$('#jvMin').title=mn?'ขยายกลับ':'ย่อเก็บ';try{localStorage.setItem('sx_jvlay',sz+(mn?'1':'0'))}catch(e){}};
+  try{const v=localStorage.getItem('sx_jvlay')||'';if('sml'.includes(v[0]||'x'))JV.sz=v[0];JV.min=v[1]==='1'}catch(e){}
+  $('#jvSz').onclick=e=>{e.stopPropagation();JV.sz={s:'m',m:'l',l:'s'}[JV.sz||'m'];JV.min=false;jvLay();jvDraw()};
+  $('#jvMin').onclick=e=>{e.stopPropagation();JV.min=!JV.min;jvLay()};
+  JV.lay=jvLay;p.querySelector('.jvh').ondblclick=()=>{JV.min=!JV.min;jvLay()};jvLay();
   $('#jvX').onclick=()=>jvToggle(false);$('#jvClr').onclick=()=>{JV.msgs=[];JV.chipsOpen=true;jvChips();jvDraw()};
   $('#jvGo').onclick=()=>{const i=$('#jvQ'),v=i.value;i.value='';jvSend(v)};
   $('#jvQ').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();$('#jvGo').click()}};
@@ -2867,7 +2888,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-04.8';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-05.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
