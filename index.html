@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>SALE X — กระดานยอดขาย</title>
 <meta name="theme-color" content="#0b0e11">
+<script>(function(){try{var m=localStorage.getItem("sx_theme")||"dark",h=new Date().getHours(),l=m==="light"||(m==="auto"&&h>=6&&h<18);if(l)document.documentElement.setAttribute("data-theme","light")}catch(e){}})()</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="SALE X">
@@ -22,6 +23,36 @@
   --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --sans:'Sarabun','Noto Sans Thai',system-ui,-apple-system,'Segoe UI',sans-serif;
 }
+
+/* ---- โหมดสว่าง (กลางวัน) ---- */
+html[data-theme=light]{color-scheme:light;--bg:#f2f4f8;--panel:#ffffff;--panel2:#eef1f6;--line:#d3dae4;--text:#18202c;--mute:#5a6678;--up:#0b9d63;--down:#d42a40;--flat:#a87400;--blue:#0a78b8;--purple:#7048d1;--pink:#cf2f6c}
+html[data-theme=light] body{background:var(--bg);color:var(--text)}
+html[data-theme=light] .tbl td,html[data-theme=light] .atbl td,html[data-theme=light] .tkm th,html[data-theme=light] .tkm td{border-color:#e3e8ef}
+html[data-theme=light] .hc,html[data-theme=light] .pbar,html[data-theme=light] .tierbar,html[data-theme=light] .gdbar,html[data-theme=light] .gcnt,html[data-theme=light] .anbar div.b,html[data-theme=light] .bossbar,html[data-theme=light] [style*="background:#1a222b"]{background:#e3e8ef!important}
+html[data-theme=light] .hc.a1{background:#9be3c4!important}html[data-theme=light] .hc.a2{background:#4cc795!important}html[data-theme=light] .hc.a3{background:#0b9d63!important}html[data-theme=light] .hc.a4{background:#06704a!important}
+html[data-theme=light] .chb{background:linear-gradient(135deg,#e2f7ee,#fff)}
+html[data-theme=light] .spotbn,html[data-theme=light] .spcard.big,html[data-theme=light] [style*="#2a2208"]{background:linear-gradient(120deg,#fff4cf,#fff 60%,#e6f7ee)!important}
+html[data-theme=light] .tip{background:rgba(255,255,255,.97);color:var(--text);box-shadow:0 8px 24px #0003}
+html[data-theme=light] #bnav{background:rgba(255,255,255,.97)}
+html[data-theme=light] header{background:rgba(255,255,255,.94)}
+html[data-theme=light] .tape{background:#e9edf3}
+html[data-theme=light] .tbl tr.sel{background:#0b9d6314}
+html[data-theme=light] .seg-base{stroke:#d3dae4}
+html[data-theme=light] [stroke="#222c37"]{stroke:#dde3ec}
+html[data-theme=light] [stroke="#0D1117"],html[data-theme=light] [stroke="#0b0e11"]{stroke:#fff}
+html[data-theme=light] [fill="#eaecef"]{fill:#18202c}
+html[data-theme=light] .tkm td.PASS{background:#0b9d6326;color:#067a4c}html[data-theme=light] .tkm td.FAIL{background:#d42a4022;color:#b8182d}
+html[data-theme=light] .tkm td.LEAVE{color:#6a3fc9}html[data-theme=light] .tkm td.OFF{background:#eceff4;color:#98a3b3}html[data-theme=light] .tkm td.FUT,html[data-theme=light] .tkm td.NA{color:#98a3b3}
+html[data-theme=light] .gcnt.gB{color:#0b8a55}html[data-theme=light] .gcnt.gC{color:#a87400}html[data-theme=light] .gcnt.gD{color:#c4620a}html[data-theme=light] .gcnt.gF{color:#b3202f}
+html[data-theme=light] .gb.gN{background:#d3dae4}
+html[data-theme=light] .badge.lv-cancelled,html[data-theme=light] .badge.st-closed{background:#d3dae4aa}
+html[data-theme=light] .btn.primary{color:#fff}html[data-theme=light] .newdot{color:#fff}
+html[data-theme=light] .modal{background:#0a101a99}
+html[data-theme=light] #jvBtn{box-shadow:0 2px 10px #0005}
+html[data-theme=light] .jvh{background:linear-gradient(90deg,#dff1fb,var(--panel))}html[data-theme=light] .jvh b{color:#0a78b8}
+html[data-theme=light] .jv-u{background:#d9f0fb;border-color:#7cc7ec}
+html[data-theme=light] .jvch{background:#f1f8fc}
+html[data-theme=light] .jvsc{background:#f6f8fb}
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none!important}
 html{color-scheme:dark}
@@ -456,6 +487,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
     <button class="tabbtn" data-tab="game">🎮 เกม</button>
     <button class="tabbtn" data-tab="admin" id="adminTab" hidden>🛠 แอดมิน</button>
   </nav>
+  <button class="btn" id="themeBtn" title="เปลี่ยนโหมดสี">🌙</button>
   <button class="btn" id="refBtn" title="โหลดข้อมูลล่าสุด">⟳</button>
   <button class="btn" id="bellBtn" title="แจ้งเตือน" style="position:relative">🔔<i class="bdg" id="bellN" hidden></i></button>
   <div class="userchip" id="userChip"></div>
@@ -621,6 +653,17 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+/* ---- 🌗 โหมดสี สว่าง/มืด/อัตโนมัติ ---- */
+const THM={m:LS.get('sx_theme')||'dark'};
+function thmIsLight(){const h=new Date().getHours();return THM.m==='light'||(THM.m==='auto'&&h>=6&&h<18)}
+function thmApply(){
+  const l=thmIsLight();
+  if(l)document.documentElement.setAttribute('data-theme','light');else document.documentElement.removeAttribute('data-theme');
+  const mt=document.querySelector('meta[name=theme-color]');if(mt)mt.content=l?'#f2f4f8':'#0b0e11';
+  const b=document.getElementById('themeBtn');if(b){b.textContent=THM.m==='auto'?'🌓':l?'☀️':'🌙';b.title='โหมดสี: '+(THM.m==='auto'?'อัตโนมัติ (06:00–18:00 สว่าง)':THM.m==='light'?'สว่าง':'มืด')+' — กดเพื่อเปลี่ยน'}
+}
+function thmCycle(){THM.m=THM.m==='dark'?'light':THM.m==='light'?'auto':'dark';LS.set('sx_theme',THM.m);thmApply();toast(THM.m==='auto'?'🌓 โหมดอัตโนมัติ: กลางวัน (06:00–18:00) สว่าง กลางคืนมืด':THM.m==='light'?'☀️ โหมดสว่าง':'🌙 โหมดมืด')}
+document.getElementById('themeBtn').onclick=thmCycle;thmApply();setInterval(()=>{if(THM.m==='auto')thmApply()},60000);
 const OKURL=u=>/^https:\/\/script\.google\.com\/.+\/exec$/.test(u||'');
 let API_URL=(typeof window.SB_API_URL==='string'&&OKURL(window.SB_API_URL.trim()))?window.SB_API_URL.trim():(OKURL(LS.get('sb_api'))?LS.get('sb_api'):'');
 let TOKEN=LS.get('sb_token')||'';
@@ -2711,7 +2754,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-04.3';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-04.4';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
