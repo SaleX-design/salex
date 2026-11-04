@@ -2370,6 +2370,38 @@ function scriptModal(x){
    <div id="smE" class="err"></div><div class="mrow"><button class="btn primary" id="smGo">${edit?'บันทึก':'เพิ่ม'}</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
   $('#smGo').onclick=async()=>{$('#smGo').disabled=true;try{await api('scriptSave',{id:x.id||'',product:$('#smP').value,stage:$('#smS').value,title:$('#smT').value,body:$('#smB').value,alt:$('#smA').value,audio:$('#smU').value,order:$('#smO').value});closeModal();toast('✅ บันทึกสคริปต์แล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(e){$('#smE').textContent=e.message;$('#smGo').disabled=false}};
 }
+function jvModal(id){
+  const A=jvAllAdmin(),x=id?A.find(i=>i.id===id):null,T=SC.d,st=T.stages||[];
+  const sel=(v,none)=>`<option value="">${none}</option>`+st.map(s=>`<option value="${s.id}" ${v===s.id?'selected':''}>${s.e} ${esc(s.name)}</option>`).join('');
+  const cur=x||{e:'💬',name:'',chip:'',kw:[],tips:[],st:['object'],next:'',status:'custom'};
+  openModal(`<h2>${x?'✏️ แก้สถานการณ์ของ J.A.R.V.I.S.':'➕ เพิ่มสถานการณ์ใหม่'}</h2>
+   <div class="row2"><div class="fld" style="max-width:90px"><label>ไอคอน</label><input id="jmE" maxlength="4" value="${esc(cur.e||'')}"></div><div class="fld"><label>ชื่อสถานการณ์ (แสดงเป็นหัวข้อคำตอบ)</label><input id="jmN" maxlength="60" value="${esc(cur.name)}" placeholder="เช่น ลูกค้าบอกว่าไม่สะดวกคุย"></div></div>
+   <div class="fld"><label>ข้อความบนปุ่มลัด (สั้นๆ)</label><input id="jmC" maxlength="40" value="${esc(cur.chip||'')}" placeholder="เช่น ไม่สะดวกคุย"></div>
+   <div class="fld"><label>คำที่ใช้จับสถานการณ์ (1 บรรทัด = 1 คำ หรือคั่นด้วย ,) — ยาว 2 ตัวอักษรขึ้นไป ใช้คำที่ลูกค้าพูดจริง</label><textarea id="jmK" rows="5">${esc((cur.kw||[]).join('\n'))}</textarea></div>
+   <div class="fld"><label>แนวทางรับมือ (1 บรรทัด = 1 ข้อ ไม่เกิน 8 ข้อ)</label><textarea id="jmT" rows="7">${esc((cur.tips||[]).join('\n'))}</textarea></div>
+   <div class="row2"><div class="fld"><label>ค้นสคริปต์จากขั้นตอน (หลัก)</label><select id="jmS1">${sel((cur.st||[])[0],'— ไม่ระบุ —')}</select></div><div class="fld"><label>ขั้นตอน (รอง)</label><select id="jmS2">${sel((cur.st||[])[1],'— ไม่ระบุ —')}</select></div></div>
+   <div class="fld"><label>บอกพนักงานว่า "ขั้นตอนถัดไป" คือ</label><select id="jmX">${sel(cur.next,'— ไม่แสดง —')}</select></div>
+   <label style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="jmA" ${cur.status==='off'?'':'checked'}> เปิดใช้งานสถานการณ์นี้</label>
+   <div id="jmE2" class="err"></div><div class="mrow"><button class="btn primary" id="jmGo">บันทึก</button>${x&&(x.status==='edited'||x.status==='off')?'<button class="btn" id="jmRs">↩️ คืนค่าเริ่มต้น</button>':''}${x&&x.status==='custom'?'<button class="btn" id="jmDel">🗑 ลบ</button>':''}<button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
+  const done=async m=>{closeModal();toast(m);await ensureScripts(true);if(S.tab==='admin')render()};
+  $('#jmGo').onclick=async()=>{$('#jmGo').disabled=true;try{await api('jvSave',{id:x?x.id:'',emoji:$('#jmE').value,name:$('#jmN').value,chip:$('#jmC').value,kw:$('#jmK').value,tips:$('#jmT').value,st:[$('#jmS1').value,$('#jmS2').value].filter(Boolean),next:$('#jmX').value,active:$('#jmA').checked});await done('✅ บันทึกแล้ว')}catch(e){$('#jmE2').textContent=e.message;$('#jmGo').disabled=false}};
+  if($('#jmRs'))$('#jmRs').onclick=async()=>{if(!confirm('คืนค่าเริ่มต้นของสถานการณ์นี้ (ข้อความที่แก้ไว้จะหาย)?'))return;try{await api('jvDelete',{id:x.id});await done('↩️ คืนค่าเริ่มต้นแล้ว')}catch(e){$('#jmE2').textContent=e.message}};
+  if($('#jmDel'))$('#jmDel').onclick=async()=>{if(!confirm('ลบสถานการณ์นี้?'))return;try{await api('jvDelete',{id:x.id});await done('🗑 ลบแล้ว')}catch(e){$('#jmE2').textContent=e.message}};
+}
+function jvAdmHTML(){
+  const T=SC.d,A=jvAllAdmin(),stl={default:'ค่าเริ่มต้น',edited:'แก้ไขแล้ว',custom:'เพิ่มเอง',off:'ปิดอยู่'};
+  const rows=A.map(x=>`<tr><td>${esc(x.e)} <b>${esc(x.name)}</b></td><td class="hint">${esc(x.kw.slice(0,4).join(', '))}${x.kw.length>4?` (+${x.kw.length-4})`:''}</td><td class="r num">${x.tips.length}</td><td>${x.status==='off'?'<span class="down">ปิดอยู่</span>':x.status==='default'?'<span class="hint">ค่าเริ่มต้น</span>':`<span class="up">${stl[x.status]}</span>`}</td><td><button class="btn sm" data-jmedit="${esc(x.id)}">✏️</button></td></tr>`).join('');
+  return `<div class="panel sec" style="margin-top:12px"><h3>🤖 J.A.R.V.I.S. — สถานการณ์ คำที่จับ และแนวทางรับมือ</h3>${T.jvReady?'':'<div class="err">ยังไม่มีชีต JarvisIntents — รัน setup ใน Apps Script ก่อน (ตอนนี้ยังใช้ได้เฉพาะค่าเริ่มต้น ยังบันทึกการแก้ไขไม่ได้)</div>'}
+   <p class="hint">แก้ข้อความที่ J.A.R.V.I.S. ตอบพนักงาน · คำที่จับ = คำที่ลูกค้าพูดแล้วให้ขึ้นสถานการณ์นั้น · สคริปต์ที่ขึ้นประกอบมาจากเมนูสคริปต์ขายด้านบน</p>
+   <button class="btn primary" id="jmAdd">➕ เพิ่มสถานการณ์</button>
+   <div style="overflow:auto;margin-top:10px"><table class="atbl"><thead><tr><th>สถานการณ์</th><th>คำที่จับ</th><th class="r">แนวทาง</th><th>สถานะ</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+   <div style="margin-top:12px"><b>🧪 ทดลองพิมพ์</b> <span class="hint">พิมพ์สิ่งที่ลูกค้าพูด แล้วดูว่า J.A.R.V.I.S. จับเป็นสถานการณ์ไหน</span><div style="display:flex;gap:8px;margin-top:6px"><input id="jmTest" style="flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px;color:var(--text)" placeholder="เช่น ตอนนี้ไม่ว่างเลยค่ะ"></div><div id="jmTestR" class="hint" style="margin-top:6px"></div></div></div>`;
+}
+function jvAdmBind(){
+  if($('#jmAdd'))$('#jmAdd').onclick=()=>jvModal();
+  $$('[data-jmedit]').forEach(b=>b.onclick=()=>jvModal(b.dataset.jmedit));
+  const t=$('#jmTest');if(t)t.oninput=()=>{const v=t.value.trim();$('#jmTestR').innerHTML=!v?'':(()=>{const d=jvDetect(v);return d.ints.length?'จับได้: '+d.ints.map(i=>`<b>${esc(i.e)} ${esc(i.name)}</b>`).join(' และ '):'<span class="down">ยังจับไม่ได้</span> — ลองเพิ่มคำนี้ในสถานการณ์ที่เกี่ยวข้อง'})()};
+}
 function admScripts(body){
   const T=SC.d;if(!T){body.innerHTML='<div class="panel"><div class="err">'+esc(SC.err||'โหลดไม่สำเร็จ')+'</div></div>';return}
   const rows=T.items.map(x=>`<tr><td>${esc(x.product?scPName(x.product):'ทั่วไป')}</td><td>${esc((T.stages.find(s=>s.id===x.stage)||{}).name||x.stage)}</td><td>${esc(x.title)}</td><td style="white-space:nowrap"><button class="btn sm" data-scedit="${esc(x.id)}">✏️</button> <button class="btn sm" data-scdel="${esc(x.id)}">🗑</button></td></tr>`).join('');
@@ -2378,6 +2410,7 @@ function admScripts(body){
   const ty=T.products.filter(p=>p.own).map(p=>`<tr><td>${esc(p.name)}</td><td style="white-space:nowrap"><button class="btn sm" data-stedit="${esc(p.id)}">✏️</button> <button class="btn sm" data-stdel="${esc(p.id)}">🗑</button></td></tr>`).join('');
   body.insertAdjacentHTML('beforeend',`<div class="panel sec" style="margin-top:12px"><h3>🏷 ชนิดสินค้า (เฉพาะสคริปต์)</h3>${T.typesReady?'':'<div class="err">ยังไม่มีชีต ScriptTypes — รัน setup ใน Apps Script ก่อน</div>'}<p class="hint">ใช้เฉพาะหน้าสคริปต์ขาย ไม่เกี่ยวกับยอดขาย/ค่าคอม · สินค้าที่อยู่ในระบบยอดขายเพิ่มที่แท็บ "สินค้า" แล้วจะมาอยู่ในรายการนี้เองโดยอัตโนมัติ</p><button class="btn primary" id="stAdd">➕ เพิ่มชนิดสินค้า</button><div style="overflow:auto;margin-top:10px"><table><thead><tr><th>ชนิด</th><th></th></tr></thead><tbody>${ty||'<tr><td colspan="2" class="hint">ยังไม่มีชนิดที่เพิ่มเอง</td></tr>'}</tbody></table></div></div>`);
   $('#stAdd').onclick=()=>typeModal();
+  body.insertAdjacentHTML('beforeend',jvAdmHTML());jvAdmBind();
   const pr=T.products.map(p=>{const f=(T.info||{})[p.id];return `<tr><td>${esc(p.name)}</td><td>${f?(f.image?'🖼 ':'')+(f.features?'✨ ':'')+(f.conditions?'📋 ':'')+(f.link?'🔗':''):'<span class="hint">ยังไม่มี</span>'}</td><td><button class="btn sm" data-scinfo="${esc(p.id)}">✏️</button></td></tr>`}).join('');
   body.insertAdjacentHTML('beforeend',`<div class="panel sec" style="margin-top:12px"><h3>🛍 ข้อมูลสินค้า (รูป/คุณสมบัติ/เงื่อนไข/ลิงก์)</h3>${T.infoReady?'':'<div class="err">ยังไม่มีชีต ProductInfo — รัน setup ใน Apps Script ก่อน</div>'}<p class="hint">แสดงบนหน้าสคริปต์ขายเมื่อพนักงานเลือกสินค้านั้น และใน Second Offer</p><div style="overflow:auto"><table><thead><tr><th>สินค้า</th><th>มีข้อมูล</th><th></th></tr></thead><tbody>${pr||'<tr><td colspan="3" class="hint">ยังไม่มีสินค้า</td></tr>'}</tbody></table></div></div>`);
 }
@@ -2395,37 +2428,49 @@ document.addEventListener('click',async e=>{
 });
 /* ---- 🤖 J.A.R.V.I.S. ผู้ช่วยขาย (ทำงานในเครื่อง ไม่ส่งข้อความออกนอกระบบ) ---- */
 const JV={open:false,msgs:[],prod:null,busy:false};
-const JVINT=[
- {id:'price',e:'💸',name:'ลูกค้าบอกว่าราคาแพง/งบจำกัด',kw:['แพงไป','แพง','ราคาสูง','ถูกกว่า','ลดได้','ลดอีก','ลดหน่อย','เกินงบ','งบไม่พอ','จ่ายไม่ไหว','ราคา'],st:['object','value'],next:'value',
+const JVDEF=[
+ {id:'price',chip:'ลูกค้าบอกว่าแพงไป',e:'💸',name:'ลูกค้าบอกว่าราคาแพง/งบจำกัด',kw:['แพงไป','แพง','ราคาสูง','ถูกกว่า','ลดได้','ลดอีก','ลดหน่อย','เกินงบ','งบไม่พอ','จ่ายไม่ไหว','ราคา'],st:['object','value'],next:'value',
   tips:['รับฟังก่อน ไม่เถียงทันที เช่น “เข้าใจค่ะ/ครับ เรื่องงบสำคัญเลย”','ถามต่อว่าลูกค้าเทียบกับอะไรอยู่ หรืองบที่สะดวกประมาณเท่าไร','ย้ำสิ่งที่ลูกค้าได้ต่อเดือน/ต่อวัน แทนการรีบลดราคา','ถ้ายังไม่ตรงงบ ไปขั้น Second Offer เสนอตัวเลือกที่เบากว่า']},
- {id:'think',e:'🤔',name:'ลูกค้าขอคิดดูก่อน',kw:['ขอคิดดู','คิดดูก่อน','ขอคิด','ไว้ก่อน','ยังไม่ตัดสินใจ','ยังไม่แน่ใจ','เดี๋ยวโทรกลับ','ไว้ก่อนนะ'],st:['object','benefit'],next:'benefit',
+ {id:'think',chip:'ขอคิดดูก่อน',e:'🤔',name:'ลูกค้าขอคิดดูก่อน',kw:['ขอคิดดู','คิดดูก่อน','ขอคิด','ไว้ก่อน','ยังไม่ตัดสินใจ','ยังไม่แน่ใจ','เดี๋ยวโทรกลับ','ไว้ก่อนนะ'],st:['object','benefit'],next:'benefit',
   tips:['ตอบรับสบายๆ “ได้ค่ะ/ครับ ไม่เป็นไร”','ถามเบาๆ ว่าติดใจเรื่องไหนอยู่ (ราคา สัญญา ความเสถียร) จะได้อธิบายให้ครบ','สรุปประโยชน์ที่ตรงกับลูกค้า 1 ข้อ','ขอนัดเวลาติดต่อกลับให้ชัดเจน อย่าปล่อยเป็น “ไว้ก่อน”']},
- {id:'compet',e:'🥊',name:'ลูกค้าใช้เจ้าอื่นอยู่',kw:['เจ้าอื่น','เจ้าเดิม','ค่ายอื่น','ค่ายเดิม','ใช้อยู่แล้ว','มีอยู่แล้ว','dtac','ais','3bb','คู่แข่ง'],st:['object','value'],next:'value',
+ {id:'compet',chip:'ใช้เจ้าอื่นอยู่',e:'🥊',name:'ลูกค้าใช้เจ้าอื่นอยู่',kw:['เจ้าอื่น','เจ้าเดิม','ค่ายอื่น','ค่ายเดิม','ใช้อยู่แล้ว','มีอยู่แล้ว','dtac','ais','3bb','คู่แข่ง'],st:['object','value'],next:'value',
   tips:['ไม่ตำหนิเจ้าเดิม เริ่มจาก “ขอบคุณที่ใช้บริการอยู่นะคะ/ครับ”','ถามว่าตอนนี้พอใจ/ไม่พอใจจุดไหน เพื่อหาจุดที่เรามีประโยชน์จริง','เทียบเฉพาะประเด็นที่ลูกค้าให้ความสำคัญ (ความเร็ว ราคา บริการ)','เสนอทดลอง/ข้อเสนอที่ลูกค้าเปลี่ยนแล้วไม่เสียเปรียบ ตามเงื่อนไขของสินค้า']},
- {id:'notneed',e:'🚫',name:'ลูกค้าไม่สนใจ/ไม่จำเป็น',kw:['ไม่สนใจ','ไม่ต้องการ','ไม่จำเป็น','ไม่อยากได้','ไม่เอา','ไม่ใช้','ไม่ต้อง'],st:['benefit','object'],next:'benefit',
+ {id:'notneed',chip:'ไม่สนใจ',e:'🚫',name:'ลูกค้าไม่สนใจ/ไม่จำเป็น',kw:['ไม่สนใจ','ไม่ต้องการ','ไม่จำเป็น','ไม่อยากได้','ไม่เอา','ไม่ใช้','ไม่ต้อง'],st:['benefit','object'],next:'benefit',
   tips:['อย่ารีบวาง ยอมรับก่อน “ไม่เป็นไรค่ะ/ครับ”','ถามคำถามเดียวที่ตรงกับการใช้งานของลูกค้า เช่น ตอนนี้ที่บ้านใช้เน็ตกี่คน','เล่าประโยชน์สั้นๆ 1 ข้อที่เกี่ยวกับชีวิตลูกค้า','ถ้ายังปฏิเสธ ขอบคุณและขออนุญาตแจ้งโปรที่เหมาะในโอกาสหน้า']},
- {id:'busy',e:'⏰',name:'ลูกค้าไม่สะดวกคุย',kw:['ไม่สะดวก','ไม่ว่าง','กำลังประชุม','กำลังขับรถ','กำลังทำงาน','โทรมาผิดเวลา','โทรทีหลัง','โทรใหม่','ไว้โทร'],st:['pitch'],next:'pitch',
+ {id:'busy',chip:'ไม่สะดวกคุย',e:'⏰',name:'ลูกค้าไม่สะดวกคุย',kw:['ไม่สะดวก','ไม่ว่าง','กำลังประชุม','กำลังขับรถ','กำลังทำงาน','โทรมาผิดเวลา','โทรทีหลัง','โทรใหม่','ไว้โทร'],st:['pitch'],next:'pitch',
   tips:['ขอโทษที่รบกวน และไม่ฝืนคุยต่อ','ถามเวลาที่สะดวกที่สุด 1 ช่วง (เช่น วันนี้หลัง 6 โมงเย็น หรือพรุ่งนี้เช้า)','ยืนยันเวลานัดซ้ำและจดบันทึกไว้เพื่อโทรกลับตรงเวลา']},
- {id:'family',e:'👨‍👩‍👧',name:'ลูกค้าต้องปรึกษาคนในบ้าน',kw:['แฟน','สามี','ภรรยา','ที่บ้าน','คนในบ้าน','ครอบครัว','ปรึกษาพ่อ','ปรึกษาแม่','ผู้ปกครอง'],st:['object','benefit'],next:'reconfirm',
+ {id:'family',chip:'ต้องถามที่บ้านก่อน',e:'👨‍👩‍👧',name:'ลูกค้าต้องปรึกษาคนในบ้าน',kw:['แฟน','สามี','ภรรยา','ที่บ้าน','คนในบ้าน','ครอบครัว','ปรึกษาพ่อ','ปรึกษาแม่','ผู้ปกครอง'],st:['object','benefit'],next:'reconfirm',
   tips:['เข้าใจและให้เกียรติ “เป็นการตัดสินใจร่วมกันเลยนะคะ/ครับ”','ถามว่าคนในบ้านจะให้ความสำคัญเรื่องอะไรเป็นพิเศษ (ราคา ความเร็ว ติดตั้ง)','เสนอสรุปสั้นๆ ให้ลูกค้านำไปคุยต่อ หรือขอคุยกับผู้ตัดสินใจร่วมด้วย','นัดเวลาโทรกลับหลังได้คุยกันแล้ว']},
- {id:'contract',e:'📄',name:'ลูกค้ากังวลสัญญา/ผูกมัด',kw:['สัญญา','ผูกมัด','ยกเลิก','ค่าปรับ','12 เดือน','ติดสัญญา','เลิกใช้'],st:['object','value'],next:'value',
+ {id:'contract',chip:'กลัวติดสัญญา',e:'📄',name:'ลูกค้ากังวลสัญญา/ผูกมัด',kw:['สัญญา','ผูกมัด','ยกเลิก','ค่าปรับ','12 เดือน','ติดสัญญา','เลิกใช้'],st:['object','value'],next:'value',
   tips:['ยอมรับว่าเรื่องสัญญาเป็นเรื่องสำคัญ','อธิบายเงื่อนไขตามข้อมูลจริงของสินค้า (ระยะสัญญา ค่าปรับ) ให้ชัดและไม่เกินจริง','ชี้ว่าระหว่างสัญญาลูกค้าได้อะไรบ้าง','ถ้ามีทางเลือกที่ผูกมัดน้อยกว่า เสนอเป็น Second Offer']},
- {id:'quality',e:'📶',name:'ลูกค้ากังวลความเร็ว/สัญญาณ',kw:['เน็ตช้า','ช้า','สัญญาณ','หลุด','ไม่เสถียร','เน็ตหลุด','แรงไหม','เร็วไหม','ไม่เร็ว'],st:['object','benefit'],next:'value',
+ {id:'quality',chip:'เน็ตช้า/หลุดบ่อย',e:'📶',name:'ลูกค้ากังวลความเร็ว/สัญญาณ',kw:['เน็ตช้า','ช้า','สัญญาณ','หลุด','ไม่เสถียร','เน็ตหลุด','แรงไหม','เร็วไหม','ไม่เร็ว'],st:['object','benefit'],next:'value',
   tips:['ถามอาการ/สถานการณ์ที่ลูกค้าเจอ (ช่วงเวลา จำนวนคนใช้ อุปกรณ์)','อธิบายสิ่งที่สินค้านี้ช่วยแก้ ตามข้อมูลสินค้าจริงเท่านั้น','ไม่รับปากเกินความเป็นจริง ถ้าไม่แน่ใจให้บอกว่าจะตรวจสอบและติดต่อกลับ','เสนอขั้นตอนตรวจสอบพื้นที่/นัดช่างตามระบบของบริษัท']},
- {id:'trust',e:'🛡',name:'ลูกค้าไม่แน่ใจ/กลัวถูกหลอก',kw:['หลอก','มิจฉาชีพ','จริงไหม','เชื่อถือ','ใช่ทรูไหม','โทรมาจากไหน','ได้เบอร์มาจากไหน','แอบอ้าง'],st:['pitch'],next:'pitch',
+ {id:'trust',chip:'ไม่แน่ใจว่าโทรมาจากไหน',e:'🛡',name:'ลูกค้าไม่แน่ใจ/กลัวถูกหลอก',kw:['หลอก','มิจฉาชีพ','จริงไหม','เชื่อถือ','ใช่ทรูไหม','โทรมาจากไหน','ได้เบอร์มาจากไหน','แอบอ้าง'],st:['pitch'],next:'pitch',
   tips:['แนะนำตัว ชื่อ รหัสพนักงาน และบริษัทให้ชัด','เสนอให้ลูกค้าตรวจสอบผ่านช่องทางทางการของบริษัทได้','ไม่ขอข้อมูลส่วนตัวเกินจำเป็นในช่วงแรก','ถ้าลูกค้ายังไม่สบายใจ ให้เคารพการตัดสินใจและเสนอให้โทรกลับผ่านช่องทางทางการ']},
- {id:'ready',e:'✅',name:'ลูกค้าสนใจ/พร้อมสมัคร',kw:['พร้อมสมัคร','สมัครเลย','ตกลง','ได้เลย','สนใจ','เอาเลย','ติดตั้งเมื่อไหร่','ติดตั้งได้เมื่อไหร่'],st:['reconfirm','value'],next:'reconfirm',
+ {id:'ready',chip:'ลูกค้าพร้อมสมัคร',e:'✅',name:'ลูกค้าสนใจ/พร้อมสมัคร',kw:['พร้อมสมัคร','สมัครเลย','ตกลง','ได้เลย','สนใจ','เอาเลย','ติดตั้งเมื่อไหร่','ติดตั้งได้เมื่อไหร่'],st:['reconfirm','value'],next:'reconfirm',
   tips:['อย่าพูดต่อยาว สรุปรายการให้ลูกค้ายืนยัน','ทวนข้อมูลสำคัญ: แพ็กเกจ ราคา ระยะสัญญา วันติดตั้ง ชื่อผู้สมัคร','ขอความยินยอมตามขั้นตอนของบริษัท','ปิดท้ายด้วยการขอบคุณและแจ้งขั้นตอนต่อไป']},
- {id:'detail',e:'📋',name:'ลูกค้าถามรายละเอียดแพ็กเกจ',kw:['รายละเอียด','มีอะไรบ้าง','ได้อะไร','แพ็กเกจ','โปรโมชั่น','โปร','เร็วเท่าไร','mbps'],st:['pitch','benefit'],next:'benefit',
+ {id:'detail',chip:'ถามรายละเอียดแพ็กเกจ',e:'📋',name:'ลูกค้าถามรายละเอียดแพ็กเกจ',kw:['รายละเอียด','มีอะไรบ้าง','ได้อะไร','แพ็กเกจ','โปรโมชั่น','โปร','เร็วเท่าไร','mbps'],st:['pitch','benefit'],next:'benefit',
   tips:['ตอบตรงคำถามก่อน สั้นและชัด','เลือกเล่าเฉพาะประโยชน์ที่ตรงกับลูกค้า ไม่ท่องทุกข้อ','ใช้ข้อมูลในการ์ดสินค้า (คุณสมบัติ/เงื่อนไข) เพื่อความถูกต้อง','จบด้วยคำถามปลายเปิด เพื่อรู้ความต้องการจริง']}
 ];
-const JVCHIPS=[['💸','ลูกค้าบอกว่าแพงไป'],['🤔','ขอคิดดูก่อน'],['🥊','ใช้เจ้าอื่นอยู่'],['🚫','ไม่สนใจ'],['⏰','ไม่สะดวกคุย'],['👨‍👩‍👧','ต้องถามที่บ้านก่อน'],['📄','กลัวติดสัญญา'],['📶','เน็ตช้า/หลุดบ่อย'],['🛡','ไม่แน่ใจว่าโทรมาจากไหน'],['✅','ลูกค้าพร้อมสมัคร']];
+function jvInts(){   // ค่าเริ่มต้น + ที่แอดมินแก้/เพิ่ม (ชีต JarvisIntents)
+  const rows=(SC.d&&SC.d.jv)||[],by={};rows.forEach(r=>by[r.id]=r);const out=[];
+  const mk=(r,d)=>({id:r.id,e:r.e||(d&&d.e)||'💬',name:r.name,chip:r.chip||(d&&d.chip)||r.name,kw:r.kw,tips:r.tips,st:r.st.length?r.st:(d?d.st:['object']),next:r.next||(d?d.next:''),edited:!!d});
+  JVDEF.forEach(d=>{const r=by[d.id];if(r){if(r.active)out.push(mk(r,d))}else out.push(d)});
+  rows.forEach(r=>{if(!JVDEF.some(d=>d.id===r.id)&&r.active)out.push(mk(r,null))});
+  return out;
+}
+function jvAllAdmin(){   // สำหรับหน้าแอดมิน: ทุกรายการพร้อมสถานะ
+  const rows=(SC.d&&SC.d.jv)||[],by={};rows.forEach(r=>by[r.id]=r);const out=[];
+  JVDEF.forEach(d=>{const r=by[d.id];out.push(r?{...d,...r,e:r.e||d.e,chip:r.chip||d.chip,st:r.st.length?r.st:d.st,next:r.next||d.next,status:r.active?'edited':'off',def:d}:{...d,status:'default',def:d})});
+  rows.forEach(r=>{if(!JVDEF.some(d=>d.id===r.id))out.push({...r,status:r.active?'custom':'off',def:null})});
+  return out;
+}
 function jvDetect(txt){
   let t=' '+String(txt||'').toLowerCase().replace(/\s+/g,' ')+' ',hit={},kws=[];
-  const all=[];JVINT.forEach(it=>it.kw.forEach(k=>all.push([k.toLowerCase(),it])));
+  const INTS=jvInts(),all=[];INTS.forEach(it=>it.kw.forEach(k=>all.push([k.toLowerCase(),it])));
   all.sort((a,b)=>b[0].length-a[0].length);
   all.forEach(([k,it])=>{if(t.includes(k)){hit[it.id]=(hit[it.id]||0)+k.length;kws.push(k);t=t.split(k).join(' ')}});
-  return {ints:JVINT.filter(it=>hit[it.id]).sort((a,b)=>hit[b.id]-hit[a.id]),kws};
+  return {ints:INTS.filter(it=>hit[it.id]).sort((a,b)=>hit[b.id]-hit[a.id]),kws};
 }
 function jvFind(txt,det,prod){
   const T=SC.d;if(!T)return[];
@@ -2442,8 +2487,8 @@ function jvFind(txt,det,prod){
   if(out.length<2&&sts.length)sc.filter(r=>r.s===0&&r.x.stage===sts[0]).sort((a,b)=>(b.x.product?1:0)-(a.x.product?1:0)).forEach(r=>{if(out.length<3)out.push(r)});
   return out.map(r=>r.x);
 }
-function jvReply(txt){
-  const T=SC.d,prod=JV.prod,det=jvDetect(txt),L=jvFind(txt,det,prod),it=det.ints[0];
+function jvReply(txt,force){
+  const T=SC.d,prod=JV.prod,fi=force?jvInts().find(x=>x.id===force):null,det=fi?{ints:[fi],kws:fi.kw.map(k=>k.toLowerCase())}:jvDetect(txt),L=jvFind(fi?'':txt,det,prod),it=det.ints[0];
   const stn=id=>{const s=(T.stages||[]).find(z=>z.id===id);return s?s.e+' '+s.name:id};
   let h='';
   if(it){
@@ -2463,18 +2508,19 @@ function jvDraw(){
   m.innerHTML=g+JV.msgs.map(x=>x.r==='u'?`<div class="jvb jv-u">${esc(x.t)}</div>`:`<div class="jvb jv-j">${x.t}</div>`).join('');
   m.scrollTop=m.scrollHeight;
 }
-async function jvSend(txt){
+async function jvSend(txt,force){
   txt=String(txt||'').trim().slice(0,300);if(!txt||JV.busy)return;
   JV.busy=true;JV.msgs.push({r:'u',t:txt});JV.msgs=JV.msgs.slice(-12);
   try{await ensureScripts();
-    JV.msgs.push({r:'j',t:SC.d?jvReply(txt):`<div class="err">โหลดสคริปต์ไม่สำเร็จ: ${esc(SC.err||'ลองใหม่อีกครั้ง')}</div>`});
+    JV.msgs.push({r:'j',t:SC.d?jvReply(txt,force):`<div class="err">โหลดสคริปต์ไม่สำเร็จ: ${esc(SC.err||'ลองใหม่อีกครั้ง')}</div>`});
   }catch(e){JV.msgs.push({r:'j',t:'<div class="err">เกิดข้อผิดพลาด ลองใหม่อีกครั้ง</div>'})}
   JV.busy=false;jvDraw();
 }
+function jvChips(){const c=$('#jvCh');if(!c)return;c.innerHTML=jvInts().map(it=>`<button data-jvchip="${esc(it.id)}">${esc(it.e)} ${esc(it.chip||it.name)}</button>`).join('')}
 function jvProdOpts(){const T=SC.d;if(!T)return'<option value="">— ทุกสินค้า —</option>';return '<option value="">— ทุกสินค้า (ทั่วไป) —</option>'+scOpts(JV.prod)}
 function jvToggle(on){
   JV.open=on===undefined?!JV.open:on;const p=$('#jvPanel');if(!p)return;p.style.display=JV.open?'flex':'none';
-  if(JV.open){if(JV.prod==null)JV.prod=SC.prod||'';ensureScripts().then(()=>{const s=$('#jvP');if(s)s.innerHTML=jvProdOpts()});jvDraw();setTimeout(()=>{const i=$('#jvQ');if(i)i.focus()},50)}
+  if(JV.open){if(JV.prod==null)JV.prod=SC.prod||'';jvChips();ensureScripts().then(()=>{const s=$('#jvP');if(s)s.innerHTML=jvProdOpts();jvChips()});jvDraw();setTimeout(()=>{const i=$('#jvQ');if(i)i.focus()},50)}
 }
 function jvBuild(){
   const st=document.createElement('style');st.textContent=`#jvBtn{position:fixed;left:14px;bottom:14px;z-index:55;width:62px;height:62px;border-radius:50%;border:2px solid #40c4ff;background:radial-gradient(circle at 30% 30%,#0f2a3a,#07121a);color:#40c4ff;font-size:28px;cursor:pointer;box-shadow:0 0 14px #40c4ff66}
@@ -2498,7 +2544,7 @@ function jvBuild(){
   const b=document.createElement('button');b.id='jvBtn';b.title='J.A.R.V.I.S. ผู้ช่วยขาย';b.setAttribute('aria-label','เปิด J.A.R.V.I.S. ผู้ช่วยขาย');b.textContent='🤖';b.onclick=()=>jvToggle();document.body.appendChild(b);
   const p=document.createElement('div');p.id='jvPanel';
   p.innerHTML=`<div class="jvh"><b>J.A.R.V.I.S.</b><span class="hint" style="flex:1">ผู้ช่วยขาย</span><button class="btn sm" id="jvClr" title="ล้างบทสนทนา">🧹</button><button class="btn sm" id="jvX" aria-label="ปิด">✕</button></div>
-   <div id="jvMsg"></div><div class="jvch">${JVCHIPS.map(c=>`<button data-jvchip="${esc(c[1])}">${c[0]} ${esc(c[1])}</button>`).join('')}</div>
+   <div id="jvMsg"></div><div class="jvch" id="jvCh"></div>
    <div class="jvi"><select id="jvP" style="flex:1 1 100%"><option value="">— ทุกสินค้า (ทั่วไป) —</option></select><input id="jvQ" maxlength="300" placeholder="ลูกค้าพูดว่า…" style="flex:1;min-width:0"><button class="btn primary" id="jvGo">ส่ง</button></div>`;
   document.body.appendChild(p);
   $('#jvX').onclick=()=>jvToggle(false);$('#jvClr').onclick=()=>{JV.msgs=[];jvDraw()};
@@ -2507,7 +2553,7 @@ function jvBuild(){
   $('#jvP').onchange=e=>{JV.prod=e.target.value};
   p.addEventListener('click',async e=>{
     const t=e.target.closest?e.target:null;if(!t)return;
-    const c=t.closest('[data-jvchip]');if(c){jvSend(c.dataset.jvchip);return}
+    const c=t.closest('[data-jvchip]');if(c){const it=jvInts().find(x=>x.id===c.dataset.jvchip);jvSend(it?(it.chip||it.name):'',c.dataset.jvchip);return}
     const cp=t.closest('[data-jvcp]');if(cp){const x=(SC.d?SC.d.items:[]).find(i=>i.id===cp.dataset.jvcp);if(x){try{await navigator.clipboard.writeText(x.body);toast('📋 คัดลอกสคริปต์แล้ว')}catch(er){toast('⚠️ คัดลอกไม่ได้ ลองเลือกข้อความแล้วคัดลอกเอง')}}return}
     const al=t.closest('[data-jvalt]');if(al){JV.prod=al.dataset.jvalt;SC.prod=JV.prod;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}jvToggle(false);goTab('script');setTimeout(()=>{const s=document.getElementById('sc-pitch');if(s)s.scrollIntoView({behavior:'smooth',block:'start'})},400);toast('🎁 สลับเป็น '+scPName(SC.prod)+' แล้ว');return}
     const go=t.closest('[data-jvgo]');if(go){const [pid,stg]=go.dataset.jvgo.split('|');SC.prod=pid;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}jvToggle(false);goTab('script');setTimeout(()=>{const s=document.getElementById('sc-'+stg);if(s)s.scrollIntoView({behavior:'smooth',block:'start'})},400)}
@@ -2754,7 +2800,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-04.4';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-04.5';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
