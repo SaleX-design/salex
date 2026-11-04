@@ -2350,6 +2350,127 @@ document.addEventListener('click',async e=>{
   const ed=t.closest('[data-scedit]');if(ed){const x=SC.d.items.find(i=>i.id===ed.dataset.scedit);if(x)scriptModal(x);return}
   const dl=t.closest('[data-scdel]');if(dl){if(!confirm('ลบสคริปต์นี้?'))return;try{await api('scriptDelete',{id:dl.dataset.scdel});toast('🗑 ลบแล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(er){toast('⚠️ '+er.message)}}
 });
+/* ---- 🤖 J.A.R.V.I.S. ผู้ช่วยขาย (ทำงานในเครื่อง ไม่ส่งข้อความออกนอกระบบ) ---- */
+const JV={open:false,msgs:[],prod:null,busy:false};
+const JVINT=[
+ {id:'price',e:'💸',name:'ลูกค้าบอกว่าราคาแพง/งบจำกัด',kw:['แพงไป','แพง','ราคาสูง','ถูกกว่า','ลดได้','ลดอีก','ลดหน่อย','เกินงบ','งบไม่พอ','จ่ายไม่ไหว','ราคา'],st:['object','value'],next:'value',
+  tips:['รับฟังก่อน ไม่เถียงทันที เช่น “เข้าใจค่ะ/ครับ เรื่องงบสำคัญเลย”','ถามต่อว่าลูกค้าเทียบกับอะไรอยู่ หรืองบที่สะดวกประมาณเท่าไร','ย้ำสิ่งที่ลูกค้าได้ต่อเดือน/ต่อวัน แทนการรีบลดราคา','ถ้ายังไม่ตรงงบ ไปขั้น Second Offer เสนอตัวเลือกที่เบากว่า']},
+ {id:'think',e:'🤔',name:'ลูกค้าขอคิดดูก่อน',kw:['ขอคิดดู','คิดดูก่อน','ขอคิด','ไว้ก่อน','ยังไม่ตัดสินใจ','ยังไม่แน่ใจ','เดี๋ยวโทรกลับ','ไว้ก่อนนะ'],st:['object','benefit'],next:'benefit',
+  tips:['ตอบรับสบายๆ “ได้ค่ะ/ครับ ไม่เป็นไร”','ถามเบาๆ ว่าติดใจเรื่องไหนอยู่ (ราคา สัญญา ความเสถียร) จะได้อธิบายให้ครบ','สรุปประโยชน์ที่ตรงกับลูกค้า 1 ข้อ','ขอนัดเวลาติดต่อกลับให้ชัดเจน อย่าปล่อยเป็น “ไว้ก่อน”']},
+ {id:'compet',e:'🥊',name:'ลูกค้าใช้เจ้าอื่นอยู่',kw:['เจ้าอื่น','เจ้าเดิม','ค่ายอื่น','ค่ายเดิม','ใช้อยู่แล้ว','มีอยู่แล้ว','dtac','ais','3bb','คู่แข่ง'],st:['object','value'],next:'value',
+  tips:['ไม่ตำหนิเจ้าเดิม เริ่มจาก “ขอบคุณที่ใช้บริการอยู่นะคะ/ครับ”','ถามว่าตอนนี้พอใจ/ไม่พอใจจุดไหน เพื่อหาจุดที่เรามีประโยชน์จริง','เทียบเฉพาะประเด็นที่ลูกค้าให้ความสำคัญ (ความเร็ว ราคา บริการ)','เสนอทดลอง/ข้อเสนอที่ลูกค้าเปลี่ยนแล้วไม่เสียเปรียบ ตามเงื่อนไขของสินค้า']},
+ {id:'notneed',e:'🚫',name:'ลูกค้าไม่สนใจ/ไม่จำเป็น',kw:['ไม่สนใจ','ไม่ต้องการ','ไม่จำเป็น','ไม่อยากได้','ไม่เอา','ไม่ใช้','ไม่ต้อง'],st:['benefit','object'],next:'benefit',
+  tips:['อย่ารีบวาง ยอมรับก่อน “ไม่เป็นไรค่ะ/ครับ”','ถามคำถามเดียวที่ตรงกับการใช้งานของลูกค้า เช่น ตอนนี้ที่บ้านใช้เน็ตกี่คน','เล่าประโยชน์สั้นๆ 1 ข้อที่เกี่ยวกับชีวิตลูกค้า','ถ้ายังปฏิเสธ ขอบคุณและขออนุญาตแจ้งโปรที่เหมาะในโอกาสหน้า']},
+ {id:'busy',e:'⏰',name:'ลูกค้าไม่สะดวกคุย',kw:['ไม่สะดวก','ไม่ว่าง','กำลังประชุม','กำลังขับรถ','กำลังทำงาน','โทรมาผิดเวลา','โทรทีหลัง','โทรใหม่','ไว้โทร'],st:['pitch'],next:'pitch',
+  tips:['ขอโทษที่รบกวน และไม่ฝืนคุยต่อ','ถามเวลาที่สะดวกที่สุด 1 ช่วง (เช่น วันนี้หลัง 6 โมงเย็น หรือพรุ่งนี้เช้า)','ยืนยันเวลานัดซ้ำและจดบันทึกไว้เพื่อโทรกลับตรงเวลา']},
+ {id:'family',e:'👨‍👩‍👧',name:'ลูกค้าต้องปรึกษาคนในบ้าน',kw:['แฟน','สามี','ภรรยา','ที่บ้าน','คนในบ้าน','ครอบครัว','ปรึกษาพ่อ','ปรึกษาแม่','ผู้ปกครอง'],st:['object','benefit'],next:'reconfirm',
+  tips:['เข้าใจและให้เกียรติ “เป็นการตัดสินใจร่วมกันเลยนะคะ/ครับ”','ถามว่าคนในบ้านจะให้ความสำคัญเรื่องอะไรเป็นพิเศษ (ราคา ความเร็ว ติดตั้ง)','เสนอสรุปสั้นๆ ให้ลูกค้านำไปคุยต่อ หรือขอคุยกับผู้ตัดสินใจร่วมด้วย','นัดเวลาโทรกลับหลังได้คุยกันแล้ว']},
+ {id:'contract',e:'📄',name:'ลูกค้ากังวลสัญญา/ผูกมัด',kw:['สัญญา','ผูกมัด','ยกเลิก','ค่าปรับ','12 เดือน','ติดสัญญา','เลิกใช้'],st:['object','value'],next:'value',
+  tips:['ยอมรับว่าเรื่องสัญญาเป็นเรื่องสำคัญ','อธิบายเงื่อนไขตามข้อมูลจริงของสินค้า (ระยะสัญญา ค่าปรับ) ให้ชัดและไม่เกินจริง','ชี้ว่าระหว่างสัญญาลูกค้าได้อะไรบ้าง','ถ้ามีทางเลือกที่ผูกมัดน้อยกว่า เสนอเป็น Second Offer']},
+ {id:'quality',e:'📶',name:'ลูกค้ากังวลความเร็ว/สัญญาณ',kw:['เน็ตช้า','ช้า','สัญญาณ','หลุด','ไม่เสถียร','เน็ตหลุด','แรงไหม','เร็วไหม','ไม่เร็ว'],st:['object','benefit'],next:'value',
+  tips:['ถามอาการ/สถานการณ์ที่ลูกค้าเจอ (ช่วงเวลา จำนวนคนใช้ อุปกรณ์)','อธิบายสิ่งที่สินค้านี้ช่วยแก้ ตามข้อมูลสินค้าจริงเท่านั้น','ไม่รับปากเกินความเป็นจริง ถ้าไม่แน่ใจให้บอกว่าจะตรวจสอบและติดต่อกลับ','เสนอขั้นตอนตรวจสอบพื้นที่/นัดช่างตามระบบของบริษัท']},
+ {id:'trust',e:'🛡',name:'ลูกค้าไม่แน่ใจ/กลัวถูกหลอก',kw:['หลอก','มิจฉาชีพ','จริงไหม','เชื่อถือ','ใช่ทรูไหม','โทรมาจากไหน','ได้เบอร์มาจากไหน','แอบอ้าง'],st:['pitch'],next:'pitch',
+  tips:['แนะนำตัว ชื่อ รหัสพนักงาน และบริษัทให้ชัด','เสนอให้ลูกค้าตรวจสอบผ่านช่องทางทางการของบริษัทได้','ไม่ขอข้อมูลส่วนตัวเกินจำเป็นในช่วงแรก','ถ้าลูกค้ายังไม่สบายใจ ให้เคารพการตัดสินใจและเสนอให้โทรกลับผ่านช่องทางทางการ']},
+ {id:'ready',e:'✅',name:'ลูกค้าสนใจ/พร้อมสมัคร',kw:['พร้อมสมัคร','สมัครเลย','ตกลง','ได้เลย','สนใจ','เอาเลย','ติดตั้งเมื่อไหร่','ติดตั้งได้เมื่อไหร่'],st:['reconfirm','value'],next:'reconfirm',
+  tips:['อย่าพูดต่อยาว สรุปรายการให้ลูกค้ายืนยัน','ทวนข้อมูลสำคัญ: แพ็กเกจ ราคา ระยะสัญญา วันติดตั้ง ชื่อผู้สมัคร','ขอความยินยอมตามขั้นตอนของบริษัท','ปิดท้ายด้วยการขอบคุณและแจ้งขั้นตอนต่อไป']},
+ {id:'detail',e:'📋',name:'ลูกค้าถามรายละเอียดแพ็กเกจ',kw:['รายละเอียด','มีอะไรบ้าง','ได้อะไร','แพ็กเกจ','โปรโมชั่น','โปร','เร็วเท่าไร','mbps'],st:['pitch','benefit'],next:'benefit',
+  tips:['ตอบตรงคำถามก่อน สั้นและชัด','เลือกเล่าเฉพาะประโยชน์ที่ตรงกับลูกค้า ไม่ท่องทุกข้อ','ใช้ข้อมูลในการ์ดสินค้า (คุณสมบัติ/เงื่อนไข) เพื่อความถูกต้อง','จบด้วยคำถามปลายเปิด เพื่อรู้ความต้องการจริง']}
+];
+const JVCHIPS=['ลูกค้าบอกว่าแพงไป','ขอคิดดูก่อน','ใช้เจ้าอื่นอยู่','ไม่สนใจ','ไม่สะดวกคุย','ต้องถามที่บ้านก่อน','กลัวติดสัญญา','เน็ตช้า/หลุดบ่อย','ไม่แน่ใจว่าโทรมาจากไหน','ลูกค้าพร้อมสมัคร'];
+function jvDetect(txt){
+  let t=' '+String(txt||'').toLowerCase().replace(/\s+/g,' ')+' ',hit={},kws=[];
+  const all=[];JVINT.forEach(it=>it.kw.forEach(k=>all.push([k.toLowerCase(),it])));
+  all.sort((a,b)=>b[0].length-a[0].length);
+  all.forEach(([k,it])=>{if(t.includes(k)){hit[it.id]=(hit[it.id]||0)+k.length;kws.push(k);t=t.split(k).join(' ')}});
+  return {ints:JVINT.filter(it=>hit[it.id]).sort((a,b)=>hit[b.id]-hit[a.id]),kws};
+}
+function jvFind(txt,det,prod){
+  const T=SC.d;if(!T)return[];
+  const toks=[...new Set(String(txt||'').toLowerCase().split(/[\s,.;:!?/()"'“”]+/).filter(w=>w.length>=2&&w.length<=24))];
+  const prim=det.ints[0],sts=prim?prim.st:[];
+  const sc=T.items.filter(x=>!x.product||x.product===prod).map(x=>{
+    const ti=x.title.toLowerCase(),bo=x.body.toLowerCase();let s=0;
+    det.kws.forEach(k=>{if(ti.includes(k))s+=3;if(bo.includes(k))s+=1});
+    toks.forEach(k=>{if(ti.includes(k))s+=3;else if(bo.includes(k))s+=1});
+    const si=sts.indexOf(x.stage),b=si===0?3:si>0?1:0;
+    return {x,s,tot:s+b+(x.product?1:0)};
+  });
+  const hits=sc.filter(r=>r.s>0).sort((a,b)=>b.tot-a.tot),out=hits.slice(0,3);
+  if(out.length<2&&sts.length)sc.filter(r=>r.s===0&&r.x.stage===sts[0]).sort((a,b)=>(b.x.product?1:0)-(a.x.product?1:0)).forEach(r=>{if(out.length<3)out.push(r)});
+  return out.map(r=>r.x);
+}
+function jvReply(txt){
+  const T=SC.d,prod=JV.prod,det=jvDetect(txt),L=jvFind(txt,det,prod),it=det.ints[0];
+  const stn=id=>{const s=(T.stages||[]).find(z=>z.id===id);return s?s.e+' '+s.name:id};
+  let h='';
+  if(it){
+    h+=`<div><b>${it.e} ${esc(it.name)}</b>${det.ints[1]?` <span class="hint">· และ ${det.ints[1].e} ${esc(det.ints[1].name)}</span>`:''}</div><ol class="jvol">${it.tips.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`;
+    if(it.next)h+=`<div class="hint" style="margin:4px 0 6px">👉 ขั้นตอนถัดไปใน 6 STEP: <b>${esc(stn(it.next))}</b></div>`;
+  }else h+='<div>ยังจับสถานการณ์ไม่ได้ชัดครับ ลองพิมพ์คำที่ลูกค้าพูดสั้นๆ (เช่น “แพง” “ขอคิดดู” “ใช้เจ้าอื่น”) หรือกดปุ่มด้านล่าง ตอนนี้ผมลองค้นสคริปต์ที่ใกล้เคียงให้</div>';
+  if(L.length){
+    h+='<div style="margin-top:8px"><b>📞 สคริปต์ของทีมที่ใช้ได้</b></div>';
+    L.forEach(x=>{const col=SCCOL[x.stage]||'#848e9c',sg=(T.stages||[]).find(z=>z.id===x.stage),long=x.body.length>240;
+      h+=`<div class="jvsc" style="border-left:4px solid ${col}"><div style="font-size:12px;color:${col};font-weight:700">${sg?esc(sg.e+' '+sg.name):''}${x.product?' · '+esc(scPName(x.product)):''}</div><div style="font-weight:600;margin:2px 0">${esc(x.title)}</div><div class="jvb">${esc(long?x.body.slice(0,240)+'…':x.body).replace(/\n/g,'<br>')}</div>${long?`<details><summary class="hint" style="cursor:pointer">ดูเต็ม</summary><div class="jvb">${esc(x.body).replace(/\n/g,'<br>')}</div></details>`:''}<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><button class="btn sm" data-jvcp="${esc(x.id)}">📋 คัดลอก</button>${x.alt?`<button class="btn sm" data-jvalt="${esc(x.alt)}">🎁 ไปเสนอ ${esc(scPName(x.alt))} แทน</button>`:''}<button class="btn sm" data-jvgo="${esc(x.product||'')}|${esc(x.stage)}">เปิดในหน้าสคริปต์</button></div></div>`});
+  }else h+='<div class="hint" style="margin-top:8px">ยังไม่มีสคริปต์ที่ตรงกับเรื่องนี้ในระบบ — แจ้งแอดมินให้เพิ่มที่เมนู 📞 สคริปต์ขาย จะได้ขึ้นที่นี่ครับ</div>';
+  return h;
+}
+function jvDraw(){
+  const m=$('#jvMsg');if(!m)return;
+  const g='<div class="jvb jv-j">สวัสดีครับ ผม <b>J.A.R.V.I.S.</b> ผู้ช่วยขายของ SALE X 🤖<br>พิมพ์สิ่งที่ลูกค้าพูดสั้นๆ ระหว่างคุยสาย หรือกดปุ่มด้านล่าง ผมจะแนะนำแนวทางและสคริปต์ของทีมให้ครับ<div class="hint" style="margin-top:6px">ผมไม่ได้ฟังสาย และไม่ส่งข้อความออกนอกระบบ · อย่าพิมพ์ชื่อ/เบอร์/ข้อมูลส่วนตัวของลูกค้า</div></div>';
+  m.innerHTML=g+JV.msgs.map(x=>x.r==='u'?`<div class="jvb jv-u">${esc(x.t)}</div>`:`<div class="jvb jv-j">${x.t}</div>`).join('');
+  m.scrollTop=m.scrollHeight;
+}
+async function jvSend(txt){
+  txt=String(txt||'').trim().slice(0,300);if(!txt||JV.busy)return;
+  JV.busy=true;JV.msgs.push({r:'u',t:txt});JV.msgs=JV.msgs.slice(-12);
+  try{await ensureScripts();
+    JV.msgs.push({r:'j',t:SC.d?jvReply(txt):`<div class="err">โหลดสคริปต์ไม่สำเร็จ: ${esc(SC.err||'ลองใหม่อีกครั้ง')}</div>`});
+  }catch(e){JV.msgs.push({r:'j',t:'<div class="err">เกิดข้อผิดพลาด ลองใหม่อีกครั้ง</div>'})}
+  JV.busy=false;jvDraw();
+}
+function jvProdOpts(){const T=SC.d;if(!T)return'<option value="">— ทุกสินค้า —</option>';return '<option value="">— ทุกสินค้า (ทั่วไป) —</option>'+scOpts(JV.prod)}
+function jvToggle(on){
+  JV.open=on===undefined?!JV.open:on;const p=$('#jvPanel');if(!p)return;p.style.display=JV.open?'flex':'none';
+  if(JV.open){if(JV.prod==null)JV.prod=SC.prod||'';ensureScripts().then(()=>{const s=$('#jvP');if(s)s.innerHTML=jvProdOpts()});jvDraw();setTimeout(()=>{const i=$('#jvQ');if(i)i.focus()},50)}
+}
+function jvBuild(){
+  const st=document.createElement('style');st.textContent=`#jvBtn{position:fixed;left:14px;bottom:14px;z-index:55;width:54px;height:54px;border-radius:50%;border:2px solid #40c4ff;background:radial-gradient(circle at 30% 30%,#0f2a3a,#07121a);color:#40c4ff;font-size:24px;cursor:pointer;box-shadow:0 0 14px #40c4ff66}
+#jvBtn:hover{box-shadow:0 0 22px #40c4ffaa}
+#jvPanel{position:fixed;left:14px;bottom:78px;z-index:55;width:min(400px,calc(100vw - 28px));max-height:min(620px,calc(100vh - 110px));display:none;flex-direction:column;background:var(--panel);border:1px solid #40c4ff88;border-radius:14px;box-shadow:0 8px 32px #000a;overflow:hidden}
+.jvh{display:flex;align-items:center;gap:8px;padding:10px 12px;background:linear-gradient(90deg,#0f2a3a,var(--panel));border-bottom:1px solid var(--line)}
+.jvh b{color:#40c4ff;letter-spacing:1px}
+#jvMsg{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:140px}
+.jvb{padding:8px 10px;border-radius:10px;font-size:14px;line-height:1.55;max-width:96%}
+.jv-j{background:var(--panel2);border:1px solid var(--line);align-self:flex-start}
+.jv-u{background:#40c4ff22;border:1px solid #40c4ff66;align-self:flex-end}
+.jvol{margin:4px 0 0 18px;padding:0;font-size:14px;line-height:1.55}
+.jvsc{margin-top:6px;padding:8px 10px;background:var(--bg);border-radius:8px}
+.jvsc .jvb{padding:0;border:0;background:none;max-width:100%}
+.jvch{display:flex;gap:6px;overflow-x:auto;padding:6px 10px;border-top:1px solid var(--line)}
+.jvch button{white-space:nowrap;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer}
+.jvi{display:flex;gap:6px;padding:8px 10px;border-top:1px solid var(--line);flex-wrap:wrap}
+.jvi select,.jvi input{background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px;font-size:15px}
+@media(max-width:700px){#jvBtn{bottom:72px;width:48px;height:48px;font-size:21px}#jvPanel{bottom:128px;left:8px;width:calc(100vw - 16px);max-height:calc(100vh - 170px)}}`;
+  document.head.appendChild(st);
+  const b=document.createElement('button');b.id='jvBtn';b.title='J.A.R.V.I.S. ผู้ช่วยขาย';b.setAttribute('aria-label','เปิด J.A.R.V.I.S. ผู้ช่วยขาย');b.textContent='🤖';b.onclick=()=>jvToggle();document.body.appendChild(b);
+  const p=document.createElement('div');p.id='jvPanel';
+  p.innerHTML=`<div class="jvh"><b>J.A.R.V.I.S.</b><span class="hint" style="flex:1">ผู้ช่วยขาย</span><button class="btn sm" id="jvClr" title="ล้างบทสนทนา">🧹</button><button class="btn sm" id="jvX" aria-label="ปิด">✕</button></div>
+   <div id="jvMsg"></div><div class="jvch">${JVCHIPS.map(c=>`<button data-jvchip="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+   <div class="jvi"><select id="jvP" style="flex:1 1 100%"><option value="">— ทุกสินค้า (ทั่วไป) —</option></select><input id="jvQ" maxlength="300" placeholder="ลูกค้าพูดว่า…" style="flex:1;min-width:0"><button class="btn primary" id="jvGo">ส่ง</button></div>`;
+  document.body.appendChild(p);
+  $('#jvX').onclick=()=>jvToggle(false);$('#jvClr').onclick=()=>{JV.msgs=[];jvDraw()};
+  $('#jvGo').onclick=()=>{const i=$('#jvQ'),v=i.value;i.value='';jvSend(v)};
+  $('#jvQ').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();$('#jvGo').click()}};
+  $('#jvP').onchange=e=>{JV.prod=e.target.value};
+  p.addEventListener('click',async e=>{
+    const t=e.target.closest?e.target:null;if(!t)return;
+    const c=t.closest('[data-jvchip]');if(c){jvSend(c.dataset.jvchip);return}
+    const cp=t.closest('[data-jvcp]');if(cp){const x=(SC.d?SC.d.items:[]).find(i=>i.id===cp.dataset.jvcp);if(x){try{await navigator.clipboard.writeText(x.body);toast('📋 คัดลอกสคริปต์แล้ว')}catch(er){toast('⚠️ คัดลอกไม่ได้ ลองเลือกข้อความแล้วคัดลอกเอง')}}return}
+    const al=t.closest('[data-jvalt]');if(al){JV.prod=al.dataset.jvalt;SC.prod=JV.prod;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}jvToggle(false);goTab('script');setTimeout(()=>{const s=document.getElementById('sc-pitch');if(s)s.scrollIntoView({behavior:'smooth',block:'start'})},400);toast('🎁 สลับเป็น '+scPName(SC.prod)+' แล้ว');return}
+    const go=t.closest('[data-jvgo]');if(go){const [pid,stg]=go.dataset.jvgo.split('|');SC.prod=pid;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}jvToggle(false);goTab('script');setTimeout(()=>{const s=document.getElementById('sc-'+stg);if(s)s.scrollIntoView({behavior:'smooth',block:'start'})},400)}
+  });
+}
+function jvShow(){if(D&&!document.getElementById('jvBtn'))jvBuild()}
 function tipModal(t){
   t=t||{};const T=TP.d,edit=!!t.id,adm=!!D.isAdmin;
   const pl=(T.products||[]).map(p=>p.name);
@@ -2590,12 +2711,12 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-04.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-04.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
 function render(){
-  if(!D)return;renderVer();
+  if(!D)return;renderVer();jvShow();
   const cnt=S.count||DEFN[S.mode];S.ext=buildPeriods(S.mode,S.anchor,cnt+LOOK);S.periods=S.ext.slice(-cnt);
   renderHeader();renderTicker();renderBell();applyMenu();renderBnav();
   if(S.tab==='spot')S.tab='rank';if(S.tab==='fb'){S.tab='feed';S.feedView='fb'}
