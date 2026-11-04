@@ -599,6 +599,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
     <button data-a="ops">⚙️ งานบริการ/เกม</button>
     <button data-a="scr">📞 สคริปต์ขาย</button>
     <button data-a="live">👥 ออนไลน์</button>
+    <button data-a="plog">🗓 ประวัติเข้าใช้ 30 วัน</button>
     <button data-a="audit">ตรวจข้อมูล</button>
     <button data-a="set">ตั้งค่า</button>
   </div>
@@ -1203,11 +1204,39 @@ async function renderAdmin(){
   else if(S.adm==='prod'){if(!ADM.content)await admLoad('content');if(!ADM.psales)await admLoad('psales');admProducts(body)}
   else if(S.adm==='ops'){if(!ADM.content)await admLoad('content');admOps(body)}
   else if(S.adm==='live'){admLive(body)}
+  else if(S.adm==='plog'){admPlog(body)}
   else if(S.adm==='scr'){await ensureScripts(true);admScripts(body)}
   else if(S.adm==='audit'){await admLoad('audit');admAudit(body)}
   else{if(!ADM.content)await admLoad('content');admSettings(body)}
 }
 
+/* ---- 🗓 ประวัติเข้าใช้งานย้อนหลัง 30 วัน (เฉพาะแอดมิน) ---- */
+const PL={d:null,view:'day',q:'',open:{}};
+async function admPlog(body){
+  clearInterval(LIVE_T);
+  if(!PL.d){body.innerHTML='<div class="panel"><div class="hint">กำลังโหลด…</div></div>';try{PL.d=await api('presenceLog')}catch(e){body.innerHTML=`<div class="panel"><div class="err">${esc(e.message)}</div></div>`;return}}
+  const P=PL.d,q=PL.q.trim().toLowerCase(),tn=t=>(teamOf(t)||{}).name||t;
+  const usedAny=P.users.filter(u=>u.n>0).length,never=P.users.filter(u=>u.n===0&&u.active);
+  let h=`<div class="topstats c3" style="margin-bottom:12px"><div class="tcell up"><small>👥 เคยเข้าใช้ใน ${P.keep} วัน</small><div class="tv">${usedAny} <span style="font-size:14px;color:var(--mute)">/ ${P.total} คน</span></div><div class="ts">ตั้งแต่ ${dShort(P.from)} ถึงวันนี้</div></div>
+   <div class="tcell"><small>😴 ไม่เข้าเลย</small><div class="tv">${never.length} <span style="font-size:14px;color:var(--mute)">คน</span></div><div class="ts">ดูรายชื่อที่แท็บ "รายคน"</div></div>
+   <div class="tcell"><small>🗑 เก็บข้อมูล</small><div class="tv">${P.keep} <span style="font-size:14px;color:var(--mute)">วัน</span></div><div class="ts">เก่ากว่านี้ถูกลบอัตโนมัติรายวัน</div></div></div>
+   ${P.noSheet?'<div class="panel"><div class="err">ยังไม่มีชีต Presence — ให้รันฟังก์ชัน setup ใน Apps Script ก่อน</div></div>':''}
+   <div class="panel sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn sm ${PL.view==='day'?'primary':''}" data-plv="day">📅 รายวัน</button><button class="btn sm ${PL.view==='user'?'primary':''}" data-plv="user">👤 รายคน</button><input id="plQ" type="search" placeholder="🔎 ค้นหาชื่อ…" value="${esc(PL.q)}" style="flex:1;min-width:160px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--text)"><button class="btn sm" id="plRf">🔄 โหลดใหม่</button></div></div>`;
+  if(PL.view==='day'){
+    h+='<div class="panel sec"><h3>📅 ใครเข้าใช้งานแต่ละวัน</h3><div class="tblwrap" style="max-height:640px;overflow:auto"><table class="atbl"><thead><tr><th>วันที่</th><th class="r">จำนวน</th><th>รายชื่อ</th></tr></thead><tbody>';
+    P.days.forEach(x=>{const L=q?x.users.filter(u=>(u.name+' '+u.id).toLowerCase().includes(q)):x.users;if(q&&!L.length)return;const op=PL.open[x.d]||!!q;
+      h+=`<tr><td style="white-space:nowrap">${dShort(x.d)}${x.d===P.t?' <span class="hint">(วันนี้)</span>':''}</td><td class="r num">${q?L.length+' / ':''}${x.n} คน</td><td>${x.n?`<a href="#" data-pld="${x.d}">${op?'▾ ซ่อน':'▸ ดูรายชื่อ'}</a>`:'<span class="hint">ไม่มีผู้เข้า</span>'}${op?`<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">${L.map(u=>`<span class="role" title="${esc(tn(u.team))} · เข้า ${esc(u.first)||'–'} ถึง ${esc(u.last)||'–'} · ${u.hrs} ชม.">${esc(u.name)} <span class="hint">${esc(u.first)||''}</span></span>`).join('')}</div>`:''}</td></tr>`});
+    h+='</tbody></table></div><div class="hint" style="margin-top:6px">กดที่เวลา/ชื่อค้างไว้ (หรือเอาเมาส์ชี้) เพื่อดูทีม ช่วงเวลา และจำนวนชั่วโมงที่ใช้งาน</div></div>';
+  }else{
+    const days=P.days.map(d=>d.d).reverse(),L=P.users.filter(u=>!q||(u.name+' '+u.id).toLowerCase().includes(q));
+    h+=`<div class="panel sec"><h3>👤 เข้ากี่วันใน ${P.keep} วัน (เรียงจากเข้าบ่อยสุด)</h3><div class="tblwrap" style="max-height:640px;overflow:auto"><table class="atbl"><thead><tr><th>ชื่อ</th><th>ทีม</th><th class="r">จำนวนวัน</th><th class="r">เข้าล่าสุด</th><th>${P.keep} วันล่าสุด (ซ้าย=เก่า, ขวา=วันนี้)</th></tr></thead><tbody>${L.map(u=>{const set={};u.ds.forEach(d=>set[d]=1);return `<tr><td>${esc(u.name)}${u.role?` <span class="role">${esc(ROLE[u.role]||u.role)}</span>`:''}${u.active?'':' <span class="hint">(ปิดใช้งาน)</span>'}</td><td class="hint">${esc(tn(u.team))}</td><td class="r num">${u.n?u.n+' วัน':'<span class="hint">ไม่เคยเข้า</span>'}</td><td class="r num">${u.last?dShort(u.last):'–'}</td><td><span style="display:inline-flex;gap:2px">${days.map(d=>`<i class="hc ${set[d]?'a3':''}" style="width:8px;height:14px;${set[d]?'background:var(--up)':''}" title="${dShort(d)} — ${set[d]?'เข้า':'ไม่ได้เข้า'}"></i>`).join('')}</span></td></tr>`}).join('')||'<tr><td colspan="5" class="hint">ไม่พบ</td></tr>'}</tbody></table></div></div>`;
+  }
+  body.innerHTML=h+'<div class="hint" style="margin:6px 0">ข้อมูลนี้เห็นเฉพาะแอดมิน · นับวันที่เปิดหน้าเว็บอย่างน้อย 1 ครั้ง · เวลาเป็นเวลาไทย</div>';
+  $$('[data-plv]',body).forEach(b=>b.onclick=()=>{PL.view=b.dataset.plv;admPlog(body)});
+  $$('[data-pld]',body).forEach(a=>a.onclick=e=>{e.preventDefault();PL.open[a.dataset.pld]=!PL.open[a.dataset.pld];admPlog(body)});
+  $('#plRf').onclick=()=>{PL.d=null;admPlog(body)};
+  $('#plQ').oninput=e=>{PL.q=e.target.value;clearTimeout(PL.t);PL.t=setTimeout(()=>{admPlog(body);const i=$('#plQ');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)};
+}
 /* ---- 👥 ออนไลน์ตอนนี้ (เฉพาะแอดมิน) ---- */
 let LIVE_T=0;
 async function admLive(body){
@@ -2250,6 +2279,17 @@ function scCard(x,adm){
   if(x.stage==='object')return `<details class="panel" style="${cs}" open><summary style="cursor:pointer;font-size:17px">${head}</summary>${inner}</details>`;
   return `<div class="panel" style="${cs};font-size:17px">${head}${inner}</div>`;
 }
+function scOpts(sel){
+  const P=SC.d.products,o=p=>`<option value="${esc(p.id)}" ${p.id===sel?'selected':''}>${esc(p.name)}</option>`,a=P.filter(p=>!p.own),b=P.filter(p=>p.own);
+  return b.length?`<optgroup label="สินค้าในระบบ">${a.map(o).join('')}</optgroup><optgroup label="ชนิดสินค้า (สคริปต์)">${b.map(o).join('')}</optgroup>`:a.map(o).join('');
+}
+function typeModal(t){
+  t=t||{};const edit=!!t.id;
+  openModal(`<h2>${edit?'✏️ แก้ชื่อชนิดสินค้า':'🏷 เพิ่มชนิดสินค้า'}</h2><p class="hint">ใช้เฉพาะหน้า 📞 สคริปต์ขาย ไม่ไปปนกับยอดขายและค่าคอม</p>
+   <div class="fld"><label>ชื่อชนิดสินค้า</label><input id="stN" maxlength="60" value="${esc(t.name||'')}" placeholder="เช่น VAS, Mesh, True ID"></div>
+   <div id="stE" class="err"></div><div class="mrow"><button class="btn primary" id="stGo">${edit?'บันทึก':'เพิ่ม'}</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
+  $('#stGo').onclick=async()=>{$('#stGo').disabled=true;try{const r=await api('scriptTypeSave',{id:t.id||'',name:$('#stN').value});closeModal();toast('✅ บันทึกชนิดสินค้าแล้ว');if(!edit&&r&&r.id){SC.prod=r.id;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}}await ensureScripts(true);if(S.tab==='admin')render()}catch(e){$('#stE').textContent=e.message;$('#stGo').disabled=false}};
+}
 function renderScript(){
   const el=$('#scriptBody');if(!el)return;
   if(!SC.d){el.innerHTML=SC.err?`<div class="panel"><div class="err">${esc(SC.err)}</div></div>`:'<div class="panel"><div class="hint">กำลังโหลด…</div></div>';ensureScripts();return}
@@ -2260,7 +2300,7 @@ function renderScript(){
   L.sort((a,b)=>(!!a.product===!!b.product?0:a.product?-1:1));
   let h='';
   if(T.needSetup)h+='<div class="panel"><div class="empty">⚠️ ยังไม่มีชีต Scripts — ให้แอดมินรันฟังก์ชัน <b>setup</b> ใน Apps Script หนึ่งครั้ง แล้วรีเฟรชหน้านี้</div></div>';
-  h+=`<div class="panel sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="scP" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--text);font-size:16px"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${T.products.map(p=>`<option value="${esc(p.id)}" ${p.id===SC.prod?'selected':''}>${esc(p.name)}</option>`).join('')}</select><input id="scQ" type="search" placeholder="🔎 ค้นหาสคริปต์…" value="${esc(SC.q)}" style="flex:1;min-width:160px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--text)">${adm?'<button class="btn primary" id="scAdd">➕ เพิ่มสคริปต์</button>':''}</div></div>`;
+  h+=`<div class="panel sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="scP" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--text);font-size:16px"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${scOpts(SC.prod)}</select><input id="scQ" type="search" placeholder="🔎 ค้นหาสคริปต์…" value="${esc(SC.q)}" style="flex:1;min-width:160px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--text)">${adm?'<button class="btn primary" id="scAdd">➕ เพิ่มสคริปต์</button><button class="btn" id="scAddT">🏷 เพิ่มชนิดสินค้า</button>':''}</div></div>`;
   if(SC.prod)h+=scInfoCard(SC.prod,adm,false);
   h+='<div class="mrow" id="scBar" style="justify-content:flex-start;position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;display:flex;gap:6px;flex-wrap:wrap">'+T.stages.map((s,i)=>`<button class="btn sm" data-scgo="${s.id}" style="border:2px solid ${SCCOL[s.id]};background:color-mix(in srgb,${SCCOL[s.id]} 18%,var(--panel2))">${i+1}. ${s.e} ${esc(s.name)}</button>`).join('')+'</div>';
   T.stages.forEach((s,i)=>{
@@ -2271,10 +2311,11 @@ function renderScript(){
   $('#scP').onchange=e=>{SC.prod=e.target.value;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}renderScript()};
   $('#scQ').oninput=e=>{SC.q=e.target.value;clearTimeout(SC.t);SC.t=setTimeout(()=>{renderScript();const i=$('#scQ');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)};
   if($('#scAdd'))$('#scAdd').onclick=()=>scriptModal({product:SC.prod});
+  if($('#scAddT'))$('#scAddT').onclick=()=>typeModal();
 }
 function scriptModal(x){
   x=x||{};const T=SC.d,edit=!!x.id;
-  const po=(sel)=>T.products.map(p=>`<option value="${esc(p.id)}" ${p.id===sel?'selected':''}>${esc(p.name)}</option>`).join('');
+  const po=scOpts;
   openModal(`<h2>${edit?'✏️ แก้ไขสคริปต์':'✍️ เพิ่มสคริปต์ขาย'}</h2>
    <div class="row2"><div class="fld"><label>สินค้า</label><select id="smP"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${po(x.product)}</select></div>
    <div class="fld"><label>ขั้นตอน</label><select id="smS">${T.stages.map(s=>`<option value="${s.id}" ${x.stage===s.id?'selected':''}>${s.e} ${esc(s.name)}</option>`).join('')}</select></div></div>
@@ -2291,6 +2332,9 @@ function admScripts(body){
   const rows=T.items.map(x=>`<tr><td>${esc(x.product?scPName(x.product):'ทั่วไป')}</td><td>${esc((T.stages.find(s=>s.id===x.stage)||{}).name||x.stage)}</td><td>${esc(x.title)}</td><td style="white-space:nowrap"><button class="btn sm" data-scedit="${esc(x.id)}">✏️</button> <button class="btn sm" data-scdel="${esc(x.id)}">🗑</button></td></tr>`).join('');
   body.innerHTML=`<div class="panel sec"><h3>📞 สคริปต์ขาย (${T.items.length})</h3><p class="hint">พนักงานทุกคนเห็นที่เมนู 📞 สคริปต์ขาย · ตัวอย่างที่มากับระบบมี [ ] ให้แก้เป็นของจริง หรือลบทิ้งได้</p><button class="btn primary" id="scAdd2">➕ เพิ่มสคริปต์</button><div style="overflow:auto;margin-top:10px"><table><thead><tr><th>สินค้า</th><th>ขั้นตอน</th><th>หัวข้อ</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="4" class="hint">ยังไม่มีสคริปต์</td></tr>'}</tbody></table></div></div>`;
   $('#scAdd2').onclick=()=>scriptModal({});
+  const ty=T.products.filter(p=>p.own).map(p=>`<tr><td>${esc(p.name)}</td><td style="white-space:nowrap"><button class="btn sm" data-stedit="${esc(p.id)}">✏️</button> <button class="btn sm" data-stdel="${esc(p.id)}">🗑</button></td></tr>`).join('');
+  body.insertAdjacentHTML('beforeend',`<div class="panel sec" style="margin-top:12px"><h3>🏷 ชนิดสินค้า (เฉพาะสคริปต์)</h3>${T.typesReady?'':'<div class="err">ยังไม่มีชีต ScriptTypes — รัน setup ใน Apps Script ก่อน</div>'}<p class="hint">ใช้เฉพาะหน้าสคริปต์ขาย ไม่เกี่ยวกับยอดขาย/ค่าคอม · สินค้าที่อยู่ในระบบยอดขายเพิ่มที่แท็บ "สินค้า" แล้วจะมาอยู่ในรายการนี้เองโดยอัตโนมัติ</p><button class="btn primary" id="stAdd">➕ เพิ่มชนิดสินค้า</button><div style="overflow:auto;margin-top:10px"><table><thead><tr><th>ชนิด</th><th></th></tr></thead><tbody>${ty||'<tr><td colspan="2" class="hint">ยังไม่มีชนิดที่เพิ่มเอง</td></tr>'}</tbody></table></div></div>`);
+  $('#stAdd').onclick=()=>typeModal();
   const pr=T.products.map(p=>{const f=(T.info||{})[p.id];return `<tr><td>${esc(p.name)}</td><td>${f?(f.image?'🖼 ':'')+(f.features?'✨ ':'')+(f.conditions?'📋 ':'')+(f.link?'🔗':''):'<span class="hint">ยังไม่มี</span>'}</td><td><button class="btn sm" data-scinfo="${esc(p.id)}">✏️</button></td></tr>`}).join('');
   body.insertAdjacentHTML('beforeend',`<div class="panel sec" style="margin-top:12px"><h3>🛍 ข้อมูลสินค้า (รูป/คุณสมบัติ/เงื่อนไข/ลิงก์)</h3>${T.infoReady?'':'<div class="err">ยังไม่มีชีต ProductInfo — รัน setup ใน Apps Script ก่อน</div>'}<p class="hint">แสดงบนหน้าสคริปต์ขายเมื่อพนักงานเลือกสินค้านั้น และใน Second Offer</p><div style="overflow:auto"><table><thead><tr><th>สินค้า</th><th>มีข้อมูล</th><th></th></tr></thead><tbody>${pr||'<tr><td colspan="3" class="hint">ยังไม่มีสินค้า</td></tr>'}</tbody></table></div></div>`);
 }
@@ -2300,6 +2344,8 @@ document.addEventListener('click',async e=>{
   const a=t.closest('[data-scalt]');if(a){SC.prod=a.dataset.scalt;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}renderScript();const s=document.getElementById('sc-pitch');if(s)s.scrollIntoView({behavior:'smooth',block:'start'});toast('🎁 สลับเป็น '+scPName(SC.prod)+' แล้ว');return}
   const cp=t.closest('[data-sccp]');if(cp){const x=SC.d.items.find(i=>i.id===cp.dataset.sccp);if(x){try{await navigator.clipboard.writeText(x.body);toast('📋 คัดลอกสคริปต์แล้ว')}catch(er){toast('⚠️ คัดลอกไม่ได้ ลองเลือกข้อความแล้วคัดลอกเอง')}}return}
   const zi=t.closest('[data-zoomimg]');if(zi){if(zi.src)openLightbox(zi.src,zi.alt);return}
+  const se=t.closest('[data-stedit]');if(se){const x=SC.d.products.find(p=>p.id===se.dataset.stedit);if(x)typeModal(x);return}
+  const sd=t.closest('[data-stdel]');if(sd){const x=SC.d.products.find(p=>p.id===sd.dataset.stdel),n=SC.d.items.filter(i=>i.product===sd.dataset.stdel||i.alt===sd.dataset.stdel).length;if(!confirm('ลบชนิดสินค้า "'+(x?x.name:'')+'" ?'+(n?'\nมีสคริปต์ที่ผูกกับชนิดนี้ '+n+' รายการ จะไม่แสดงจนกว่าจะแก้ให้เป็นสินค้าอื่น':'')))return;try{await api('scriptTypeDelete',{id:sd.dataset.stdel});toast('🗑 ลบแล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(er){toast('⚠️ '+er.message)}return}
   const inf=t.closest('[data-scinfo]');if(inf){infoModal(inf.dataset.scinfo);return}
   const ed=t.closest('[data-scedit]');if(ed){const x=SC.d.items.find(i=>i.id===ed.dataset.scedit);if(x)scriptModal(x);return}
   const dl=t.closest('[data-scdel]');if(dl){if(!confirm('ลบสคริปต์นี้?'))return;try{await api('scriptDelete',{id:dl.dataset.scdel});toast('🗑 ลบแล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(er){toast('⚠️ '+er.message)}}
@@ -2544,7 +2590,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-03.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-04.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -2791,6 +2837,32 @@ function drawTalkChart(ids,ym){
   const last=[...P].reverse().find(p=>p.avg!=null);
   $('#tkLg').innerHTML=(C.type==='candle'?'🕯 เขียว = ค่าเฉลี่ยเพิ่มจากช่วงก่อนหน้า · แดง = ลดลง · ไส้เทียน = สูงสุด–ต่ำสุด · ':'')+`เส้นประเหลือง = เกณฑ์ผ่าน · แกนตั้งเป็นชั่วโมง · ล่าสุด <b>${hms(last.avg)}</b> ชม.:นาที${C.per==='month'?' (ข้อมูลย้อนหลัง 3 เดือน)':''} · วางเมาส์/แตะแท่งเพื่อดูรายละเอียด`;
 }
+function tkTeamSum(ids,ym){   // สรุป Talk Time ต่อทีม: ค่าเฉลี่ย / วันผ่าน-ต่ำกว่าเกณฑ์ / จำนวนคนที่ค่าเฉลี่ยผ่าน
+  const cfg=D.v5.cfg,rows=[];
+  TEAMS.forEach(t=>{
+    const tids=ids.filter(id=>memOf(id).team===t.id);if(!tids.length)return;
+    let sum=0,n=0,pass=0,fail=0,leave=0,ppl=0,pplPass=0;const ag=[];
+    tids.forEach(id=>{const x=talkSum(id,ym);if(x.n){sum+=x.avg*x.n;n+=x.n;ppl++;if(x.avg>=cfg.talkMin)pplPass++}pass+=x.pass;fail+=x.fail;leave+=x.leave;ag.push({id,avg:x.avg,n:x.n,pass:x.pass,fail:x.fail,leave:x.leave})});
+    const sens=((D.kpi&&D.kpi.seniors)||[]).filter(x=>x.teams.includes(String(t.id))).map(x=>(memOf(x.id)||{}).nick||(memOf(x.id)||{}).name||x.id);
+    const sn=sens.length?sens:MEM.filter(m=>m.role==='senior'&&m.team===t.id).map(m=>m.nick||m.name);
+    ag.sort((a,b)=>(b.avg==null?-1:b.avg)-(a.avg==null?-1:a.avg));
+    rows.push({sum,n,t,sn:[...new Set(sn)],heads:tids.length,ppl,pplPass,avg:n?sum/n:null,pass,fail,leave,ag,pct:pass+fail?pass/(pass+fail)*100:null});
+  });
+  return rows;
+}
+function tkTeamHTML(ids,ym){
+  const cfg=D.v5.cfg,R=tkTeamSum(ids,ym);if(!R.length)return'';
+  const O=S.tkO||(S.tkO={}),best=R.filter(r=>r.avg!=null).sort((a,b)=>b.avg-a.avg)[0];
+  const T=R.reduce((a,r)=>{a.heads+=r.heads;a.pass+=r.pass;a.fail+=r.fail;a.leave+=r.leave;a.ppl+=r.ppl;a.pplPass+=r.pplPass;return a},{heads:0,pass:0,fail:0,leave:0,ppl:0,pplPass:0});
+  const sa=R.reduce((a,r)=>a+r.sum,0),sn=R.reduce((a,r)=>a+r.n,0);
+  const col=(v)=>v==null?'':v>=cfg.talkMin?'PASS':'FAIL';
+  let h=`<div class="panel sec"><h3>👔 สรุป Talk Time แยกตามทีม / Senior · ${THMON[+ym.slice(5)-1]} ${+ym.slice(0,4)+543}</h3><div class="tblwrap"><table class="atbl"><thead><tr><th>ทีม / Senior</th><th class="r">พนักงาน</th><th class="r">เฉลี่ย (ชม:นาที:วินาที/วัน)</th><th class="r">ผ่านเกณฑ์</th><th class="r">วันผ่าน / ต่ำกว่า</th><th class="r">วันลา</th></tr></thead><tbody>`;
+  R.forEach(r=>{const op=!!O[r.t.id];
+    h+=`<tr style="cursor:pointer" data-tkt="${esc(r.t.id)}"><td><span class="dot" style="background:${r.t.color}"></span> <b>${esc(r.t.name)}</b>${r.sn.length?`<div class="hint">👔 ${esc(r.sn.join(', '))}</div>`:''}<div class="hint">${op?'▾ ซ่อนรายคน':'▸ ดูรายคน'}</div></td><td class="r num">${r.heads}</td><td class="r num ${col(r.avg)}" style="font-weight:700">${r.avg==null?'–':hms(r.avg)}${best&&best.t.id===r.t.id&&R.length>1?' 🏆':''}</td><td class="r num">${r.pplPass}/${r.ppl} คน<div class="hint">${r.pct==null?'–':r.pct.toFixed(0)+'% ของวัน'}</div></td><td class="r num"><span class="up">${r.pass}</span> / <span class="down">${r.fail}</span></td><td class="r num">${r.leave}</td></tr>`;
+    if(op)h+=`<tr><td colspan="6" style="padding:0 0 8px 24px"><table class="atbl" style="margin:0"><thead><tr><th>พนักงาน</th><th class="r">เฉลี่ย</th><th class="r">ผ่าน/วันที่มีข้อมูล</th><th class="r">ลา</th></tr></thead><tbody>${r.ag.map(a=>{const m=memOf(a.id);return `<tr><td>${esc(m.nick||m.name)}</td><td class="r num ${col(a.avg)}">${a.avg==null?'–':hms(a.avg)}</td><td class="r num">${a.pass}/${a.n}</td><td class="r num">${a.leave}</td></tr>`}).join('')}</tbody></table></td></tr>`});
+  h+=`<tr style="font-weight:700;border-top:2px solid var(--line)"><td>รวมทุกทีมที่แสดง</td><td class="r num">${T.heads}</td><td class="r num ${col(sn?sa/sn:null)}">${sn?hms(sa/sn):'–'}</td><td class="r num">${T.pplPass}/${T.ppl} คน</td><td class="r num"><span class="up">${T.pass}</span> / <span class="down">${T.fail}</span></td><td class="r num">${T.leave}</td></tr>`;
+  return h+`</tbody></table></div><div class="hint" style="margin-top:6px">เกณฑ์ผ่าน ≥ ${hms(cfg.talkMin)} ชม.:นาที/วัน · เฉลี่ย = ค่าเฉลี่ยของทุกวัน-คนที่มีข้อมูล (ไม่รวมวันลา, NA, วันที่ Talk Time &lt; ${TKOFF()} นาที) · "ผ่านเกณฑ์" = จำนวนคนที่ค่าเฉลี่ยทั้งเดือนผ่านเกณฑ์ · กดที่ทีมเพื่อดูรายคน</div></div>`;
+}
 function renderTalk(){
   const T=S.tk||(S.tk={ym:curYM()}),ym=T.ym,dim=monthDays(ym),cfg=D.v5.cfg,mgr=D.canManage,minYM=addMonths(curYM(),-2);
   $('#tkCtl').innerHTML=`<input type="month" id="tkM" min="${minYM}" max="${curYM()}" value="${ym}"><span class="hint">เกณฑ์ผ่าน ≥ <b>${hms(cfg.talkMin)}</b> ชม.:นาที/วัน (${cfg.talkMin} นาที) · ข้อมูลย้อนหลังได้ 3 เดือน</span>${teamSelHTML('tkTeam')}`;
@@ -2820,6 +2892,7 @@ function renderTalk(){
       <div class="seg" id="tkcP">${[['day','รายวัน'],['month','รายเดือน']].map(([k,l])=>`<button data-v="${k}" class="${C.per===k?'on':''}">${l}</button>`).join('')}</div>
       <select id="tkcW"><option value="all">👥 ทุกคนที่แสดง (เฉลี่ย)</option>${ids.map(id=>`<option value="${esc(id)}" ${C.who===id?'selected':''}>${esc(memName(id))}</option>`).join('')}</select></div>
     <div id="tkChart" style="width:100%"></div><div id="tkLg" class="hint" style="margin-top:4px"></div></div>`;
+  h+=tkTeamHTML(ids,ym);
   h+=`<div class="panel"><h3>📅 ตาราง Talk Time · ${THMON[+ym.slice(5)-1]} ${+ym.slice(0,4)+543}</h3>
     <div class="tklg"><span><i style="background:#0ecb8133;border:1px solid #0ecb81"></i>ผ่านเกณฑ์</span><span><i style="background:#f6465d33;border:1px solid #f6465d"></i>ต่ำกว่าเกณฑ์</span><span><i style="background:#b388ff2e;border:1px solid #b388ff"></i>ลา</span><span><i style="background:#11161c;border:1px solid #2a3541"></i>วันหยุด (รวมวันที่ Talk Time &lt; ${TKOFF()} นาที)</span><span><i style="background:transparent;border:1px solid #2a3541"></i>NA ไม่มีข้อมูล</span></div>
     <div class="tkwrap"><table class="tkm"><thead><tr><th class="n">ชื่อ</th>${Array.from({length:dim},(_,i)=>{const k=ym+'-'+pad(i+1);return `<th title="${dayTxt(k)}"${k===today?' style="color:var(--flat)"':''}>${i+1}<br><span style="font-weight:400;opacity:.6">${WDN[U(k).getUTCDay()]}</span></th>`}).join('')}<th class="a">เฉลี่ย</th><th class="a">ผ่าน</th></tr></thead><tbody>`;
@@ -2842,6 +2915,7 @@ function renderTalk(){
   drawTalkChart(C.who==='all'?ids:[C.who],ym);
   $$('#tkcT button').forEach(b=>b.onclick=()=>{C.type=b.dataset.v;renderTalk()});$$('#tkcP button').forEach(b=>b.onclick=()=>{C.per=b.dataset.v;renderTalk()});
   $('#tkcW').onchange=e=>{C.who=e.target.value;renderTalk()};
+  $$('[data-tkt]').forEach(tr=>tr.onclick=()=>{const o=S.tkO||(S.tkO={});o[tr.dataset.tkt]=!o[tr.dataset.tkt];renderTalk()});
   const send=async rows=>{try{const r=await api('talkSet',{rows});toast(`✅ บันทึก Talk Time ${r.saved} รายการ`);await load();render()}catch(e){if($('#tkErr'))$('#tkErr').textContent=e.message;else toast('⚠️ '+esc(e.message))}};
   if(mgr){
     $('#tkGo').onclick=()=>send([{day:$('#tkDay').value,m:$('#tkWho').value,minutes:$('#tkMin').value}]);
