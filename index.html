@@ -2602,7 +2602,10 @@ function jvBuild(){
 #jvPanel[data-sz=s]{width:min(380px,calc(100vw - 28px));max-height:min(480px,calc(100vh - 100px))}
 #jvPanel[data-sz=l]{width:min(940px,calc(100vw - 28px));height:calc(100vh - 100px);max-height:calc(100vh - 100px)}
 #jvPanel[data-sz=l] .jvch{max-height:300px}
-#jvPanel.jvmin #jvMsg,#jvPanel.jvmin .jvch,#jvPanel.jvmin .jvi{display:none}#jvPanel.jvmin{height:auto;width:min(380px,calc(100vw - 28px))}#jvPanel.jvmin .jvh .hint,#jvPanel.jvmin #jvSzT{display:none}.jvh .hint{white-space:nowrap}.jvh .btn{flex:none;white-space:nowrap}
+#jvPanel[data-sz=f]{left:0;top:0;right:0;bottom:0;width:100vw;height:100vh;max-height:100vh;border-radius:0;z-index:90}
+#jvPanel[data-sz=f] .jvch{max-height:34vh}#jvPanel[data-sz=f] #jvMsg{padding:18px max(18px,calc((100vw - 1100px)/2))}#jvPanel[data-sz=f] .jvi{padding:12px max(18px,calc((100vw - 1100px)/2))}#jvPanel[data-sz=f] .jvch{padding:10px max(18px,calc((100vw - 1100px)/2))}
+#jvPanel[data-sz=f] .jvb,#jvPanel[data-sz=f] .jvol,#jvPanel[data-sz=f] .jvsc{font-size:19px}
+#jvPanel.jvmin #jvMsg,#jvPanel.jvmin .jvch,#jvPanel.jvmin .jvi{display:none}#jvPanel.jvmin{height:auto;width:min(380px,calc(100vw - 28px))}#jvPanel.jvmin .jvh .hint,#jvPanel.jvmin #jvSzT{display:none}#jvPanel.jvmin #jvSc{display:none}.jvh .hint{white-space:nowrap}.jvh .btn{flex:none;white-space:nowrap}
 .jvh{cursor:pointer;user-select:none}.jvh .btn{cursor:pointer}
 #jvPanel{position:fixed;left:14px;bottom:88px;z-index:55;width:min(560px,calc(100vw - 28px));max-height:min(760px,calc(100vh - 100px));display:none;flex-direction:column;background:var(--panel);border:1px solid #40c4ff88;border-radius:14px;box-shadow:0 8px 32px #000a;overflow:hidden}
 .jvh{display:flex;align-items:center;gap:8px;padding:12px 14px;font-size:17px;background:linear-gradient(90deg,#0f2a3a,var(--panel));border-bottom:1px solid var(--line)}
@@ -2624,15 +2627,16 @@ function jvBuild(){
   document.head.appendChild(st);
   const b=document.createElement('button');b.id='jvBtn';b.title='J.A.R.V.I.S. ผู้ช่วยขาย';b.setAttribute('aria-label','เปิด J.A.R.V.I.S. ผู้ช่วยขาย');b.textContent='🤖';b.onclick=()=>jvToggle();document.body.appendChild(b);
   const p=document.createElement('div');p.id='jvPanel';
-  p.innerHTML=`<div class="jvh"><b>J.A.R.V.I.S.</b><span class="hint" style="flex:1">ผู้ช่วยขาย</span><button class="btn sm" id="jvSz" title="เปลี่ยนขนาด: เล็ก / กลาง / ใหญ่">⤢ <span id="jvSzT">กลาง</span></button><button class="btn sm" id="jvMin" title="ย่อ / ขยาย">➖</button><button class="btn sm" id="jvClr" title="ล้างบทสนทนา">🧹</button><button class="btn sm" id="jvX" aria-label="ปิด">✕</button></div>
+  p.innerHTML=`<div class="jvh"><b>J.A.R.V.I.S.</b><span class="hint" style="flex:1">ผู้ช่วยขาย</span><button class="btn sm" id="jvSc" title="ไปเมนูสคริปต์ขาย">📞 สคริปต์</button><button class="btn sm" id="jvSz" title="เปลี่ยนขนาด: เล็ก / กลาง / ใหญ่ / เต็มจอ">⤢ <span id="jvSzT">กลาง</span></button><button class="btn sm" id="jvMin" title="ย่อ / ขยาย">➖</button><button class="btn sm" id="jvClr" title="ล้างบทสนทนา">🧹</button><button class="btn sm" id="jvX" aria-label="ปิด">✕</button></div>
    <div id="jvMsg"></div><div class="jvch" id="jvCh"></div>
    <div class="jvi"><select id="jvP" style="flex:1 1 100%"><option value="">— ทุกสินค้า (ทั่วไป) —</option></select><input id="jvQ" maxlength="300" placeholder="ลูกค้าพูดว่า…" style="flex:1;min-width:0"><button class="btn primary" id="jvGo">ส่ง</button></div>`;
   document.body.appendChild(p);
-  const jvLay=()=>{const sz=JV.sz||'m',mn=!!JV.min;p.dataset.sz=sz;p.classList.toggle('jvmin',mn);$('#jvSzT').textContent={s:'เล็ก',m:'กลาง',l:'ใหญ่'}[sz];$('#jvMin').textContent=mn?'🔼':'➖';$('#jvMin').title=mn?'ขยายกลับ':'ย่อเก็บ';try{localStorage.setItem('sx_jvlay',sz+(mn?'1':'0'))}catch(e){}};
-  try{const v=localStorage.getItem('sx_jvlay')||'';if('sml'.includes(v[0]||'x'))JV.sz=v[0];JV.min=v[1]==='1'}catch(e){}
-  $('#jvSz').onclick=e=>{e.stopPropagation();JV.sz={s:'m',m:'l',l:'s'}[JV.sz||'m'];JV.min=false;jvLay();jvDraw()};
+  const jvLay=()=>{const sz=JV.sz||'m',mn=!!JV.min;p.dataset.sz=sz;p.classList.toggle('jvmin',mn);$('#jvSzT').textContent={s:'เล็ก',m:'กลาง',l:'ใหญ่',f:'เต็มจอ'}[sz];$('#jvMin').textContent=mn?'🔼':'➖';$('#jvMin').title=mn?'ขยายกลับ':'ย่อเก็บ';try{localStorage.setItem('sx_jvlay',sz+(mn?'1':'0'))}catch(e){}};
+  try{const v=localStorage.getItem('sx_jvlay')||'';if('smlf'.includes(v[0]||'x'))JV.sz=v[0];JV.min=v[1]==='1'}catch(e){}
+  $('#jvSz').onclick=e=>{e.stopPropagation();JV.sz={s:'m',m:'l',l:'f',f:'s'}[JV.sz||'m'];JV.min=false;jvLay();jvDraw()};
   $('#jvMin').onclick=e=>{e.stopPropagation();JV.min=!JV.min;jvLay()};
   JV.lay=jvLay;p.querySelector('.jvh').ondblclick=()=>{JV.min=!JV.min;jvLay()};jvLay();
+  $('#jvSc').onclick=e=>{e.stopPropagation();if(JV.prod){SC.prod=JV.prod;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}}jvToggle(false);goTab('script')};
   $('#jvX').onclick=()=>jvToggle(false);$('#jvClr').onclick=()=>{JV.msgs=[];JV.chipsOpen=true;jvChips();jvDraw()};
   $('#jvGo').onclick=()=>{const i=$('#jvQ'),v=i.value;i.value='';jvSend(v)};
   $('#jvQ').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();$('#jvGo').click()}};
@@ -2888,7 +2892,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-05.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-05.3';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
