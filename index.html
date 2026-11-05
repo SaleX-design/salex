@@ -481,6 +481,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
     <button class="tabbtn" data-tab="run" id="runTab" hidden>🚀 Run Rate</button>
     <button class="tabbtn" data-tab="feed">💬 หัวข้อ &amp; Feedback</button>
     <button class="tabbtn" data-tab="ins">📊 Insight</button>
+    <button class="tabbtn" data-tab="eng" id="engTab" hidden>📈 Engagement</button>
     <button class="tabbtn" data-tab="tips">💡 เทคนิคขาย</button>
     <button class="tabbtn" data-tab="script">📞 สคริปต์ขาย</button>
     <button class="tabbtn" data-tab="svc">🗂 ลา/ร้องเรียน</button>
@@ -613,6 +614,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 <section id="tab-script" hidden><div id="scriptBody"></div></section>
 <section id="tab-prof" hidden><div id="profBody"></div></section>
 <section id="tab-ins" hidden><div id="insBody"></div></section>
+<section id="tab-eng" hidden><div id="engBody"></div></section>
 <section id="tab-run" hidden><div class="rkctl" id="runCtl"></div><div id="runBody"></div></section>
 <section id="tab-talk" hidden><div class="rkctl" id="tkCtl"></div><div id="tkBody"></div></section>
 <!-- LEAVE / COMPLAINTS -->
@@ -2199,6 +2201,76 @@ function insMeHTML(){
   return h;
 }
 
+/* =====================================================================
+   📈 Engagement — สรุปการใช้งาน SALE X ทั้งหมด (เฉพาะแอดมิน · ย้อนหลัง 30 วัน)
+   ===================================================================== */
+const ENG={d:null,q:'',role:'',lv:'',busy:0,mq:'',mo:{}};
+const ENGF={claim:['🎁','รับ TOKEN ประจำวัน'],wheel:['🎡','หมุนวงล้อ'],predict:['🔮','ทายผล'],feedback:['💬','ส่ง Feedback'],comment:['🗨','คอมเมนต์'],like:['❤️','กดไลก์'],redeem:['🛍','แลกของรางวัล'],leave:['🗓','ยื่นลา']};
+const ENGL={power:['🔥','Power User','var(--up)'],regular:['✅','ใช้สม่ำเสมอ','#40c4ff'],light:['🌱','ใช้นาน ๆ ครั้ง','var(--flat)'],none:['😴','ไม่เข้าเลย','var(--down)']};
+const ENGM={dash:'📈 ยอดขาย',prof:'👤 PROFILE',feed:'💬 หัวข้อ & Feedback',ins:'📊 Insight',eng:'📈 Engagement',tips:'💡 เทคนิคขาย',script:'📞 สคริปต์ขาย',run:'🚀 Run Rate',rank:'🏆 อันดับ & TOP SALE',talk:'⏱ Talk Time',svc:'🗂 ลา/ร้องเรียน',game:'🎮 เกม',prod:'🛍 สินค้า',com:'💸 ค่าคอม',road:'🗺 ROAD MAP',login:'🎁 รางวัล/ล็อกอิน',admin:'🛠 แอดมิน',jarvis:'🤖 J.A.R.V.I.S.'};
+function engMenusHTML(E,U,tot,tn){
+  if(!E.menusReady)return '<div class="panel sec"><h3>📂 ใครใช้เมนูไหน</h3><div class="hint">ยังไม่มีชีต MenuUsage — ให้รัน setup ใน Apps Script 1 ครั้ง</div></div>';
+  const ok=new Set(U.map(u=>u.id)),nm={};E.users.forEach(u=>nm[u.id]=u);
+  const rows=Object.keys(E.menus).map(k=>{const L=(E.menus[k]||[]).filter(x=>ok.has(x.id));return {k,L,us:L.length,v:L.reduce((s,x)=>s+x.v,0)}}).sort((a,b)=>b.us-a.us||b.v-a.v);
+  const any=rows.some(r=>r.us>0),q=ENG.mq.trim().toLowerCase();
+  const pcn=(a,b)=>b?Math.round(a/b*100):0;
+  return `<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>📂 ใครใช้เมนูไหน (${E.keep} วัน)</span><input id="egMq" placeholder="🔍 ค้นหาชื่อในทุกเมนู" value="${esc(ENG.mq)}" style="padding:6px"></h3>
+   ${any?'':'<div class="hint" style="margin-bottom:8px">⏳ เพิ่งเริ่มเก็บสถิติ — จะมีรายชื่อตั้งแต่ที่อัปเดตเป็นต้นไป (ข้อมูลก่อนหน้านี้ย้อนหลังไม่ได้)</div>'}
+   ${rows.map(r=>{const L=q?r.L.filter(x=>((nm[x.id]||{}).name||x.id).toLowerCase().includes(q)||x.id.toLowerCase().includes(q)):r.L;if(q&&!L.length)return '';const op=ENG.mo[r.k]||!!q;
+    return `<div style="border:1px solid var(--line);border-radius:10px;margin:8px 0;background:var(--panel2)"><div data-egm="${r.k}" style="display:flex;gap:10px;align-items:center;padding:10px 12px;cursor:pointer;flex-wrap:wrap"><b style="min-width:170px">${esc(ENGM[r.k]||r.k)}</b><div class="chbar" style="flex:1;min-width:120px;margin:0"><i style="width:${pcn(r.us,tot)}%"></i></div><span class="num"><b>${q?L.length+' / ':''}${r.us}</b> คน <span class="hint">(${pcn(r.us,tot)}%) · ${fmt(r.v)} ครั้ง</span></span><span class="hint">${r.us?(op?'▾ ซ่อน':'▸ ดูรายชื่อ'):''}</span></div>
+     ${op&&L.length?`<div style="padding:0 12px 12px;display:flex;gap:6px;flex-wrap:wrap">${L.map(x=>{const u=nm[x.id]||{};return `<span class="role" title="${esc(tn(u.team))} · เปิด ${x.v} ครั้ง · ${x.d} วัน · ล่าสุด ${x.last?dShort(x.last):''}">${esc(u.name||x.id)} <span class="hint">×${x.v}</span></span>`}).join('')}</div>`:''}</div>`}).join('')}
+   <div class="hint">นับ "ครั้ง" = เปิดเมนูนั้น (นับซ้ำได้ไม่เกิน 1 ครั้งต่อ 10 นาทีต่อเมนู) · เรียงจากมีคนใช้มากสุด · กดแถวเพื่อดูรายชื่อ · ตัวเลข ×n คือจำนวนครั้งที่คนนั้นเปิด</div></div>`;
+}
+async function renderEng(force){
+  const body=$('#engBody');if(!body)return;
+  if(force||!ENG.d){body.innerHTML='<div class="panel"><div class="hint">กำลังรวบรวมข้อมูลการใช้งาน…</div></div>';
+    try{ENG.d=await api('engagement')}catch(e){body.innerHTML=`<div class="panel"><div class="err">${esc(e.message)}${/ไม่รู้จัก|unknown|action/i.test(e.message)?'<br>ยังไม่ได้อัปเดตหลังบ้าน (Code.gs) — ให้วางโค้ดใหม่แล้ว Deploy':''}</div></div>`;return}}
+  const E=ENG.d,tn=t=>(teamOf(t)||{}).name||t||'–',pc=(a,b)=>b?Math.round(a/b*100):0;
+  const roles=[...new Set(E.users.map(u=>u.role||'-'))];
+  const U=E.users.filter(u=>(!ENG.role||(u.role||'-')===ENG.role));
+  const tot=U.length,a30=U.filter(u=>u.d30>0).length,a7=U.filter(u=>u.d7>0).length,aT=E.users.filter(u=>(!ENG.role||(u.role||'-')===ENG.role)&&u.last===E.t).length;
+  const sumD=U.reduce((s,u)=>s+u.d30,0),avgD=a30?sumD/a30:0,mau=a30,avgDau=E.days.reduce((s,x)=>s+x.n,0)/E.days.length;
+  const stick=mau?Math.round(Math.min(100,avgDau/mau*100)):0;
+  const lv={power:0,regular:0,light:0,none:0};U.forEach(u=>lv[u.level]++);
+  const mxD=Math.max(1,...E.days.map(x=>x.n)),mxH=Math.max(1,...E.hourHist),peak=E.hourHist.indexOf(Math.max(...E.hourHist));
+  const hh=h=>String(h).padStart(2,'0');
+  const feats=Object.keys(ENGF).map(k=>{const us=U.filter(u=>u.f[k]>0).length,ev=U.reduce((s,u)=>s+u.f[k],0);return {k,us,ev}});
+  const stale=U.filter(u=>u.d30>0&&u.last&&u.last<addDays(E.t,-6)),never=U.filter(u=>u.d30===0);
+  const top=U.slice(0,3);
+  const lines=[];
+  lines.push(`ใน ${E.keep} วันที่ผ่านมา มีคนเข้าใช้ ${a30}/${tot} คน (${pc(a30,tot)}%) · 7 วันล่าสุด ${a7} คน (${pc(a7,tot)}%) · วันนี้ ${aT} คน`);
+  if(E.hourHist[peak]>0)lines.push(`ช่วงที่คนใช้งานมากสุดคือ ${hh(peak)}:00–${hh((peak+1)%24)}:00 น. — เหมาะกับการส่งประกาศ/POP UP/Broadcast`);
+  const ft=feats.slice().sort((a,b)=>b.us-a.us);if(tot){lines.push(`ฟีเจอร์ที่คนใช้มากสุด: ${ENGF[ft[0].k][1]} (${pc(ft[0].us,tot)}%) · ใช้น้อยสุด: ${ENGF[ft[ft.length-1].k][1]} (${pc(ft[ft.length-1].us,tot)}%)`)}
+  if(stale.length)lines.push(`${stale.length} คนเคยเข้าแต่หายไปเกิน 7 วัน · ${never.length} คนไม่เข้าเลยใน ${E.keep} วัน — ควรติดตาม`);
+  lines.push(`ผู้ใช้ที่เข้าแล้ว เข้าเฉลี่ย ${avgD.toFixed(1)} วัน จาก ${E.keep} วัน · Stickiness (DAU÷MAU) ${stick}%`);
+  const K=(ic,t,v,sub,cls)=>`<div class="tcell ${cls||''}"><small>${ic} ${t}</small><div class="tv">${v}</div><div class="ts">${sub}</div></div>`;
+  let h=`<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>📈 Engagement การใช้งาน SALE X · ย้อนหลัง ${E.keep} วัน</span><span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><select id="egRole" style="padding:6px"><option value="">ทุกบทบาท</option>${roles.map(r=>`<option value="${esc(r)}" ${ENG.role===r?'selected':''}>${esc(r)}</option>`).join('')}</select><button class="btn sm" id="egRf">⟳ รีเฟรช</button></span></h3>
+    ${E.noSheet?'<div class="err">ยังไม่มีชีต Presence — ให้รัน setup ใน Apps Script ก่อน</div>':''}
+    <div class="topstats c3" style="margin-bottom:10px">${K('🟢','ใช้งานวันนี้',`${aT} <span style="font-size:14px;color:var(--mute)">/ ${tot}</span>`,pc(aT,tot)+'% ของผู้ใช้','up')}${K('📅','ใช้งาน 7 วัน',`${a7} <span style="font-size:14px;color:var(--mute)">/ ${tot}</span>`,pc(a7,tot)+'%')}${K('🗓','ใช้งาน '+E.keep+' วัน (MAU)',`${a30} <span style="font-size:14px;color:var(--mute)">/ ${tot}</span>`,pc(a30,tot)+'%')}</div>
+    <div class="topstats c3">${K('🔁','Stickiness (DAU÷MAU)',stick+'%','เฉลี่ยวันละ '+avgDau.toFixed(1)+' คน')}${K('📆','วันเข้าใช้เฉลี่ย',avgD.toFixed(1)+' <span style="font-size:14px;color:var(--mute)">วัน</span>','ต่อคนที่เข้าใช้ (จาก '+E.keep+' วัน)')}${K('⏰','ช่วงใช้งานสูงสุด',E.hourHist[peak]>0?hh(peak)+':00 น.':'–','ช่วงที่คนออนไลน์บ่อยสุด')}</div></div>
+   <div class="panel sec"><h3>💡 สรุปสำหรับแอดมิน</h3><ul class="insl">${lines.map(l=>`<li>${esc(l)}</li>`).join('')}</ul></div>
+   <div class="panel sec"><h3>📊 จำนวนคนใช้งานรายวัน (DAU) ${E.keep} วัน</h3><div style="display:flex;gap:2px;align-items:flex-end;height:110px">${E.days.map(x=>`<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%" title="${esc(dShort(x.d))}: ${x.n} คน"><div style="height:${Math.round(x.n/mxD*100)}%;min-height:${x.n?2:0}px;background:${x.d===E.t?'#40c4ff':'var(--up)'};border-radius:2px 2px 0 0;opacity:${x.d===E.t?1:.8}"></div></div>`).join('')}</div><div class="hint" style="display:flex;justify-content:space-between"><span>${dShort(E.days[0].d)}</span><span>สูงสุด ${mxD} คน/วัน</span><span>วันนี้</span></div></div>
+   <div class="panel sec"><h3>⏰ ช่วงเวลาที่ใช้งาน (ทั้ง ${E.keep} วัน)</h3><div style="display:flex;gap:3px;align-items:flex-end;height:90px">${E.hourHist.map((v,i)=>`<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%" title="${hh(i)}:00 · ${v} ครั้ง"><div style="height:${Math.round(v/mxH*100)}%;min-height:${v?2:0}px;background:${i===peak&&v?'#f0b90b':'#40c4ff'};border-radius:2px 2px 0 0"></div></div>`).join('')}</div><div style="display:flex;gap:3px">${E.hourHist.map((v,i)=>`<div style="flex:1;text-align:center;font-size:10px;color:var(--mute)">${i%3===0?hh(i):''}</div>`).join('')}</div></div>
+   <div class="spgrid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));align-items:start">
+   <div class="panel sec"><h3>🧩 ใช้ฟีเจอร์อะไรบ้าง (${E.keep} วัน)</h3>${feats.map(f=>`<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;gap:6px"><span>${ENGF[f.k][0]} ${ENGF[f.k][1]}</span><span class="num"><b>${f.us}</b> คน <span class="hint">(${pc(f.us,tot)}%) · ${fmt(f.ev)} ครั้ง</span></span></div><div class="chbar"><i style="width:${pc(f.us,tot)}%"></i></div></div>`).join('')}<div class="hint">ดูรายชื่อคนที่ใช้แต่ละเมนูได้ในส่วน "ใครใช้เมนูไหน" ด้านล่าง</div></div>
+   <div class="panel sec"><h3>🎯 ระดับการใช้งานของผู้ใช้</h3>${Object.keys(ENGL).map(k=>`<div style="margin:8px 0;cursor:pointer" data-eglv="${k}"><div style="display:flex;justify-content:space-between"><span>${ENGL[k][0]} ${ENGL[k][1]}</span><span class="num"><b>${lv[k]}</b> คน <span class="hint">(${pc(lv[k],tot)}%)</span></span></div><div class="chbar"><i style="width:${pc(lv[k],tot)}%;background:${ENGL[k][2]}"></i></div></div>`).join('')}<div class="hint">คะแนน 0–100 = วันที่เข้าใช้ใน ${E.keep} วัน (60) + ความหลากหลายฟีเจอร์ (25) + ความสม่ำเสมอ 7 วันล่าสุด (15) · กดแถบเพื่อกรองตารางด้านล่าง</div></div></div>
+   ${engMenusHTML(E,U,tot,tn)}
+   <div class="panel sec"><h3>👥 แยกตามทีม</h3><div class="tblwrap"><table class="atbl"><thead><tr><th>ทีม</th><th class="r">คน</th><th class="r">ใช้ 7 วัน</th><th class="r">ใช้ ${E.keep} วัน</th><th class="r">วันเข้าเฉลี่ย/คน</th></tr></thead><tbody>${(()=>{const T={};U.forEach(u=>{const o=T[u.team]||(T[u.team]={n:0,a7:0,a30:0,d:0});o.n++;if(u.d7>0)o.a7++;if(u.d30>0)o.a30++;o.d+=u.d30});return Object.keys(T).sort((a,b)=>T[b].a7/T[b].n-T[a].a7/T[a].n).map(k=>{const o=T[k];return `<tr><td>${esc(tn(k))}</td><td class="r num">${o.n}</td><td class="r num">${o.a7} <span class="hint">(${pc(o.a7,o.n)}%)</span></td><td class="r num">${o.a30} <span class="hint">(${pc(o.a30,o.n)}%)</span></td><td class="r num">${(o.d/o.n).toFixed(1)}</td></tr>`}).join('')})()}</tbody></table></div></div>`;
+  const q=ENG.q.trim().toLowerCase(),L=U.filter(u=>(!ENG.lv||u.level===ENG.lv)&&(!q||(u.name+' '+u.id).toLowerCase().includes(q)));
+  h+=`<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>👤 รายคน (${L.length}${ENG.lv?' · '+ENGL[ENG.lv][1]:''})</span><span style="display:flex;gap:6px;align-items:center"><input id="egQ" placeholder="🔍 ค้นหาชื่อ" value="${esc(ENG.q)}" style="padding:6px"><button class="btn sm" id="egCsv">⬇ CSV</button>${ENG.lv?'<button class="btn sm" id="egClr">✕ ล้างตัวกรอง</button>':''}</span></h3>
+   <div class="tblwrap" style="max-height:640px;overflow:auto"><table class="atbl"><thead><tr><th>ชื่อ</th><th>ทีม</th><th>ระดับ</th><th class="r">คะแนน</th><th class="r">วันเข้า ${E.keep}ว</th><th class="r">7 วัน</th><th>ล่าสุด</th>${Object.keys(ENGF).slice(0,6).map(k=>`<th class="r" title="${ENGF[k][1]}">${ENGF[k][0]}</th>`).join('')}</tr></thead><tbody>${L.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(tn(u.team))}</td><td style="color:${ENGL[u.level][2]};white-space:nowrap">${ENGL[u.level][0]} ${ENGL[u.level][1]}</td><td class="r num">${u.score}</td><td class="r num">${u.d30}</td><td class="r num">${u.d7}</td><td>${u.last?dShort(u.last):'<span class="hint">ไม่เคย</span>'}</td>${Object.keys(ENGF).slice(0,6).map(k=>`<td class="r num">${u.f[k]||'<span class="hint">–</span>'}</td>`).join('')}</tr>`).join('')||'<tr><td colspan="13" class="empty">ไม่พบ</td></tr>'}</tbody></table></div>
+   <div class="hint" style="margin-top:6px">เห็นเฉพาะแอดมิน · "เข้าใช้" = เปิดหน้าเว็บอย่างน้อย 1 ครั้งในวันนั้น (ข้อมูลเก็บ ${E.keep} วัน) · Feedback แบบไม่ระบุชื่อไม่ถูกนับรายคน · ไอคอน: 🎁 TOKEN 🎡 วงล้อ 🔮 ทายผล 💬 Feedback 🗨 คอมเมนต์ ❤️ ไลก์</div></div>`;
+  body.innerHTML=h;
+  $('#egRf').onclick=()=>renderEng(true);
+  $$('[data-egm]',body).forEach(d=>d.onclick=()=>{ENG.mo[d.dataset.egm]=!ENG.mo[d.dataset.egm];renderEng()});
+  const mq=$('#egMq');if(mq)mq.oninput=e=>{ENG.mq=e.target.value;clearTimeout(ENG.t2);ENG.t2=setTimeout(()=>{renderEng();const i=$('#egMq');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)};
+  $('#egRole').onchange=e=>{ENG.role=e.target.value;renderEng()};
+  $$('[data-eglv]',body).forEach(d=>d.onclick=()=>{ENG.lv=ENG.lv===d.dataset.eglv?'':d.dataset.eglv;renderEng()});
+  const c=$('#egClr');if(c)c.onclick=()=>{ENG.lv='';renderEng()};
+  $('#egQ').oninput=e=>{ENG.q=e.target.value;clearTimeout(ENG.t);ENG.t=setTimeout(()=>{renderEng();const i=$('#egQ');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)};
+  $('#egCsv').onclick=()=>{const hd=['ชื่อ','ทีม','บทบาท','ระดับ','คะแนน','วันเข้า'+E.keep,'วันเข้า7วัน','ล่าสุด',...Object.keys(ENGF).map(k=>ENGF[k][1])],rows=L.map(u=>[u.name,tn(u.team),u.role,ENGL[u.level][1],u.score,u.d30,u.d7,u.last,...Object.keys(ENGF).map(k=>u.f[k])]);
+    const csv='﻿'+[hd,...rows].map(r=>r.map(v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(',')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='engagement_'+E.t+'.csv';a.click()};
+}
 /* ---------- 📊 สถิติเด่น 10 หัวข้อ · ย้อนหลัง 1 / 3 / 7 วัน (นับเฉพาะ "วันที่มียอดขาย") ---------- */
 const INW={n:7};
 function insPeriod(n){
@@ -2657,7 +2729,7 @@ function jvChips(){const c=$('#jvCh');if(!c)return;const L=jvInts();
 }
 function jvProdOpts(){const T=SC.d;if(!T)return'<option value="">— ทุกสินค้า —</option>';return '<option value="">— ทุกสินค้า (ทั่วไป) —</option>'+scOpts(JV.prod)}
 function jvToggle(on){
-  JV.open=on===undefined?!JV.open:on;const p=$('#jvPanel');if(!p)return;p.style.display=JV.open?'flex':'none';
+  JV.open=on===undefined?!JV.open:on;if(JV.open)menuTrack('jarvis');const p=$('#jvPanel');if(!p)return;p.style.display=JV.open?'flex':'none';
   if(JV.open){if(JV.min){JV.min=false;if(JV.lay)JV.lay()}if(JV.prod==null)JV.prod=SC.prod||'';jvChips();ensureScripts().then(()=>{const s=$('#jvP');if(s)s.innerHTML=jvProdOpts();jvChips()});jvDraw();setTimeout(()=>{const i=$('#jvQ');if(i)i.focus()},50)}
 }
 function jvBuild(){
@@ -2956,18 +3028,23 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-05.5';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-05.7';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
+const MTR={t:{}};
+function menuTrack(tab){   // บันทึกว่าเปิดเมนูไหน (ส่งไม่เกิน 1 ครั้ง/เมนู/10 นาที · เงียบ ๆ ไม่แจ้ง error)
+  try{if(!D||!TOKEN||!tab||MTR.off)return;const n=Date.now();if(MTR.t[tab]&&n-MTR.t[tab]<600000)return;MTR.t[tab]=n;
+    api('menuPing',{tab}).catch(()=>{})}catch(e){}
+}
 function render(){
   if(!D)return;renderVer();jvShow();
   const cnt=S.count||DEFN[S.mode];S.ext=buildPeriods(S.mode,S.anchor,cnt+LOOK);S.periods=S.ext.slice(-cnt);
   renderHeader();renderTicker();renderBell();applyMenu();renderBnav();
   if(S.tab==='spot')S.tab='rank';if(S.tab==='fb'){S.tab='feed';S.feedView='fb'}
-  if(S.tab==='admin'&&!D.isAdmin)S.tab='dash';
+  if((S.tab==='admin'||S.tab==='eng')&&!D.isAdmin)S.tab='dash';
   if(S.tab==='run'&&!D.canSeeAll)S.tab='dash';
-  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins','tips','prof','script'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
+  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins','eng','tips','prof','script'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
   $$('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab));
   if(S.tab==='dash'){rebuildProd();syncControls();renderTop();renderComStrip();renderSvcStrip();renderNews();renderQuote();renderChart();renderBoard();renderDashMix();ensureSpot();ensureTips();ensurePostPop()}
   else if(S.tab==='rank'){renderRank();renderSpotTab()}
@@ -2979,12 +3056,14 @@ function render(){
   else if(S.tab==='run')renderRun();
   else if(S.tab==='feed')renderFeedPage();
   else if(S.tab==='ins')renderIns();
+  else if(S.tab==='eng')renderEng();
   else if(S.tab==='tips')renderTips();
   else if(S.tab==='script')renderScript();
   else if(S.tab==='prof')renderProfPage();
   else if(S.tab==='svc')renderSvc();
   else if(S.tab==='game'){if(S.tab!==LASTTAB)GM=null;renderGame()}
   else renderAdmin();
+  if(S.tab!==LASTTAB)menuTrack(S.tab);
   LASTTAB=S.tab;
 }
 
@@ -3500,14 +3579,14 @@ function openInbox(){
 }
 $('#bellBtn').onclick=()=>D&&openInbox();
 /* ---------- เมนู: ลำดับ/ซ่อน ตั้งโดยแอดมิน (config menuOrder) ---------- */
-const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['prof','👤','PROFILE','👤 PROFILE'],['feed','💬','หัวข้อ','💬 หัวข้อ & Feedback'],['ins','📊','Insight','📊 Insight'],['tips','💡','เทคนิค','💡 เทคนิคขาย'],['script','📞','สคริปต์ขาย','📞 สคริปต์ขาย'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
+const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['prof','👤','PROFILE','👤 PROFILE'],['feed','💬','หัวข้อ','💬 หัวข้อ & Feedback'],['ins','📊','Insight','📊 Insight'],['eng','📈','Engagement','📈 Engagement (แอดมิน)'],['tips','💡','เทคนิค','💡 เทคนิคขาย'],['script','📞','สคริปต์ขาย','📞 สคริปต์ขาย'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
 function menuList(raw){   // คืน [{id,show}] ตามลำดับที่ตั้ง (ที่ไม่ได้ระบุต่อท้ายตามค่าเริ่มต้น)
   const L=[],seen={};String(raw==null?((D.v5&&D.v5.cfg&&D.v5.cfg.menu)||''):raw).split(/[,;\s]+/).filter(Boolean).forEach(x=>{const h=x[0]==='-',id=h?x.slice(1):x;if(seen[id]||!TABDEF.some(t=>t[0]===id))return;seen[id]=1;L.push({id,show:!(h&&id!=='dash'&&id!=='admin')})});
   TABDEF.forEach(t=>{if(!seen[t[0]])L.push({id:t[0],show:true})});return L}
-const menuVisible=()=>menuList().filter(x=>x.show&&(x.id!=='admin'||(D&&D.isAdmin))&&(x.id!=='run'||(D&&D.canSeeAll))).map(x=>TABDEF.find(t=>t[0]===x.id));
+const menuVisible=()=>menuList().filter(x=>x.show&&((x.id!=='admin'&&x.id!=='eng')||(D&&D.isAdmin))&&(x.id!=='run'||(D&&D.canSeeAll))).map(x=>TABDEF.find(t=>t[0]===x.id));
 function applyMenu(){
   const nav=$('#tabs');if(!nav||!D)return;const L=menuList();
-  L.forEach(x=>{const b=nav.querySelector(`[data-tab="${x.id}"]`);if(!b)return;nav.appendChild(b);if(x.id==='run')b.hidden=!x.show||!D.canSeeAll;else if(x.id!=='admin')b.hidden=!x.show});
+  L.forEach(x=>{const b=nav.querySelector(`[data-tab="${x.id}"]`);if(!b)return;nav.appendChild(b);if(x.id==='run')b.hidden=!x.show||!D.canSeeAll;else if(x.id==='eng')b.hidden=!x.show||!D.isAdmin;else if(x.id!=='admin')b.hidden=!x.show});
 }
 function renderBnav(){
   const n=inboxUnread();
