@@ -574,6 +574,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 <!-- RANKING -->
 <section id="tab-rank" hidden>
   <div id="spotBody" style="margin-bottom:14px"></div>
+  <div id="tokBoard" style="margin-bottom:14px"></div>
   <div class="rkctl" id="rkCtl"></div>
   <div id="rkBody"></div>
 </section>
@@ -1369,6 +1370,7 @@ function admSettings(el){
       <div class="fld" style="margin:0"><label>หัก DIFF POINT (% ของ POINT)</label><input type="number" id="cDF" min="0" max="100" step="any" value="${DFP()}"></div>
       <div class="fld" style="margin:0"><label>แหล่ง POINT สำหรับคอม</label><select id="cPS"><option value="product">ยอดรายสินค้า × Factor (แนะนำ)</option><option value="sales">POINT จากแท็บ Sales</option></select></div>
       <div class="fld" style="margin:0"><label>Factor คูณกับอะไร (เมื่อใช้ยอดรายสินค้า)</label><select id="cFB"><option value="amount">ยอดเงินรายสินค้า (amount) × Factor</option><option value="qty">จำนวนชิ้น (qty) × Factor</option></select></div>
+      <div class="fld" style="margin:0"><label>แสดง TOP 10 TOKEN ให้พนักงานเห็น</label><select id="cTB"><option value="1" ${D.tokenBoard===false?'':'selected'}>แสดง (พนักงานเห็น Top 10 + อันดับตัวเอง)</option><option value="0" ${D.tokenBoard===false?'selected':''}>ซ่อน (แอดมินเห็นอย่างเดียว)</option></select></div>
       <button class="btn primary" id="cSave">บันทึก</button></div>
     <div class="hint" style="margin-top:8px">การเปลี่ยนอัตรา TOKEN มีผลย้อนหลังกับทั้ง Season ทันที · การเปลี่ยน Hold/แหล่ง POINT มีผลกับการคำนวณคอมทุกเดือนทันที</div></div>
     <div class="panel sec"><h3>🪜 ตาราง Tier ค่าคอมมิชชั่น</h3>
@@ -1385,7 +1387,7 @@ function admSettings(el){
     <div class="hint" style="margin-top:8px">พนักงานต้องตั้งรหัสใหม่เองตอนเข้าสู่ระบบครั้งถัดไป · เพิ่มพนักงานใหม่ที่แท็บ Members แล้วใช้เมนู “SALE X” ใน Google Sheets เพื่อตั้งรหัสเริ่มต้น · ตั้งตำแหน่งที่คอลัมน์ role (leader / senior)</div>
     <div id="cErr" class="err"></div></div>`;
   $('#cV').value=D.visibility;$('#cPS').value=D.pointSource;$('#cFB').value=D.factorBasis||'amount';
-  $('#cSave').onclick=async()=>{try{await api('setConfig',{baht:+$('#cB').value,visibility:$('#cV').value,hold:+$('#cH').value,diffPct:+$('#cDF').value,pointSource:$('#cPS').value,factorBasis:$('#cFB').value});await load();render();toast('✅ บันทึกการตั้งค่าแล้ว')}catch(e){$('#cErr').textContent=e.message}};
+  $('#cSave').onclick=async()=>{try{await api('setConfig',{baht:+$('#cB').value,visibility:$('#cV').value,hold:+$('#cH').value,diffPct:+$('#cDF').value,tokenBoard:$('#cTB').value,pointSource:$('#cPS').value,factorBasis:$('#cFB').value});await load();render();toast('✅ บันทึกการตั้งค่าแล้ว')}catch(e){$('#cErr').textContent=e.message}};
   $('#cRS').onclick=async()=>{try{await api('resetPassword',{m:$('#cRM').value,newPassword:$('#cRP').value});$('#cRP').value='';$('#cErr').textContent='';toast('✅ รีเซ็ตรหัสผ่านแล้ว แจ้งรหัสชั่วคราวให้พนักงาน')}catch(e){$('#cErr').textContent=e.message}};
   const grab=()=>{const T=tiers.map(t=>({upTo:t.upTo,rate:t.rate}));$$('[data-tu]').forEach(i=>T[+i.dataset.tu].upTo=i.value===''?'':+i.value);$$('[data-tr]').forEach(i=>T[+i.dataset.tr].rate=i.value===''?'':+i.value);return T};
   $('#tAdd').onclick=()=>{const T=grab(),last=T.pop(),prev=T.length?+T[T.length-1].upTo:0;T.push({upTo:prev+15000,rate:last.rate});T.push(last);ADM.editTiers=T;render()};
@@ -2110,6 +2112,24 @@ function heatHTML(heat,day){
   return `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start"><div><div style="display:flex;gap:3px"><div class="hcol hlab">${nm.map(x=>`<i class="hc" style="background:none;font-size:10px;color:var(--mute);font-style:normal;width:auto;line-height:16px">${x}</i>`).join('')}</div>${cells.join('')}</div><div class="hint" style="margin-top:4px">ล่าสุด ${WK} สัปดาห์ · สีเข้ม = ยอดขายรวมทั้งทีมสูง</div></div>
    <div style="flex:1;min-width:200px"><div class="hint" style="margin-bottom:4px">ยอดเฉลี่ยตามวันในสัปดาห์${avg[best]>0?` · ขายดีสุด <b>วัน${nm[best].replace('.','')}</b>`:''}</div>${avg.map((v,i)=>`<div class="chr"><span class="chn" style="width:28px">${nm[i]}</span><span class="chbar"><i style="width:${Math.max(2,Math.round(v/am*100))}%;${i===best&&v>0?'background:#f0b90b':''}"></i></span><b class="num" style="min-width:70px;text-align:right">${v>0?'฿'+fmt(v):'-'}</b></div>`).join('')}</div></div>`;
 }
+/* ---- ⭐ อันดับ TOKEN: พนักงานเห็น Top 10 + อันดับตัวเอง · แอดมินเห็นทุกคน (ที่เมนู Engagement) ---- */
+const TKB={d:null,ts:0,busy:0};
+async function ensureTkb(force){
+  if(!D||TKB.busy)return TKB.d;
+  if(!force&&TKB.d&&Date.now()-TKB.ts<180000)return TKB.d;
+  TKB.busy=1;try{TKB.d=await api('tokenBoard',{});TKB.ts=Date.now()}catch(e){if(!TKB.d)TKB.d={err:e.message}}finally{TKB.busy=0}
+  return TKB.d;
+}
+async function renderTokBoard(){
+  const el=$('#tokBoard');if(!el||!D)return;
+  const d=await ensureTkb();if(S.tab!=='rank'||!d||d.err||d.off){el.innerHTML='';return}
+  const list=d.admin?d.list.slice(0,10):d.top,mine=d.admin?null:d.mine;
+  const myId=D.me&&D.me.id,mx=Math.max(1,...list.map(x=>x.earned)),tn=t=>(teamOf(t)||{}).name||t||'';
+  el.innerHTML=`<div class="panel sec"><h3>⭐ TOP 10 TOKEN สะสม <span class="hint" style="font-weight:400">· ตั้งแต่ ${dShort(d.from)}</span></h3>
+   ${list.map(x=>`<div class="chr" style="${x.id===myId?'background:color-mix(in srgb,#f0b90b 14%,transparent);border-radius:8px':''}"><span class="chn">${['🥇','🥈','🥉'][x.rank-1]||x.rank+'.'}</span><span class="chnm" style="flex:0 0 min(230px,44%);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x.name)} <span class="hint">${esc(tn(x.team))}${x.streak>=3?' · 🔥 '+x.streak+' วัน':''}</span></span><span class="chbar" style="flex:1"><i style="width:${Math.round(x.earned/mx*100)}%"></i></span><span class="num" style="min-width:64px;text-align:right"><b>${fmt(x.earned)}</b> ⭐</span></div>`).join('')||'<div class="empty">ยังไม่มีข้อมูล</div>'}
+   ${mine?`<div class="panel" style="margin-top:8px;background:var(--panel2)">📍 คุณอยู่อันดับ <b>${mine.rank}</b> จาก ${d.total} คน · สะสม <b>${fmt(mine.earned)}</b> TOKEN${mine.rank>10&&list[9]?` · อีก <b>${fmt(Math.max(0,list[9].earned-mine.earned+1))}</b> TOKEN เข้า Top 10`:' 🎉 อยู่ใน Top 10'}</div>`:''}
+   <div class="hint" style="margin-top:6px">TOKEN สะสม = จากยอดขาย + รับ TOKEN ประจำวัน + โบนัส (ไม่หักที่แลกไปแล้ว)${d.admin?' · แอดมินดูทั้งหมดได้ที่เมนู Engagement':''}</div></div>`;
+}
 /* ---------- 🎯 วิเคราะห์เชิงความน่าจะเป็น: 7 "วันที่มียอดขาย" ล่าสุด ---------- */
 const normCdf=z=>{const t=1/(1+.2316419*Math.abs(z)),d=.3989423*Math.exp(-z*z/2),p=d*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p};
 const pctS=x=>Math.round(Math.max(0,Math.min(1,x))*100)+'%';
@@ -2204,7 +2224,7 @@ function insMeHTML(){
 /* =====================================================================
    📈 Engagement — สรุปการใช้งาน SALE X ทั้งหมด (เฉพาะแอดมิน · ย้อนหลัง 30 วัน)
    ===================================================================== */
-const ENG={d:null,q:'',role:'',lv:'',busy:0,mq:'',mo:{}};
+const ENG={d:null,q:'',role:'',lv:'',busy:0,mq:'',mo:{},tq:''};
 const ENGF={claim:['🎁','รับ TOKEN ประจำวัน'],wheel:['🎡','หมุนวงล้อ'],predict:['🔮','ทายผล'],feedback:['💬','ส่ง Feedback'],comment:['🗨','คอมเมนต์'],like:['❤️','กดไลก์'],redeem:['🛍','แลกของรางวัล'],leave:['🗓','ยื่นลา']};
 const ENGL={power:['🔥','Power User','var(--up)'],regular:['✅','ใช้สม่ำเสมอ','#40c4ff'],light:['🌱','ใช้นาน ๆ ครั้ง','var(--flat)'],none:['😴','ไม่เข้าเลย','var(--down)']};
 const ENGM={dash:'📈 ยอดขาย',prof:'👤 PROFILE',feed:'💬 หัวข้อ & Feedback',ins:'📊 Insight',eng:'📈 Engagement',tips:'💡 เทคนิคขาย',script:'📞 สคริปต์ขาย',run:'🚀 Run Rate',rank:'🏆 อันดับ & TOP SALE',talk:'⏱ Talk Time',svc:'🗂 ลา/ร้องเรียน',game:'🎮 เกม',prod:'🛍 สินค้า',com:'💸 ค่าคอม',road:'🗺 ROAD MAP',login:'🎁 รางวัล/ล็อกอิน',admin:'🛠 แอดมิน',jarvis:'🤖 J.A.R.V.I.S.'};
@@ -2221,10 +2241,18 @@ function engMenusHTML(E,U,tot,tn){
      ${op&&L.length?`<div style="padding:0 12px 12px;display:flex;gap:6px;flex-wrap:wrap">${L.map(x=>{const u=nm[x.id]||{};return `<span class="role" title="${esc(tn(u.team))} · เปิด ${x.v} ครั้ง · ${x.d} วัน · ล่าสุด ${x.last?dShort(x.last):''}">${esc(u.name||x.id)} <span class="hint">×${x.v}</span></span>`}).join('')}</div>`:''}</div>`}).join('')}
    <div class="hint">นับ "ครั้ง" = เปิดเมนูนั้น (นับซ้ำได้ไม่เกิน 1 ครั้งต่อ 10 นาทีต่อเมนู) · เรียงจากมีคนใช้มากสุด · กดแถวเพื่อดูรายชื่อ · ตัวเลข ×n คือจำนวนครั้งที่คนนั้นเปิด</div></div>`;
 }
+function engTokHTML(){
+  const d=TKB.d;if(!d||d.err)return `<div class="panel sec"><h3>⭐ อันดับ TOKEN ทุกคน</h3><div class="hint">${d&&d.err?esc(d.err)+' — ถ้าเพิ่งอัปเดต ให้ Deploy หลังบ้านเวอร์ชันใหม่':'กำลังโหลด…'}</div></div>`;
+  if(!d.admin)return '';
+  const q=ENG.tq.trim().toLowerCase(),L=d.list.filter(x=>!q||(x.name+' '+x.id).toLowerCase().includes(q)),tn=t=>(teamOf(t)||{}).name||t||'–',tot=d.list.reduce((s,x)=>s+x.earned,0);
+  return `<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>⭐ อันดับ TOKEN ทุกคน (${d.total} คน · รวมสะสม ${fmt(tot)})</span><span style="display:flex;gap:6px;align-items:center"><input id="egTq" placeholder="🔍 ค้นหาชื่อ" value="${esc(ENG.tq)}" style="padding:6px"><button class="btn sm" id="egTcsv">⬇ CSV</button></span></h3>
+   <div class="tblwrap" style="max-height:560px;overflow:auto"><table class="atbl"><thead><tr><th class="r">#</th><th>ชื่อ</th><th>ทีม</th><th class="r">สะสม ⭐</th><th class="r">จากยอดขาย</th><th class="r">รับรายวัน</th><th class="r">โบนัส</th><th class="r">ใช้ไปแล้ว</th><th class="r">คงเหลือ</th><th class="r">🔥 Streak</th></tr></thead><tbody>${L.map(x=>`<tr><td class="r num">${x.rank}</td><td>${esc(x.name)}</td><td>${esc(tn(x.team))}</td><td class="r num"><b>${fmt(x.earned)}</b></td><td class="r num">${fmt(x.sales)}</td><td class="r num">${fmt(x.login)}</td><td class="r num">${fmt(x.bonus)}</td><td class="r num">${fmt(x.spent)}</td><td class="r num">${fmt(x.balance)}</td><td class="r num">${x.streak}</td></tr>`).join('')||'<tr><td colspan="10" class="empty">ไม่พบ</td></tr>'}</tbody></table></div>
+   <div class="hint" style="margin-top:6px">นับตั้งแต่ ${dShort(d.from)} · สะสม = จากยอดขาย + รับ TOKEN ประจำวัน + โบนัส · ไม่รวมแอดมินและคนที่ปิดการใช้งาน · พนักงานเห็นเฉพาะ Top 10 (ปิดได้ที่ ⚙️ ตั้งค่า)</div></div>`;
+}
 async function renderEng(force){
   const body=$('#engBody');if(!body)return;
   if(force||!ENG.d){body.innerHTML='<div class="panel"><div class="hint">กำลังรวบรวมข้อมูลการใช้งาน…</div></div>';
-    try{ENG.d=await api('engagement')}catch(e){body.innerHTML=`<div class="panel"><div class="err">${esc(e.message)}${/ไม่รู้จัก|unknown|action/i.test(e.message)?'<br>ยังไม่ได้อัปเดตหลังบ้าน (Code.gs) — ให้วางโค้ดใหม่แล้ว Deploy':''}</div></div>`;return}}
+    try{ENG.d=await api('engagement');await ensureTkb(true)}catch(e){body.innerHTML=`<div class="panel"><div class="err">${esc(e.message)}${/ไม่รู้จัก|unknown|action/i.test(e.message)?'<br>ยังไม่ได้อัปเดตหลังบ้าน (Code.gs) — ให้วางโค้ดใหม่แล้ว Deploy':''}</div></div>`;return}}
   const E=ENG.d,tn=t=>(teamOf(t)||{}).name||t||'–',pc=(a,b)=>b?Math.round(a/b*100):0;
   const roles=[...new Set(E.users.map(u=>u.role||'-'))];
   const U=E.users.filter(u=>(!ENG.role||(u.role||'-')===ENG.role));
@@ -2255,6 +2283,7 @@ async function renderEng(force){
    <div class="panel sec"><h3>🧩 ใช้ฟีเจอร์อะไรบ้าง (${E.keep} วัน)</h3>${feats.map(f=>`<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;gap:6px"><span>${ENGF[f.k][0]} ${ENGF[f.k][1]}</span><span class="num"><b>${f.us}</b> คน <span class="hint">(${pc(f.us,tot)}%) · ${fmt(f.ev)} ครั้ง</span></span></div><div class="chbar"><i style="width:${pc(f.us,tot)}%"></i></div></div>`).join('')}<div class="hint">ดูรายชื่อคนที่ใช้แต่ละเมนูได้ในส่วน "ใครใช้เมนูไหน" ด้านล่าง</div></div>
    <div class="panel sec"><h3>🎯 ระดับการใช้งานของผู้ใช้</h3>${Object.keys(ENGL).map(k=>`<div style="margin:8px 0;cursor:pointer" data-eglv="${k}"><div style="display:flex;justify-content:space-between"><span>${ENGL[k][0]} ${ENGL[k][1]}</span><span class="num"><b>${lv[k]}</b> คน <span class="hint">(${pc(lv[k],tot)}%)</span></span></div><div class="chbar"><i style="width:${pc(lv[k],tot)}%;background:${ENGL[k][2]}"></i></div></div>`).join('')}<div class="hint">คะแนน 0–100 = วันที่เข้าใช้ใน ${E.keep} วัน (60) + ความหลากหลายฟีเจอร์ (25) + ความสม่ำเสมอ 7 วันล่าสุด (15) · กดแถบเพื่อกรองตารางด้านล่าง</div></div></div>
    ${engMenusHTML(E,U,tot,tn)}
+   ${engTokHTML()}
    <div class="panel sec"><h3>👥 แยกตามทีม</h3><div class="tblwrap"><table class="atbl"><thead><tr><th>ทีม</th><th class="r">คน</th><th class="r">ใช้ 7 วัน</th><th class="r">ใช้ ${E.keep} วัน</th><th class="r">วันเข้าเฉลี่ย/คน</th></tr></thead><tbody>${(()=>{const T={};U.forEach(u=>{const o=T[u.team]||(T[u.team]={n:0,a7:0,a30:0,d:0});o.n++;if(u.d7>0)o.a7++;if(u.d30>0)o.a30++;o.d+=u.d30});return Object.keys(T).sort((a,b)=>T[b].a7/T[b].n-T[a].a7/T[a].n).map(k=>{const o=T[k];return `<tr><td>${esc(tn(k))}</td><td class="r num">${o.n}</td><td class="r num">${o.a7} <span class="hint">(${pc(o.a7,o.n)}%)</span></td><td class="r num">${o.a30} <span class="hint">(${pc(o.a30,o.n)}%)</span></td><td class="r num">${(o.d/o.n).toFixed(1)}</td></tr>`}).join('')})()}</tbody></table></div></div>`;
   const q=ENG.q.trim().toLowerCase(),L=U.filter(u=>(!ENG.lv||u.level===ENG.lv)&&(!q||(u.name+' '+u.id).toLowerCase().includes(q)));
   h+=`<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>👤 รายคน (${L.length}${ENG.lv?' · '+ENGL[ENG.lv][1]:''})</span><span style="display:flex;gap:6px;align-items:center"><input id="egQ" placeholder="🔍 ค้นหาชื่อ" value="${esc(ENG.q)}" style="padding:6px"><button class="btn sm" id="egCsv">⬇ CSV</button>${ENG.lv?'<button class="btn sm" id="egClr">✕ ล้างตัวกรอง</button>':''}</span></h3>
@@ -2262,6 +2291,9 @@ async function renderEng(force){
    <div class="hint" style="margin-top:6px">เห็นเฉพาะแอดมิน · "เข้าใช้" = เปิดหน้าเว็บอย่างน้อย 1 ครั้งในวันนั้น (ข้อมูลเก็บ ${E.keep} วัน) · Feedback แบบไม่ระบุชื่อไม่ถูกนับรายคน · ไอคอน: 🎁 TOKEN 🎡 วงล้อ 🔮 ทายผล 💬 Feedback 🗨 คอมเมนต์ ❤️ ไลก์</div></div>`;
   body.innerHTML=h;
   $('#egRf').onclick=()=>renderEng(true);
+  const tq=$('#egTq');if(tq)tq.oninput=e=>{ENG.tq=e.target.value;clearTimeout(ENG.t3);ENG.t3=setTimeout(()=>{renderEng();const i=$('#egTq');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)};
+  const tc=$('#egTcsv');if(tc)tc.onclick=()=>{const d=TKB.d,tn=t=>(teamOf(t)||{}).name||t||'',hd=['อันดับ','ชื่อ','ทีม','สะสม','จากยอดขาย','รับรายวัน','โบนัส','ใช้ไปแล้ว','คงเหลือ','Streak'],rows=d.list.map(x=>[x.rank,x.name,tn(x.team),x.earned,x.sales,x.login,x.bonus,x.spent,x.balance,x.streak]);
+    const csv='\ufeff'+[hd,...rows].map(r=>r.map(v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(',')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='token_'+E.t+'.csv';a.click()};
   $$('[data-egm]',body).forEach(d=>d.onclick=()=>{ENG.mo[d.dataset.egm]=!ENG.mo[d.dataset.egm];renderEng()});
   const mq=$('#egMq');if(mq)mq.oninput=e=>{ENG.mq=e.target.value;clearTimeout(ENG.t2);ENG.t2=setTimeout(()=>{renderEng();const i=$('#egMq');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)};
   $('#egRole').onchange=e=>{ENG.role=e.target.value;renderEng()};
@@ -3028,7 +3060,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-05.7';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-05.8';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -3047,7 +3079,7 @@ function render(){
   ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins','eng','tips','prof','script'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
   $$('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab));
   if(S.tab==='dash'){rebuildProd();syncControls();renderTop();renderComStrip();renderSvcStrip();renderNews();renderQuote();renderChart();renderBoard();renderDashMix();ensureSpot();ensureTips();ensurePostPop()}
-  else if(S.tab==='rank'){renderRank();renderSpotTab()}
+  else if(S.tab==='rank'){renderRank();renderSpotTab();renderTokBoard()}
   else if(S.tab==='com')renderCom();
   else if(S.tab==='road')renderRoad();
   else if(S.tab==='login')renderLogin();
