@@ -1364,7 +1364,7 @@ function admSettings(el){
     <div class="row2"><div class="fld" style="margin:0"><label>ขายทุกกี่บาท ได้ 1 TOKEN</label><input type="number" id="cB" min="1" value="${D.baht}"></div>
       <div class="fld" style="margin:0"><label>พนักงานมองเห็นข้อมูล</label><select id="cV"><option value="self">เฉพาะของตัวเอง (แนะนำ)</option><option value="team">ภายในทีมเดียวกัน</option><option value="all">ทุกคน</option></select></div>
       <div class="fld" style="margin:0"><label>Hold (% ของ Com Before)</label><input type="number" id="cH" min="0" max="100" step="any" value="${D.hold}"></div>
-      <div class="fld" style="margin:0"><label>หัก DIFF POINT (% ของ POINT)</label><input type="number" id="cDF" min="0" max="100" step="any" value="${D.diffPct==null?5:D.diffPct}"></div>
+      <div class="fld" style="margin:0"><label>หัก DIFF POINT (% ของ POINT)</label><input type="number" id="cDF" min="0" max="100" step="any" value="${DFP()}"></div>
       <div class="fld" style="margin:0"><label>แหล่ง POINT สำหรับคอม</label><select id="cPS"><option value="product">ยอดรายสินค้า × Factor (แนะนำ)</option><option value="sales">POINT จากแท็บ Sales</option></select></div>
       <div class="fld" style="margin:0"><label>Factor คูณกับอะไร (เมื่อใช้ยอดรายสินค้า)</label><select id="cFB"><option value="amount">ยอดเงินรายสินค้า (amount) × Factor</option><option value="qty">จำนวนชิ้น (qty) × Factor</option></select></div>
       <button class="btn primary" id="cSave">บันทึก</button></div>
@@ -1425,9 +1425,10 @@ function renderNews(){
 /* ---------- คอมมิชชั่น / Runrate ---------- */
 const FAC=p=>{const x=PRODS.find(q=>q.id===p);return x?x.factor:1};
 const monthDays=ym=>{const [y,m]=ym.split('-').map(Number);return new Date(Date.UTC(y,m,0)).getUTCDate()};
+const DFP=()=>D&&D.diffPct!=null?D.diffPct:0;   // % หัก DIFF POINT (ค่าเริ่มต้น 0 = ไม่หัก)
 function tierOf(pt){const T=D.tiers;for(let i=0;i<T.length;i++)if(T[i].upTo===null||pt<=T[i].upTo)return Object.assign({i},T[i]);const i=T.length-1;return Object.assign({i},T[i])}
 function monthPoint(id,ym){
-  const pen=((D.pen||{})[id]||{})[ym]||0,k=1-(D.diffPct==null?5:D.diffPct)/100;   // หัก DIFF POINT ก่อนคิดคอม
+  const pen=((D.pen||{})[id]||{})[ym]||0,k=1-DFP()/100;   // หัก DIFF POINT ก่อนคิดคอม
   if(D.pointSource==='sales'){const v=val([id],'m',ym,'point');return Math.max(0,(v==null?0:v)*k-pen)}
   let s=0;(PSBY[id]||[]).forEach(r=>{if(r.per.startsWith(ym))s+=PTV(r)});return Math.max(0,s*k-pen)}
 function autoElapsed(ym){
@@ -1477,7 +1478,7 @@ function seniorComHTML(C,ym,elC){
   return `<div class="panel sec"><h3>🏅 คอมมิชชั่น Senior (N-5) — คิดจาก POINT ของสมาชิกในทีม</h3>
    <div class="ctl" style="margin-bottom:8px"><select id="snW">${ids.map(i=>`<option value="${esc(i)}" ${i===C.sn?'selected':''}>${esc(nm(i))}</option>`).join('')}</select><span class="hint">ทีมที่ดูแล: ${esc(tn)} · ${r.agents.length} คน · ผู้ใช้ Senior/Admin เท่านั้นที่เห็นส่วนนี้</span></div>
    <div class="cgrid">
-    <div class="tcell com"><small>🎯 POINT รวมทีม (ตอนนี้)</small><div class="tv">${f2(r.sumP)}</div><div class="ts">หัก DIFF ${D.diffPct==null?5:D.diffPct}% แล้ว</div></div>
+    <div class="tcell com"><small>🎯 POINT รวมทีม (ตอนนี้)</small><div class="tv">${f2(r.sumP)}</div><div class="ts">${DFP()>0?"หัก DIFF "+DFP()+"% แล้ว":"ไม่หัก DIFF"}</div></div>
     <div class="tcell com"><small>📈 RUNRATE รวมทีมสิ้นเดือน</small><div class="tv">${fp(r.sumRun)}</div><div class="ts">รวม Runrate ของสมาชิกแต่ละคน (หักวันลา)</div></div>
     <div class="tcell com"><small>💰 คอม Senior ตาม Runrate</small><div class="tv up">฿${fp(r.run.total)}</div><div class="ts">ตอนนี้ (ตามยอดจริง): ฿${fp(r.now.total)}</div></div>
    </div>
@@ -1508,7 +1509,7 @@ function renderCom(){
   const remDays=dim-el,basis=over!=null?'ตามที่กำหนด':'ตาม Runrate';
   let h=`<div class="hint" style="margin-bottom:10px">${w.name}${w.role?` · ${ROLE[w.role]}`:''} · ${THMON[+ym.slice(5)-1]} ${+ym.slice(0,4)+543} · POINT ${D.pointSource==='sales'?'จากแท็บ Sales (ที่แอดมินบันทึก)':'= ยอดเงินรายสินค้า × Factor'}${isCur?'':' · เดือนที่ผ่านมาแล้ว (ตัวเลขจริง)'}</div>
    <div class="cgrid">
-    <div class="tcell com"><small>🎯 POINT ปัจจุบัน (หัก DIFF ${D.diffPct==null?5:D.diffPct}%)</small><div class="tv">${f2(c.point)}</div><div class="ts">ผ่านมา ${el}/${dim} วัน</div></div>
+    <div class="tcell com"><small>🎯 POINT ปัจจุบัน${DFP()>0?' (หัก DIFF '+DFP()+'%)':''}</small><div class="tv">${f2(c.point)}</div><div class="ts">ผ่านมา ${el}/${dim} วัน</div></div>
     <div class="tcell com"><small>⚡ เฉลี่ย POINT/วัน</small><div class="tv">${f2(c.avg)}</div><div class="ts">${f2(c.point)} ÷ ${el} วัน</div></div>
     <div class="tcell com"><small>📈 RUNRATE สิ้นเดือน</small><div class="tv">${fp(c.run)}</div><div class="ts">${over!=null?'ค่าที่คุณกำหนด':`${f2(c.avg)} × ${dim} วัน`}</div></div>
     <div class="tcell tok"><small>🏷 % X คาดการณ์</small><div class="tv">${c.tier.rate}%</div><div class="ts">Tier: ${tierRange(c.tier.i)}</div></div></div>
@@ -2111,7 +2112,7 @@ function heatHTML(heat,day){
 const normCdf=z=>{const t=1/(1+.2316419*Math.abs(z)),d=.3989423*Math.exp(-z*z/2),p=d*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p};
 const pctS=x=>Math.round(Math.max(0,Math.min(1,x))*100)+'%';
 function dayPt(id,k){
-  const k0=1-(D.diffPct==null?5:D.diffPct)/100;
+  const k0=1-DFP()/100;
   if(D.pointSource==='sales'){const b=DB[id]&&DB[id].point;return ((b&&b.D[k])||0)*k0}
   let s=0;(PSBY[id]||[]).forEach(r=>{if(r.per===k)s+=PTV(r)});return s*k0;
 }
@@ -2722,7 +2723,7 @@ function renderRun(){
    <div class="tblwrap"><table class="atbl"><thead><tr><th>#</th>${AH('name','ชื่อ')}${AH('team','ทีม')}${AH('amt','ยอดขายตอนนี้','r')}${AH('ramt','Runrate ยอดขาย','r')}${AH('pt','POINT ตอนนี้','r')}${AH('rpt','Runrate POINT','r')}${AH('sub','SUB ตอนนี้','r')}${AH('rsub','Runrate SUB','r')}</tr></thead><tbody>
    ${rows.map((r,i)=>`<tr><td class="num hint">${i+1}</td><td>${esc(r.name)}</td><td class="hint">${esc(r.team)}</td><td class="r num">${fb(r.amt)}</td><td class="r num up"><b>${fb(r.ramt)}</b></td><td class="r num">${f2(r.pt)}</td><td class="r num up"><b>${f2(r.rpt)}</b></td><td class="r num">${fmt(r.sub)}</td><td class="r num up"><b>${f2(r.rsub)}</b></td></tr>`).join('')}
    <tr><td></td><td colspan="2"><b>รวม ${rows.length} คน</b></td><td class="r num"><b>${fb(T.amt)}</b></td><td class="r num up"><b>${fb(T.ramt)}</b></td><td class="r num"><b>${f2(T.pt)}</b></td><td class="r num up"><b>${f2(T.rpt)}</b></td><td class="r num"><b>${fmt(T.sub)}</b></td><td class="r num up"><b>${f2(T.rsub)}</b></td></tr></tbody></table></div>
-   <div class="hint" style="margin-top:6px">แตะหัวคอลัมน์เพื่อเรียง มาก↔น้อย · POINT หัก DIFF ${D.diffPct==null?5:D.diffPct}% แล้ว · เมนูนี้เห็นได้เฉพาะ Senior และแอดมิน</div></div>`;
+   <div class="hint" style="margin-top:6px">แตะหัวคอลัมน์เพื่อเรียง มาก↔น้อย · ${DFP()>0?'POINT หัก DIFF '+DFP()+'% แล้ว':'POINT ไม่หัก DIFF'} · เมนูนี้เห็นได้เฉพาะ Senior และแอดมิน</div></div>`;
   const sens=(D.kpi?D.kpi.seniors:[]).filter(x=>!S.tf||x.teams.includes(S.tf)).map(x=>{const c=seniorCalc(x.id,ym,elC);return c?{x,c,name:(memOf(x.id)||{}).nick||(memOf(x.id)||{}).name||x.id,n:c.agents.length,sp:c.sumP,rp:c.sumRun,avg:c.agents.length?c.sumRun/Math.max(1,c.actual):0,aq:c.run.aq,tm:c.run.tm,ex:c.run.co+c.run.bz,now:c.now.total,run:c.run.total}:null}).filter(Boolean);
   const sk=C.sk||'run',sd=C.sd||'desc';sortBy(sens,r=>r[sk],sd);
   const SH=(k,l,cls)=>`<th class="${cls||''} sortable" data-sk2="${k}">${l}${shArrow(sk,k,sd)}</th>`;
@@ -2892,7 +2893,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-05.3';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-05.4';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
