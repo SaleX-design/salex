@@ -2346,19 +2346,20 @@ async function renderEng(force){
     const csv='﻿'+[hd,...rows].map(r=>r.map(v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(',')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='engagement_'+E.t+'.csv';a.click()};
 }
 /* ---------- 📊 สถิติเด่น 10 หัวข้อ · ย้อนหลัง 1 / 3 / 7 วัน (นับเฉพาะ "วันที่มียอดขาย") ---------- */
-const INW={n:7};
+const INW={n:7,who:''};
 function insPeriod(n){
   const days=salesDays();if(!days.length)return null;
   const L=days.slice(-n),P=days.slice(-2*n,-n),sL=new Set(L),sP=new Set(P),ags=AGM(),ids=ags.map(m=>m.id);
   if(!ids.length)return null;
+  const sel=INW.who?ags.find(m=>m.id===INW.who)||null:null,sid=sel?[sel.id]:ids;
   const per=(arr,f)=>{const o={};ids.forEach(id=>{o[id]=arr.reduce((s,k)=>s+f(id,k),0)});return o};
-  const sum=o=>ids.reduce((s,id)=>s+o[id],0);
+  const sum=o=>sid.reduce((s,id)=>s+o[id],0);
   const aL=per(L,dAmt),aP=per(P,dAmt),pL=per(L,dayPt),pP=per(P,dayPt),sbL=per(L,dSub),sbP=per(P,dSub);
   const hasP=P.length>0;
   const cmp=(c,pv)=>{if(!hasP)return null;const a=c/L.length,b=pv/P.length;return b>0?(a-b)/b*100:null};   // เทียบเฉลี่ยต่อวัน (กรณีช่วงก่อนมีวันน้อยกว่า)
   const TA=sum(aL),TP=sum(pL),TS=sum(sbL),PA=sum(aP),PP=sum(pP),PS_=sum(sbP);
   // สินค้า
-  const pr={},pp={};ids.forEach(id=>(PSBY[id]||[]).forEach(r=>{if(sL.has(r.per)){const o=pr[r.p]||(pr[r.p]={a:0,q:0});o.a+=+r.a||0;o.q+=+r.q||0}else if(sP.has(r.per)){const o=pp[r.p]||(pp[r.p]={a:0,q:0});o.a+=+r.a||0;o.q+=+r.q||0}}));
+  const pr={},pp={};sid.forEach(id=>(PSBY[id]||[]).forEach(r=>{if(sL.has(r.per)){const o=pr[r.p]||(pr[r.p]={a:0,q:0});o.a+=+r.a||0;o.q+=+r.q||0}else if(sP.has(r.per)){const o=pp[r.p]||(pp[r.p]={a:0,q:0});o.a+=+r.a||0;o.q+=+r.q||0}}));
   const prods=Object.keys(pr).map(k=>({id:k,name:prodName(k),a:pr[k].a,q:pr[k].q,pc:hasP&&pp[k]&&pp[k].a>0?(pr[k].a/L.length-pp[k].a/P.length)/(pp[k].a/P.length)*100:null})).sort((x,y)=>y.a-x.a);
   const prodSum=prods.reduce((s,x)=>s+x.a,0);
   const hot=prods.filter(x=>x.pc!=null&&x.a>0).sort((x,y)=>y.pc-x.pc)[0];
@@ -2366,41 +2367,50 @@ function insPeriod(n){
   const rank=ags.map(m=>({m,name:m.nick||m.name,a:aL[m.id],pc:(hasP&&aP[m.id]>0)?cmp(aL[m.id],aP[m.id]):null})).sort((x,y)=>y.a-x.a);
   const top=rank[0]&&rank[0].a>0?rank[0]:null;
   const mover=rank.filter(x=>x.pc!=null&&x.a>0&&aP[x.m.id]>=TA/ids.length*P.length/L.length*.25).sort((x,y)=>y.pc-x.pc)[0];
-  const sellers=rank.filter(x=>x.a>0).length;
+  const sellers=rank.filter(x=>x.a>0).length,pos=sel?rank.findIndex(x=>x.m.id===sel.id)+1:0,soldDays=sel?L.filter(k=>dAmt(sel.id,k)>0).length:0,selTeam=sel?(TEAMS.find(t=>t.id===sel.team)||{}).name||sel.team:'',teamTot=sel?ags.filter(m=>m.team===sel.team).reduce((s,m)=>s+aL[m.id],0):0;
   // ทีม
   const tm={};ags.forEach(m=>{tm[m.team]=(tm[m.team]||0)+aL[m.id]});
   const teams=Object.keys(tm).map(k=>({id:k,name:(TEAMS.find(t=>t.id===k)||{}).name||k,a:tm[k]})).sort((x,y)=>y.a-x.a);
   // วันที่ขายดีสุด
-  const dd=L.map(k=>({k,a:ids.reduce((s,id)=>s+dAmt(id,k),0)})).sort((x,y)=>y.a-x.a)[0];
-  return {n,L,P,hasP,TA,TP,TS,PA,PP,PS_,cA:cmp(TA,PA),cP:cmp(TP,PP),cS:cmp(TS,PS_),tk:TS>0?TA/TS:null,tkP:PS_>0?PA/PS_:null,prods,prodSum,hot,top,mover,sellers,nAg:ids.length,teams,best:dd,avgDay:TA/L.length,avgAg:TA/ids.length};
+  const dd=L.map(k=>({k,a:sid.reduce((s,id)=>s+dAmt(id,k),0)})).sort((x,y)=>y.a-x.a)[0];
+  return {n,L,P,hasP,TA,TP,TS,PA,PP,PS_,cA:cmp(TA,PA),cP:cmp(TP,PP),cS:cmp(TS,PS_),tk:TS>0?TA/TS:null,tkP:PS_>0?PA/PS_:null,prods,prodSum,hot,top,mover,sellers,nAg:ids.length,sel,pos,soldDays,selTeam,teamTot,teams,best:dd,avgDay:TA/L.length,avgAg:TA/sid.length};
 }
 function insPeriodHTML(){
   const R=insPeriod(INW.n),tabs=[1,3,7].map(n=>`<button class="btn sm ${INW.n===n?'primary':''}" data-inw="${n}">ย้อนหลัง ${n} วัน</button>`).join('');
-  let h=`<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>📊 สถิติเด่น 10 หัวข้อ · ใช้เป็นเหตุผลในการเสนอขาย</span><span style="display:flex;gap:6px">${tabs}</span></h3>`;
+  let h=`<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>📊 สถิติเด่น 10 หัวข้อ · ใช้เป็นเหตุผลในการเสนอขาย</span><span style="display:flex;gap:6px">${tabs}</span></h3>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">${teamSelHTML('inwTeam')}<select id="inwWho" title="เลือกรายบุคคล"><option value="">👤 ทุกคน (ภาพรวม)</option>${AGM().map(m=>`<option value="${esc(m.id)}" ${INW.who===m.id?'selected':''}>${esc(m.nick||m.name)}${m.nick&&m.name?' · '+esc(m.name):''}${m.id===(D.me||{}).id?' ← ฉัน':''}</option>`).join('')}</select><span class="hint">${INW.who?'ดูรายบุคคล':'ดูภาพรวม'}${S.tf?' · ทีม '+esc((TEAMS.find(t=>t.id===S.tf)||{}).name||S.tf):''}</span></div>`;
   if(!R)return h+'<div class="empty">ยังไม่มียอดขายรายวันให้วิเคราะห์</div></div>';
   const ch=(v,suffix)=>v==null?`<span class="hint">${R.hasP?'ช่วงก่อนไม่มีข้อมูลเทียบ':'ยังไม่มีช่วงก่อนหน้าเทียบ'}</span>`:`<span class="num ${v>=0?'up':'dn'}" style="font-weight:800">${v>=0?'▲ +':'▼ '}${v.toFixed(1)}%</span> <span class="hint">${suffix||'เทียบช่วงก่อน (ต่อวัน)'}</span>`;
   const card=(ic,t,big,sub,tip)=>`<div class="panel" style="background:var(--panel2);margin:0"><div class="hint">${ic} ${t}</div><div class="num" style="font-size:22px;font-weight:800;margin:2px 0">${big}</div><div>${sub}</div>${tip?`<div style="margin-top:6px;padding:6px 8px;border-left:3px solid #40c4ff;background:color-mix(in srgb,#40c4ff 8%,transparent);font-size:14px">💬 ${esc(tip)}</div>`:''}</div>`;
   const win=R.n===1?dShort(R.L[0]):`${dShort(R.L[0])} – ${dShort(R.L[R.L.length-1])}`,span=R.L.length<R.n?` (มีเพียง ${R.L.length} วันที่มียอด)`:'';
   const cards=[];
-  cards.push(card('💰','1. ยอดขายรวม','฿'+fmt(R.TA),ch(R.cA),R.cA!=null&&R.cA>0?`ยอดขายโตขึ้น ${R.cA.toFixed(0)}% ต่อวัน — ลูกค้าตัดสินใจสมัครมากขึ้นอย่างต่อเนื่อง`:`ทีมปิดการขายรวม ฿${fmt(R.TA)} ในช่วงนี้`));
+  cards.push(card('💰','1. ยอดขายรวม','฿'+fmt(R.TA),ch(R.cA),R.sel?null:R.cA!=null&&R.cA>0?`ยอดขายโตขึ้น ${R.cA.toFixed(0)}% ต่อวัน — ลูกค้าตัดสินใจสมัครมากขึ้นอย่างต่อเนื่อง`:`ทีมปิดการขายรวม ฿${fmt(R.TA)} ในช่วงนี้`));
   cards.push(card('🎯','2. POINT รวม',fmt(R.TP),ch(R.cP),null));
   cards.push(card('👤','3. SUB (จำนวนสมัคร)',fmt(R.TS),ch(R.cS),R.TS>0?`มีลูกค้าสมัครแล้ว ${fmt(R.TS)} ราย ในช่วงนี้ (เฉลี่ย ${(R.TS/R.L.length).toFixed(1)} ราย/วัน)`:null));
   cards.push(card('🧾','4. มูลค่าเฉลี่ยต่อ SUB',R.tk==null?'–':'฿'+fmt(R.tk),R.tk!=null&&R.tkP!=null?ch((R.tk-R.tkP)/R.tkP*100,'เทียบช่วงก่อน'):'<span class="hint">ยอดเงิน ÷ จำนวนสมัคร</span>',R.tk!=null?`ลูกค้าเลือกแพ็กเกจเฉลี่ย ฿${fmt(R.tk)} ต่อราย — ใช้เป็นราคาอ้างอิงในการเสนอ`:null));
   const t3=R.prods.slice(0,3);
-  cards.push(card('🏆','5. สินค้าขายดีสุด',R.prods[0]?esc(R.prods[0].name):'–',R.prods[0]?`฿${fmt(R.prods[0].a)} · ${fmt(R.prods[0].q)} ชิ้น · ${R.prodSum?Math.round(R.prods[0].a/R.prodSum*100):0}% ของทั้งหมด${t3.length>1?`<div class="hint">รองลงมา: ${t3.slice(1).map(x=>esc(x.name)).join(', ')}</div>`:''}`:'<span class="hint">ไม่มีข้อมูลสินค้ารายวัน</span>',R.prods[0]?`${R.prods[0].name} เป็นสินค้าที่ลูกค้าเลือกมากที่สุดใน ${R.n===1?'วันนี้':R.n+' วันล่าสุด'} (${fmt(R.prods[0].q)} รายการ) — บอกลูกค้าได้ว่า "ตอนนี้คนนิยมที่สุด"`:null));
+  cards.push(card('🏆','5. สินค้าขายดีสุด',R.prods[0]?esc(R.prods[0].name):'–',R.prods[0]?`฿${fmt(R.prods[0].a)} · ${fmt(R.prods[0].q)} ชิ้น · ${R.prodSum?Math.round(R.prods[0].a/R.prodSum*100):0}% ของทั้งหมด${t3.length>1?`<div class="hint">รองลงมา: ${t3.slice(1).map(x=>esc(x.name)).join(', ')}</div>`:''}`:'<span class="hint">ไม่มีข้อมูลสินค้ารายวัน</span>',R.prods[0]&&!R.sel?`${R.prods[0].name} เป็นสินค้าที่ลูกค้าเลือกมากที่สุดใน ${R.n===1?'วันนี้':R.n+' วันล่าสุด'} (${fmt(R.prods[0].q)} รายการ) — บอกลูกค้าได้ว่า "ตอนนี้คนนิยมที่สุด"`:null));
   cards.push(card('🔥','6. สินค้ามาแรง',R.hot?esc(R.hot.name):'–',R.hot?ch(R.hot.pc):'<span class="hint">ยังไม่มีช่วงก่อนหน้าเทียบ</span>',R.hot&&R.hot.pc>0?`${R.hot.name} ยอดเพิ่มขึ้น ${R.hot.pc.toFixed(0)}% — กระแสตอบรับดี ใช้สร้างความมั่นใจให้ลูกค้า`:null));
+  if(R.sel){const nm=esc(R.sel.nick||R.sel.name);
+  cards.push(card('🥇','7. อันดับยอดขาย',`#${R.pos}/${R.nAg}`,`<span class="hint">${nm} · ฿${fmt(R.TA)} · ${R.TA&&R.teamTot?Math.round(R.TA/R.teamTot*100):0}% ของทีม</span>`,null));
+  cards.push(card('🚀','8. เทียบช่วงก่อนหน้า',R.cA==null?'–':(R.cA>=0?'+':'')+R.cA.toFixed(1)+'%',R.cA==null?'<span class="hint">ยังไม่มีช่วงก่อนหน้าเทียบ</span>':'<span class="hint">ยอดขายต่อวันเทียบช่วงก่อนหน้า</span>',null));
+  cards.push(card('🏁','9. ทีมของเขา',esc(R.selTeam||'–'),`<span class="hint">ยอดทีมช่วงนี้ ฿${fmt(R.teamTot)}</span>`,null));
+  cards.push(card('📅','10. วันที่ปิดการขายได้',`${R.soldDays}/${R.L.length} วัน`,`<span class="hint">เฉลี่ย ฿${fmt(R.avgDay)}/วัน${R.best&&R.best.a>0?` · วันขายดีสุด ${dShort(R.best.k)} ฿${fmt(R.best.a)}`:''}</span>`,null));
+  }else{
   cards.push(card('🥇','7. Agent ยอดสูงสุด',R.top?esc(R.top.name):'–',R.top?`฿${fmt(R.top.a)} · ${R.TA?Math.round(R.top.a/R.TA*100):0}% ของยอดรวม`:'',null));
   cards.push(card('🚀','8. Agent ยอดพุ่งสุด',R.mover?esc(R.mover.name):'–',R.mover?ch(R.mover.pc):'<span class="hint">ยังไม่มีช่วงก่อนหน้าเทียบ</span>',R.mover?'ชวนคุยว่าใช้เทคนิคอะไร แล้วแชร์ในทีม':null));
   cards.push(card('🏁','9. ทีมนำ',R.teams[0]&&R.teams[0].a>0?esc(R.teams[0].name):'–',R.teams[0]?`฿${fmt(R.teams[0].a)}${R.teams[1]?` · อันดับ 2: ${esc(R.teams[1].name)} ฿${fmt(R.teams[1].a)}`:''}`:'',null));
   cards.push(card('👥','10. Agent ที่ปิดการขายได้',`${R.sellers}/${R.nAg} คน`,`<span class="hint">${R.nAg?Math.round(R.sellers/R.nAg*100):0}% ของ Agent · เฉลี่ย ฿${fmt(R.avgAg)}/คน${R.n>1&&R.best?` · วันขายดีสุด ${dShort(R.best.k)} ฿${fmt(R.best.a)}`:''}</span>`,null));
+  }
   // จุดเด่นที่ใช้พูดกับลูกค้า (ใช้ตัวเลขภาพรวม ไม่ระบุชื่อพนักงาน)
   const pitch=[];
-  if(R.prods[0])pitch.push(`"${R.prods[0].name} เป็นแพ็กเกจที่ลูกค้าเลือกมากที่สุดช่วงนี้ครับ/ค่ะ มีผู้สมัครแล้ว ${fmt(R.prods[0].q)} รายการ${R.n===1?'ภายในวันนี้':' ใน '+R.n+' วันที่ผ่านมา'}"`);
+  if(!R.sel){if(R.prods[0])pitch.push(`"${R.prods[0].name} เป็นแพ็กเกจที่ลูกค้าเลือกมากที่สุดช่วงนี้ครับ/ค่ะ มีผู้สมัครแล้ว ${fmt(R.prods[0].q)} รายการ${R.n===1?'ภายในวันนี้':' ใน '+R.n+' วันที่ผ่านมา'}"`);
   if(R.TS>0)pitch.push(`"มีลูกค้าสมัครใช้บริการกับเราแล้ว ${fmt(R.TS)} ราย ${R.n===1?'ในวันนี้':'ใน '+R.n+' วันที่ผ่านมา'} จึงมั่นใจได้ว่าเป็นที่นิยมครับ/ค่ะ"`);
   if(R.hot&&R.hot.pc>0)pitch.push(`"${R.hot.name} กำลังมาแรง ยอดสมัครเพิ่มขึ้น ${R.hot.pc.toFixed(0)}% เมื่อเทียบกับช่วงก่อน"`);
-  if(R.tk)pitch.push(`"ลูกค้าที่สมัครช่วงนี้เลือกแพ็กเกจเฉลี่ยประมาณ ฿${fmt(R.tk)} ต่อราย ครับ/ค่ะ"`);
-  h+=`<div class="hint" style="margin-bottom:8px">ช่วง ${win}${span} · นับเฉพาะวันที่มียอดขาย · เทียบกับ ${R.hasP?R.P.length+' วันก่อนหน้า':'— (ยังไม่มีช่วงก่อนหน้า)'} · ${R.nAg} Agent</div>
+  if(R.tk)pitch.push(`"ลูกค้าที่สมัครช่วงนี้เลือกแพ็กเกจเฉลี่ยประมาณ ฿${fmt(R.tk)} ต่อราย ครับ/ค่ะ"`);}
+  h+=`<div class="hint" style="margin-bottom:8px">ช่วง ${win}${span} · นับเฉพาะวันที่มียอดขาย · เทียบกับ ${R.hasP?R.P.length+' วันก่อนหน้า':'— (ยังไม่มีช่วงก่อนหน้า)'} · ${R.sel?esc(R.sel.nick||R.sel.name):R.nAg+' Agent'}</div>
    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">${cards.join('')}</div>
+   ${R.sel?'<div class="hint" style="margin-top:10px">⭐ ประโยคจุดเด่นสำหรับพูดกับลูกค้าใช้ข้อมูลภาพรวมทีม — เลือก “ทุกคน (ภาพรวม)” เพื่อดูและคัดลอก</div>':''}
    ${pitch.length?`<div class="panel" style="margin-top:12px;background:var(--panel2)"><b>⭐ จุดเด่นที่นำไปพูดกับลูกค้าได้</b><div class="hint">เป็นข้อมูลภาพรวมของทีม ไม่ระบุชื่อพนักงาน/ลูกค้า — กดคัดลอกไปใช้ได้</div><ul class="insl" style="margin-top:6px">${pitch.map((t,i)=>`<li>${esc(t)} <button class="btn sm" data-inwcp="${i}">📋</button></li>`).join('')}</ul></div>`:''}
    <div class="hint" style="margin-top:8px">ตัวเลขคำนวณจากยอดขายรายวันที่แอดมินบันทึก (นับเฉพาะ Agent ตามตัวกรองทีมที่เลือก) · % เปรียบเทียบเป็นค่าเฉลี่ยต่อวันกับช่วงก่อนหน้า</div></div>`;
   INW.pitch=pitch;return h;
@@ -2432,8 +2442,10 @@ function renderIns(){
   el.innerHTML=h;
   bindTeamSel('inTeam',renderIns);
   $$('[data-inw]').forEach(b=>b.onclick=()=>{INW.n=+b.dataset.inw;renderIns()});
+  const iT=$('#inwTeam');if(iT)iT.onchange=e=>{S.tf=e.target.value;if(INW.who&&!AGM().some(m=>m.id===INW.who)){INW.who='';SOC.who='team'}renderIns()};
+  const iW=$('#inwWho');if(iW)iW.onchange=e=>{INW.who=e.target.value;SOC.who=INW.who||'team';renderIns()};
   $$('[data-inwcp]').forEach(b=>b.onclick=()=>{const t=(INW.pitch||[])[+b.dataset.inwcp];if(!t)return;const v=t.replace(/^"|"$/g,'');try{navigator.clipboard.writeText(v).then(()=>toast('📋 คัดลอกแล้ว'))}catch(e){toast('คัดลอกไม่ได้ — เลือกข้อความเอง')}});
-  if($('#imWho'))$('#imWho').onchange=e=>{SOC.who=e.target.value;renderIns()};
+  if($('#imWho'))$('#imWho').onchange=e=>{SOC.who=e.target.value;INW.who=e.target.value==='team'?'':e.target.value;renderIns()};
 }
 /* ---- 🔔 แจ้งเตือนสังคม ---- */
 const socSeen=()=>+LS.get('sb_soc')||0;
@@ -3102,7 +3114,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-06.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-07.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
