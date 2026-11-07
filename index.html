@@ -451,6 +451,19 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
   .frow{grid-template-columns:1fr}
 }
 
+/* กล่องข้อมูลสินค้า */
+.pbx{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--panel2)}
+.pbf{border-color:color-mix(in srgb,var(--up) 45%,var(--line));background:color-mix(in srgb,var(--up) 7%,var(--panel2))}
+.pbc{border-color:color-mix(in srgb,#40c4ff 45%,var(--line));background:color-mix(in srgb,#40c4ff 6%,var(--panel2))}
+.pbh{font-weight:800;font-size:17px;margin-bottom:8px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px}
+.pcl{display:grid;gap:6px}
+.pit{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;line-height:1.55;font-size:16px}
+.pck,.pno{flex:0 0 24px;height:24px;border-radius:50%;color:#0D1117;font-weight:800;text-align:center;line-height:24px;font-size:13px}
+.pck{background:var(--up)}.pno{background:#40c4ff}
+.pintro{margin:0 0 8px;padding:8px 10px;border-radius:10px;background:var(--panel);border:1px dashed var(--line);font-size:15px;line-height:1.55}
+.pmini .pit{font-size:14px;padding:6px 8px}.pmini .pbh{font-size:15px;margin-bottom:6px}.pmini .pbx{padding:8px 10px}
+.pth{width:54px;height:54px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;background:var(--panel2)}.pth.on{border-color:var(--blue)}
 </style>
 </head>
 <body>
@@ -2375,6 +2388,98 @@ function insPeriod(n){
   const dd=L.map(k=>({k,a:sid.reduce((s,id)=>s+dAmt(id,k),0)})).sort((x,y)=>y.a-x.a)[0];
   return {n,L,P,hasP,TA,TP,TS,PA,PP,PS_,cA:cmp(TA,PA),cP:cmp(TP,PP),cS:cmp(TS,PS_),tk:TS>0?TA/TS:null,tkP:PS_>0?PA/PS_:null,prods,prodSum,hot,top,mover,sellers,nAg:ids.length,sel,pos,soldDays,selTeam,teamTot,teams,best:dd,avgDay:TA/L.length,avgAg:TA/sid.length};
 }
+function insFocusHTML(R){
+  const A=MEM.filter(AG),L=R.L,P=R.P,hasP=R.hasP;if(!A.length||!L.length)return '';
+  const rows=A.map(m=>{const id=m.id,s=(arr,f)=>arr.reduce((t,k)=>t+f(id,k),0),a=s(L,dAmt),p=s(L,dayPt),sb=s(L,dSub),a0=s(P,dAmt);
+    return {m,id,name:m.nick||m.name,team:m.team,a,p,sb,a0,d:L.filter(k=>dAmt(id,k)>0).length,tk:sb>0?a/sb:0,ch:hasP&&a0>0?(a/L.length-a0/P.length)/(a0/P.length)*100:null}});
+  const mean=(arr,k)=>arr.length?arr.reduce((t,x)=>t+x[k],0)/arr.length:0,sumk=(arr,k)=>arr.reduce((t,x)=>t+x[k],0);
+  const pct=(v,avg)=>avg>0?v/avg*100:null,tn=id=>(TEAMS.find(t=>t.id===id)||{}).name||id;
+  const st=p=>p==null?{t:'–',c:'flat'}:p>=120?{t:'🟢 สูงกว่าค่าเฉลี่ย',c:'up'}:p>=90?{t:'🔵 ใกล้เคียงค่าเฉลี่ย',c:'flat'}:p>=60?{t:'🟡 ต่ำกว่าค่าเฉลี่ย',c:'dn'}:{t:'🔴 ต่ำกว่ามาก',c:'dn'};
+  const rk=(arr,x,k)=>arr.filter(y=>y[k]>x[k]).length+1;
+  const priv=!!D.isAdmin||!!(D.me&&D.me.role),meId=(D.me||{}).id;
+  const trend=c=>c==null?'<span class="hint">–</span>':`<span class="num ${c>=0?'up':'dn'}">${c>=0?'▲ +':'▼ '}${c.toFixed(0)}%</span>`;
+  const pc=v=>v==null?'<span class="hint">–</span>':`<b class="num">${Math.round(v)}%</b>`;
+  const chg=(a,a0)=>hasP&&a0>0?(a/L.length-a0/P.length)/(a0/P.length)*100:null;
+  const tile=(t,b,s)=>`<div class="panel" style="background:var(--panel2);margin:0;padding:10px 12px"><div class="hint">${t}</div><div class="num" style="font-size:20px;font-weight:800">${b}</div><div class="hint">${s||''}</div></div>`;
+  const lst=(h,items,cls)=>`<div class="pbx ${cls}" style="margin:0"><div class="pbh" style="font-size:15px">${h}</div><ul class="insl">${items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`;
+  const th=a=>`<thead><tr>${a.map((x,i)=>`<th ${i?'class="r"':''}>${x}</th>`).join('')}</tr></thead>`;
+  const wrap=(title,sub,body)=>`<div class="panel" style="margin:10px 0 14px;border:1px solid color-mix(in srgb,var(--blue) 40%,var(--line))"><h3 style="margin:0 0 4px">🔎 ${title}</h3><div class="hint" style="margin-bottom:10px">${sub}</div>${body}<div class="hint" style="margin-top:10px">ข้อสังเกตจากตัวเลขในช่วงที่เลือก (เทียบกับค่าเฉลี่ยของ Agent ที่ระบบมองเห็น) — ไม่ใช่การประเมินผลงานอย่างเป็นทางการ</div></div>`;
+  const prodBars=()=>{const t=R.prods.slice(0,5);if(!t.length)return '';const mx=t[0].a||1;return `<div style="margin-top:12px"><b>🛍 สัดส่วนสินค้าที่ขายได้</b>${t.map(x=>`<div style="display:flex;gap:8px;align-items:center;margin-top:5px"><span style="flex:0 0 min(150px,34%);font-size:14px">${esc(x.name)}</span><span style="flex:1;background:var(--panel2);border-radius:6px;height:14px;overflow:hidden"><span style="display:block;height:100%;width:${Math.max(3,x.a/mx*100)}%;background:var(--blue)"></span></span><span class="num" style="flex:0 0 auto;font-size:13px">฿${fmt(x.a)} · ${R.prodSum?Math.round(x.a/R.prodSum*100):0}%</span></div>`).join('')}</div>`};
+  /* ===== รายบุคคล ===== */
+  if(R.sel){
+    const me=rows.find(r=>r.id===R.sel.id);if(!me)return '';
+    const T=rows.filter(r=>r.team===me.team),nm=esc(me.name);
+    const defs=[['💰 ยอดขาย','a',v=>'฿'+fmt(v)],['🎯 POINT','p',v=>fmt(v)],['👤 SUB (จำนวนสมัคร)','sb',v=>fmt(v)],['🧾 มูลค่าเฉลี่ยต่อ SUB','tk',v=>v?'฿'+fmt(v):'–'],['📅 วันที่ปิดการขายได้','d',v=>v+'/'+L.length+' วัน']];
+    const M=defs.map(([lb,k,f])=>({lb,k,f,v:me[k],aT:mean(T,k),aA:mean(rows,k),p:pct(me[k],mean(rows,k)),rT:rk(T,me,k),rA:rk(rows,me,k)}));
+    const main=M[0],vd=me.a<=0?{t:'⚪ ยังไม่มียอดขายในช่วงนี้',c:'flat'}:st(main.p);
+    const lines=[];
+    lines.push(me.a>0?`ยอดขาย ฿${fmt(me.a)} คิดเป็น ${Math.round(main.p||0)}% ของค่าเฉลี่ยทั้งหมด (อันดับ ${main.rA}/${rows.length} ของทั้งหมด · ${main.rT}/${T.length} ของ ${tn(me.team)})`:`ยังไม่มียอดขายในช่วง ${L.length} วันล่าสุด`);
+    if(me.ch!=null)lines.push(`ยอดขายต่อวัน${me.ch>=0?'เพิ่มขึ้น':'ลดลง'} ${Math.abs(me.ch).toFixed(0)}% เทียบ ${P.length} วันก่อนหน้า`);
+    lines.push(`ปิดการขายได้ ${me.d} จาก ${L.length} วัน${me.sb>0?` · ลูกค้าสมัคร ${fmt(me.sb)} ราย เฉลี่ย ฿${fmt(me.tk)}/ราย`:''}`);
+    const good=[],bad=[],tips=[];
+    M.forEach(x=>{if(x.p==null)return;const lbl=x.lb.replace(/^\S+\s/,'');if(x.p>=110)good.push(`${lbl} สูงกว่าค่าเฉลี่ย ${Math.round(x.p-100)}%`);else if(x.p<90&&(x.k!=='tk'||me.sb>0))bad.push(`${lbl} ต่ำกว่าค่าเฉลี่ย (${Math.round(x.p)}% ของค่าเฉลี่ย)`)});
+    if(me.ch!=null&&me.ch>=10)good.push(`ยอดต่อวันเพิ่มขึ้น ${me.ch.toFixed(0)}% เทียบช่วงก่อน`);
+    if(me.ch!=null&&me.ch<=-10)bad.push(`ยอดต่อวันลดลง ${Math.abs(me.ch).toFixed(0)}% เทียบช่วงก่อน`);
+    if(R.prods.length>=3)good.push(`ขายได้หลายสินค้า (${R.prods.length} รายการ)`);
+    if(R.prods.length>=1&&R.prodSum&&R.prods[0].a/R.prodSum>=.7&&R.prods.length>1)bad.push(`พึ่งพาสินค้าเดียว: ${R.prods[0].name} ${Math.round(R.prods[0].a/R.prodSum*100)}% ของยอด`);
+    const has=k=>M.find(x=>x.k===k&&x.p!=null&&x.p<90&&(k!=='tk'||me.sb>0));
+    if(has('a'))tips.push('ยอดขายต่ำกว่าค่าเฉลี่ย: เปิดเมนู 📞 สคริปต์ ดูขั้นตอน “ปิดการขาย” และถาม J.A.R.V.I.S. เมื่อลูกค้าปฏิเสธ');
+    if(has('tk'))tips.push('มูลค่าต่อ SUB ต่ำกว่าเฉลี่ย: ลองเสนอแพ็กเกจที่สูงขึ้น หรือใช้ Second Offer');
+    if(has('sb'))tips.push('จำนวนสมัครน้อยกว่าเฉลี่ย: เพิ่มจำนวนสายและติดตามลูกค้าที่ยังลังเล');
+    if(has('d'))tips.push('ปิดการขายไม่ครบทุกวัน: ตั้งเป้าอย่างน้อย 1 ราย/วัน เพื่อให้ยอดสม่ำเสมอ');
+    if(has('p'))tips.push('POINT ต่ำกว่าเฉลี่ย: เน้นสินค้าที่ให้ POINT สูง (ดูเมนูสินค้า)');
+    if(me.ch!=null&&me.ch<=-10)tips.push('ยอดลดลงเทียบช่วงก่อน: ทบทวนสิ่งที่เปลี่ยนไป เช่น ช่วงเวลาโทร กลุ่มลูกค้า หรือสินค้าที่เสนอ');
+    if(!tips.length)tips.push(me.a>0?'รักษามาตรฐานนี้ไว้ และแชร์เทคนิคให้เพื่อนร่วมทีม':'เริ่มจากปิดการขายรายแรกของช่วงนี้ — ดูสคริปต์และถาม J.A.R.V.I.S. ได้ตลอด');
+    const body=`<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px"><span class="${vd.c}" style="font-size:20px;font-weight:800">${vd.t}</span></div>
+     <ul class="insl" style="margin-bottom:12px">${lines.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+     <div style="overflow:auto"><table class="atbl">${th(['ตัวชี้วัด','ของ '+nm,'เฉลี่ยทีม','เฉลี่ยทั้งหมด','% ของค่าเฉลี่ย','อันดับในทีม','อันดับทั้งหมด','สถานะ'])}<tbody>${M.map(x=>{const s=st(x.p);return `<tr><td>${x.lb}</td><td class="r num"><b>${x.f(x.v)}</b></td><td class="r num">${x.f(x.aT)}</td><td class="r num">${x.f(x.aA)}</td><td class="r">${pc(x.p)}</td><td class="r num">${x.rT}/${T.length}</td><td class="r num">${x.rA}/${rows.length}</td><td class="r ${s.c}">${s.t}</td></tr>`}).join('')}</tbody></table></div>
+     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:12px">${lst('✅ จุดเด่น',good.length?good:['ยังไม่มีตัวชี้วัดที่สูงกว่าค่าเฉลี่ยอย่างชัดเจนในช่วงนี้'],'pbf')}${lst('⚠️ จุดที่ควรปรับ',bad.length?bad:['ไม่พบตัวชี้วัดที่ต่ำกว่าค่าเฉลี่ยอย่างชัดเจน'],'pbc')}</div>
+     ${lst('🧭 ข้อแนะนำ',tips,'pbc').replace('style="margin:0"','style="margin:10px 0 0"')}${prodBars()}`;
+    return wrap(`วิเคราะห์รายบุคคล: ${nm}`,`${esc(tn(me.team))} · ช่วง ${R.L.length} วันล่าสุด เทียบค่าเฉลี่ยของทีมและของทั้งหมด`,body);
+  }
+  /* ===== รายทีม ===== */
+  const tms={};rows.forEach(r=>{(tms[r.team]=tms[r.team]||[]).push(r)});
+  const allA=sumk(rows,'a'),avgAll=mean(rows,'a');
+  const tinfo=Object.keys(tms).map(id=>{const T=tms[id],a=sumk(T,'a'),a0=sumk(T,'a0');return {id,name:tn(id),T,n:T.length,a,avg:a/T.length,sold:T.filter(x=>x.a>0).length,ch:chg(a,a0),share:allA?a/allA*100:0,p:pct(a/T.length,avgAll)}}).sort((x,y)=>y.a-x.a);
+  if(S.tf&&tms[S.tf]){
+    const ti=tinfo.find(x=>x.id===S.tf),T=ti.T,rkT=tinfo.findIndex(x=>x.id===ti.id)+1,rkAvg=[...tinfo].sort((x,y)=>y.avg-x.avg).findIndex(x=>x.id===ti.id)+1,avgT=ti.avg;
+    const sorted=[...T].sort((x,y)=>y.a-x.a),vd=ti.a<=0?{t:'⚪ ทีมยังไม่มียอดขายในช่วงนี้',c:'flat'}:st(ti.p);
+    const good=[],bad=[],tips=[];
+    if(ti.p!=null&&ti.p>=110)good.push(`ยอดเฉลี่ยต่อคน สูงกว่าค่าเฉลี่ยทั้งหมด ${Math.round(ti.p-100)}%`);
+    if(ti.ch!=null&&ti.ch>=10)good.push(`ยอดทีมต่อวันเพิ่มขึ้น ${ti.ch.toFixed(0)}% เทียบช่วงก่อน`);
+    if(ti.sold===ti.n&&ti.n>1)good.push(`ทุกคนในทีมปิดการขายได้ (${ti.sold}/${ti.n} คน)`);
+    if(rkT===1&&tinfo.length>1)good.push('ยอดรวมเป็นอันดับ 1 ของทุกทีม');
+    if(ti.p!=null&&ti.p<90)bad.push(`ยอดเฉลี่ยต่อคนต่ำกว่าค่าเฉลี่ยทั้งหมด (${Math.round(ti.p)}%)`);
+    if(ti.ch!=null&&ti.ch<=-10)bad.push(`ยอดทีมต่อวันลดลง ${Math.abs(ti.ch).toFixed(0)}% เทียบช่วงก่อน`);
+    if(ti.sold<ti.n)bad.push(`มี ${ti.n-ti.sold} คนที่ยังไม่มียอดขายในช่วงนี้ (ปิดการขายได้ ${ti.sold}/${ti.n} คน)`);
+    if(ti.a>0&&sorted[0]&&ti.n>2&&sorted[0].a/ti.a>=.4)bad.push(`ยอดกระจุกตัว: คนอันดับ 1 คิดเป็น ${Math.round(sorted[0].a/ti.a*100)}% ของยอดทีม`);
+    if(R.prods.length>=1&&R.prodSum&&R.prods[0].a/R.prodSum>=.7&&R.prods.length>1)bad.push(`พึ่งพาสินค้าเดียว: ${R.prods[0].name} ${Math.round(R.prods[0].a/R.prodSum*100)}% ของยอดทีม`);
+    const low=T.filter(x=>avgT>0&&x.a<avgT*.6);
+    if(ti.sold<ti.n||low.length)tips.push(priv?`ควรดูแลเป็นพิเศษ: ${[...new Set([...T.filter(x=>x.a<=0),...low])].map(x=>x.name).slice(0,8).join(', ')} (ยอดต่ำกว่า 60% ของค่าเฉลี่ยทีม หรือยังไม่มียอด)`:`ในทีมมี ${new Set([...T.filter(x=>x.a<=0),...low]).size} คนที่ยอดต่ำกว่า 60% ของค่าเฉลี่ยทีม — ช่วยกันแชร์เทคนิค`);
+    if(sorted[0]&&sorted[0].a>0)tips.push(`ให้ ${sorted[0].name} (ยอดสูงสุดของทีม) แชร์เทคนิคและสคริปต์ที่ใช้ให้เพื่อนร่วมทีม`);
+    if(ti.ch!=null&&ti.ch<=-10)tips.push('ยอดทีมลดลง: ทบทวนสคริปต์ขั้นตอนที่ลูกค้าปฏิเสธ และตรวจช่วงเวลาโทร');
+    if(!tips.length)tips.push('ทีมอยู่ในเกณฑ์ดี — รักษามาตรฐานและแชร์แนวทางที่ได้ผล');
+    const body=`<div style="margin-bottom:10px"><span class="${vd.c}" style="font-size:20px;font-weight:800">${vd.t}</span></div>
+     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px">
+     ${tile('💰 ยอดรวมทีม','฿'+fmt(ti.a),`${ti.share.toFixed(0)}% ของยอดทั้งหมด`)}${tile('🏁 อันดับทีม',`#${rkT}/${tinfo.length}`,'ตามยอดรวม')}${tile('👤 เฉลี่ยต่อคน','฿'+fmt(avgT),`${ti.p==null?'–':Math.round(ti.p)+'% ของค่าเฉลี่ยทั้งหมด'} · อันดับ ${rkAvg}/${tinfo.length}`)}${tile('👥 ปิดการขายได้',`${ti.sold}/${ti.n} คน`,`${ti.n?Math.round(ti.sold/ti.n*100):0}% ของทีม`)}${tile('📈 แนวโน้ม',ti.ch==null?'–':(ti.ch>=0?'+':'')+ti.ch.toFixed(0)+'%','ยอดต่อวันเทียบช่วงก่อน')}</div>
+     <b>👥 ผลงานรายคนในทีม ${esc(ti.name)}</b>
+     <div style="overflow:auto"><table class="atbl">${th(['#','พนักงาน','ยอดขาย','% ของค่าเฉลี่ยทีม','SUB','POINT','วันที่ขายได้','แนวโน้ม','สถานะ'])}<tbody>${sorted.map((x,i)=>{const p=pct(x.a,avgT),s=st(pct(x.a,avgAll)),show=priv||x.id===meId;return `<tr ${x.id===meId?'style="background:color-mix(in srgb,var(--blue) 12%,transparent)"':''}><td class="num">${i+1}</td><td><button class="btn sm" data-inwp="${esc(x.id)}" title="ดูรายบุคคล">${esc(x.name)}</button></td><td class="r num"><b>฿${fmt(x.a)}</b></td><td class="r">${pc(p)}</td><td class="r num">${fmt(x.sb)}</td><td class="r num">${fmt(x.p)}</td><td class="r num">${x.d}/${L.length}</td><td class="r">${trend(x.ch)}</td><td class="r ${show?s.c:''}">${show?s.t:'<span class="hint">—</span>'}</td></tr>`}).join('')}</tbody></table></div>
+     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:12px">${lst('✅ จุดเด่นของทีม',good.length?good:['ยังไม่มีตัวชี้วัดที่เด่นชัดกว่าค่าเฉลี่ยในช่วงนี้'],'pbf')}${lst('⚠️ จุดที่ควรปรับ',bad.length?bad:['ไม่พบจุดที่ต่ำกว่าค่าเฉลี่ยอย่างชัดเจน'],'pbc')}</div>
+     ${lst('🧭 ข้อแนะนำ',tips,'pbc').replace('style="margin:0"','style="margin:10px 0 0"')}${prodBars()}`;
+    return wrap(`วิเคราะห์รายทีม: ${esc(ti.name)}`,`${ti.n} คน · ช่วง ${L.length} วันล่าสุด เทียบค่าเฉลี่ยของ Agent ทั้งหมด`,body);
+  }
+  /* ===== ภาพรวมทุกทีม ===== */
+  if(tinfo.length<1)return '';
+  const best=tinfo[0],fast=[...tinfo].filter(x=>x.ch!=null).sort((x,y)=>y.ch-x.ch)[0],lowT=[...tinfo].filter(x=>x.p!=null&&x.p<90);
+  const sum=[];
+  if(best.a>0)sum.push(`ทีมที่ยอดรวมสูงสุด: ${best.name} ฿${fmt(best.a)} (${best.share.toFixed(0)}% ของทั้งหมด)`);
+  if(fast&&fast.ch>0)sum.push(`ทีมที่ยอดโตเร็วที่สุด: ${fast.name} (+${fast.ch.toFixed(0)}% ต่อวัน เทียบช่วงก่อน)`);
+  if(lowT.length)sum.push(`ทีมที่ยอดเฉลี่ยต่อคนต่ำกว่าค่าเฉลี่ย: ${lowT.map(x=>x.name).join(', ')}`);
+  sum.push(`ปิดการขายได้ ${rows.filter(x=>x.a>0).length}/${rows.length} คน · ยอดเฉลี่ยต่อคน ฿${fmt(avgAll)}`);
+  const body=`<ul class="insl" style="margin-bottom:12px">${sum.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+   <div style="overflow:auto"><table class="atbl">${th(['#','ทีม','คน','ปิดการขายได้','ยอดรวม','สัดส่วน','เฉลี่ย/คน','% ของค่าเฉลี่ย','แนวโน้ม','สถานะ',''])}<tbody>${tinfo.map((x,i)=>{const s=st(x.p);return `<tr><td class="num">${i+1}</td><td><b>${esc(x.name)}</b></td><td class="r num">${x.n}</td><td class="r num">${x.sold}/${x.n}</td><td class="r num"><b>฿${fmt(x.a)}</b></td><td class="r num">${x.share.toFixed(0)}%</td><td class="r num">฿${fmt(x.avg)}</td><td class="r">${pc(x.p)}</td><td class="r">${trend(x.ch)}</td><td class="r ${s.c}">${s.t}</td><td class="r"><button class="btn sm" data-inwteam="${esc(x.id)}">ดูทีมนี้ →</button></td></tr>`}).join('')}</tbody></table></div>${prodBars()}`;
+  return wrap('วิเคราะห์ทุกทีม (เลือกทีมหรือคนด้านบนเพื่อดูรายละเอียด)',`${tinfo.length} ทีม · ช่วง ${L.length} วันล่าสุด`,body);
+}
 function insPeriodHTML(){
   const R=insPeriod(INW.n),tabs=[1,3,7].map(n=>`<button class="btn sm ${INW.n===n?'primary':''}" data-inw="${n}">ย้อนหลัง ${n} วัน</button>`).join('');
   let h=`<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>📊 สถิติเด่น 10 หัวข้อ · ใช้เป็นเหตุผลในการเสนอขาย</span><span style="display:flex;gap:6px">${tabs}</span></h3>
@@ -2408,6 +2513,7 @@ function insPeriodHTML(){
   if(R.TS>0)pitch.push(`"มีลูกค้าสมัครใช้บริการกับเราแล้ว ${fmt(R.TS)} ราย ${R.n===1?'ในวันนี้':'ใน '+R.n+' วันที่ผ่านมา'} จึงมั่นใจได้ว่าเป็นที่นิยมครับ/ค่ะ"`);
   if(R.hot&&R.hot.pc>0)pitch.push(`"${R.hot.name} กำลังมาแรง ยอดสมัครเพิ่มขึ้น ${R.hot.pc.toFixed(0)}% เมื่อเทียบกับช่วงก่อน"`);
   if(R.tk)pitch.push(`"ลูกค้าที่สมัครช่วงนี้เลือกแพ็กเกจเฉลี่ยประมาณ ฿${fmt(R.tk)} ต่อราย ครับ/ค่ะ"`);}
+  h+=insFocusHTML(R);
   h+=`<div class="hint" style="margin-bottom:8px">ช่วง ${win}${span} · นับเฉพาะวันที่มียอดขาย · เทียบกับ ${R.hasP?R.P.length+' วันก่อนหน้า':'— (ยังไม่มีช่วงก่อนหน้า)'} · ${R.sel?esc(R.sel.nick||R.sel.name):R.nAg+' Agent'}</div>
    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">${cards.join('')}</div>
    ${R.sel?'<div class="hint" style="margin-top:10px">⭐ ประโยคจุดเด่นสำหรับพูดกับลูกค้าใช้ข้อมูลภาพรวมทีม — เลือก “ทุกคน (ภาพรวม)” เพื่อดูและคัดลอก</div>':''}
@@ -2442,6 +2548,8 @@ function renderIns(){
   el.innerHTML=h;
   bindTeamSel('inTeam',renderIns);
   $$('[data-inw]').forEach(b=>b.onclick=()=>{INW.n=+b.dataset.inw;renderIns()});
+  $$('[data-inwteam]').forEach(b=>b.onclick=()=>{S.tf=b.dataset.inwteam;INW.who='';SOC.who='team';renderIns()});
+  $$('[data-inwp]').forEach(b=>b.onclick=()=>{INW.who=b.dataset.inwp;SOC.who=INW.who;renderIns();const e=$('#inwWho');if(e)e.scrollIntoView({behavior:'smooth',block:'center'})});
   const iT=$('#inwTeam');if(iT)iT.onchange=e=>{S.tf=e.target.value;if(INW.who&&!AGM().some(m=>m.id===INW.who)){INW.who='';SOC.who='team'}renderIns()};
   const iW=$('#inwWho');if(iW)iW.onchange=e=>{INW.who=e.target.value;SOC.who=INW.who||'team';renderIns()};
   $$('[data-inwcp]').forEach(b=>b.onclick=()=>{const t=(INW.pitch||[])[+b.dataset.inwcp];if(!t)return;const v=t.replace(/^"|"$/g,'');try{navigator.clipboard.writeText(v).then(()=>toast('📋 คัดลอกแล้ว'))}catch(e){toast('คัดลอกไม่ได้ — เลือกข้อความเอง')}});
@@ -2533,13 +2641,13 @@ async function pImgResize(file){
   throw new Error('รูปซับซ้อนเกินไป ลองรูปอื่นหรือรูปที่เล็กลง');
 }
 SC.imgs={};
-async function loadPImg(pid){
-  const f=((SC.d||{}).info||{})[pid];if(!f||!f.hasImg)return '';
-  const k=pid+':'+f.iv;if(SC.imgs[k]!==undefined)return SC.imgs[k];
-  try{const r=await api('prodImg',{product:pid});SC.imgs[k]=r.img||''}catch(e){return ''}
+async function loadPImg(pid,slot){
+  slot=+slot||0;const f=((SC.d||{}).info||{})[pid];if(!f||!f.hasImg)return '';
+  const k=pid+':'+slot+':'+f.iv;if(SC.imgs[k]!==undefined)return SC.imgs[k];
+  try{const r=await api('prodImg',{product:pid,slot});SC.imgs[k]=r.img||''}catch(e){return ''}
   return SC.imgs[k];
 }
-function loadPImgs(root){(root||document).querySelectorAll('img[data-pimg]').forEach(async el=>{if(el.src)return;const u=await loadPImg(el.dataset.pimg);if(u&&el.isConnected){el.src=u;el.style.minHeight='';el.style.minWidth=''}})}
+function loadPImgs(root){(root||document).querySelectorAll('img[data-pimg]').forEach(async el=>{if(el.getAttribute('src'))return;const u=await loadPImg(el.dataset.pimg,el.dataset.pslot);if(u&&el.isConnected){el.src=u;el.style.minHeight='';el.style.minWidth=''}})}
 function openLightbox(src,alt){
   if(!src)return;closeLightbox();
   const d=document.createElement('div');d.id='lb';d.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.95);overflow:auto;display:flex;align-items:center;justify-content:center;-webkit-overflow-scrolling:touch';
@@ -2553,31 +2661,50 @@ function openLightbox(src,alt){
 function lbKey(e){if(e.key==='Escape')closeLightbox()}
 function closeLightbox(){const d=document.getElementById('lb');if(d)d.remove();document.removeEventListener('keydown',lbKey)}
 function scLines(t){return String(t||'').split(/\n+/).map(s=>s.replace(/^\s*[-•·*]\s*/,'').trim()).filter(Boolean)}
+function scSplit(t){   // แยกเป็นรายข้อ: ถ้าพิมพ์เป็นเลข 1. 2. 3. ให้รวมบรรทัดที่ตกลงมาเข้ากับข้อก่อนหน้า
+  const L=scLines(t),isN=x=>/^\d{1,2}\s*[.)]\s*\S/.test(x);
+  if(L.filter(isN).length<2)return {intro:[],items:L.map(x=>({n:'',t:x}))};
+  const intro=[],items=[];
+  L.forEach(x=>{const m=x.match(/^(\d{1,2})\s*[.)]\s*(.*)$/);if(m)items.push({n:m[1],t:m[2]});else if(items.length)items[items.length-1].t+=' '+x;else intro.push(x)});
+  return {intro,items};
+}
 function scInfoCard(pid,adm,mini){
   const f=((SC.d||{}).info||{})[pid];
   if(!f){return adm&&!mini?`<div class="panel sec" style="border:1px dashed var(--line)"><span class="hint">ยังไม่มีข้อมูลสินค้า ${esc(scPName(pid))}</span> <button class="btn sm primary" data-scinfo="${esc(pid)}">➕ เพิ่มรูป/คุณสมบัติ/เงื่อนไข</button></div>`:''}
-  const ist=`width:${mini?'110':'240'}px;max-width:36%;height:auto;max-height:${mini?'110':'300'}px;object-fit:contain;border-radius:12px;background:var(--panel2);align-self:flex-start;cursor:zoom-in`;
-  const img=f.hasImg?`<img data-pimg="${esc(pid)}" data-zoomimg alt="${esc(scPName(pid))}" title="แตะเพื่อดูภาพใหญ่" style="${ist};min-height:${mini?'70':'140'}px;min-width:${mini?'70':'140'}px">`:f.image?`<img data-zoomimg src="${esc(scImg(f.image))}" alt="${esc(scPName(pid))}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'" title="แตะเพื่อดูภาพใหญ่" style="${ist}">`:'';
-  const ul=(t,h)=>{const L=scLines(t);return L.length?`<div><b style="font-size:${mini?'15':'17'}px">${h}</b><ul style="margin:4px 0 0 18px;padding:0;font-size:${mini?'15':'18'}px;line-height:1.6">${L.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''};
+  const ist=`width:${mini?'110':'240'}px;max-width:100%;height:auto;max-height:${mini?'110':'300'}px;object-fit:contain;border-radius:12px;background:var(--panel2);cursor:zoom-in`;
+  const slots=f.slots||(f.hasImg?[0]:[]);
+  let gal='';
+  if(slots.length){
+    gal=`<img data-pimg="${esc(pid)}" data-pslot="${slots[0]}" data-pmain data-zoomimg alt="${esc(scPName(pid))}" title="แตะเพื่อดูภาพใหญ่" style="${ist};min-height:${mini?'70':'140'}px;min-width:${mini?'70':'140'}px">`;
+    if(slots.length>1&&!mini)gal+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;max-width:240px">${slots.map((sl,i)=>`<img class="pth ${i?'':'on'}" data-pimg="${esc(pid)}" data-pslot="${sl}" data-pthumb="${sl}" alt="รูปที่ ${i+1}" title="รูปที่ ${i+1}">`).join('')}</div>`;
+    else if(slots.length>1)gal+=`<div class="hint" style="margin-top:4px;text-align:center">🖼 ${slots.length} รูป</div>`;
+  }else if(f.image)gal=`<img data-zoomimg src="${esc(scImg(f.image))}" alt="${esc(scPName(pid))}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'" title="แตะเพื่อดูภาพใหญ่" style="${ist}">`;
+  const box=(cls,h,t)=>{const x=scSplit(t);if(!x.items.length&&!x.intro.length)return '';
+    return `<div class="pbx ${cls}"><div class="pbh">${h}</div>${x.intro.length?`<div class="pintro">${esc(x.intro.join(' '))}</div>`:''}<div class="${cls==='pbf'?'pgrid':'pcl'}">${x.items.map(i=>`<div class="pit"><span class="${cls==='pbf'?'pck':'pno'}">${cls==='pbf'?'✓':esc(i.n||'•')}</span><span style="min-width:0;overflow-wrap:anywhere">${esc(i.t)}</span></div>`).join('')}</div></div>`};
   const lk=f.link?`<a class="btn sm primary" href="${esc(f.link)}" target="_blank" rel="noopener noreferrer">🔗 ดูรายละเอียดเต็ม</a>`:'';
   const ed=adm&&!mini?`<button class="btn sm" data-scinfo="${esc(pid)}">✏️ แก้ข้อมูลสินค้า</button>`:'';
-  return `<div class="panel ${mini?'':'sec'}" style="display:flex;gap:16px;flex-wrap:nowrap;align-items:flex-start;${mini?'margin:8px 0;padding:12px;':''}border-left:6px solid var(--blue)">${img}<div style="flex:1;min-width:0;display:grid;gap:10px"><h3 style="margin:0;font-size:${mini?'18':'22'}px">🛍 ${esc(scPName(pid))}</h3>${ul(f.features,'✨ คุณสมบัติ')}${ul(f.conditions,'📋 เงื่อนไข')}<div style="display:flex;gap:8px;flex-wrap:wrap">${lk}${ed}</div></div></div>`;
+  return `<div data-pcard class="panel ${mini?'pmini':'sec'}" style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;${mini?'margin:8px 0;padding:12px;':''}border-left:6px solid var(--blue)">${gal?`<div style="flex:0 0 auto;max-width:100%">${gal}</div>`:''}<div style="flex:1;min-width:min(100%,260px);display:grid;gap:10px"><h3 style="margin:0;font-size:${mini?'18':'22'}px">🛍 ${esc(scPName(pid))}</h3>${box('pbf','✨ คุณสมบัติ',f.features)}${box('pbc','📋 เงื่อนไข',f.conditions)}<div style="display:flex;gap:8px;flex-wrap:wrap">${lk}${ed}</div></div></div>`;
 }
 function infoModal(pid){
-  const f=((SC.d||{}).info||{})[pid]||{};
+  const f=((SC.d||{}).info||{})[pid]||{},rdy=(SC.d||{}).imgsReady!==false;
+  const tile=i=>{const dis=i>0&&!rdy;return `<div style="border:1px dashed var(--line);border-radius:10px;padding:8px;text-align:center;${dis?'opacity:.5':''}"><div style="height:96px;display:flex;align-items:center;justify-content:center"><img data-ipv="${i}" alt="" style="max-width:100%;max-height:96px;object-fit:contain;border-radius:8px;display:none"><span class="hint" data-ipph="${i}">รูปที่ ${i+1}</span></div><div style="display:flex;gap:4px;justify-content:center;margin-top:6px"><label class="btn sm" style="cursor:pointer">📷<input type="file" accept="image/*" hidden data-ipf="${i}" ${dis?'disabled':''}></label><button class="btn sm" type="button" data-ipr="${i}" hidden>🗑</button></div><div class="hint" data-ipn="${i}" style="min-height:16px"></div></div>`};
   openModal(`<h2>🛍 ข้อมูลสินค้า: ${esc(scPName(pid))}</h2>
-   <div class="fld"><label>รูปสินค้า (อัปโหลดจากเครื่อง — ระบบย่อให้อัตโนมัติ ให้ภาพใหญ่และคมเมื่อกดดู)</label>
-     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><img id="ipPv" alt="" style="width:120px;height:120px;object-fit:contain;border-radius:10px;background:var(--panel2);display:none"><div style="display:grid;gap:6px"><label class="btn sm" style="cursor:pointer">📷 เลือกรูป<input type="file" id="ipFile" accept="image/*" hidden></label><button class="btn sm" id="ipRm" type="button" hidden>🗑 ลบรูป</button><span id="ipFn" class="hint"></span></div></div></div>
-   <div class="fld"><label>คุณสมบัติ (พิมพ์บรรทัดละข้อ)</label><textarea id="ipF" rows="5" maxlength="2000">${esc(f.features||'')}</textarea></div>
-   <div class="fld"><label>เงื่อนไข (พิมพ์บรรทัดละข้อ)</label><textarea id="ipC" rows="5" maxlength="2000">${esc(f.conditions||'')}</textarea></div>
+   <div class="fld"><label>รูปสินค้า (สูงสุด 5 รูป — อัปโหลดจากเครื่อง ระบบย่อให้อัตโนมัติ)</label>
+     ${rdy?'':'<div class="err">ยังไม่มีชีต ProductImgs — รัน setup ใน Apps Script ก่อน จึงจะเพิ่มรูปที่ 2–5 ได้ (ตอนนี้เพิ่มได้รูปเดียว)</div>'}
+     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">${[0,1,2,3,4].map(tile).join('')}</div></div>
+   <div class="fld"><label>คุณสมบัติ (พิมพ์บรรทัดละข้อ — แสดงเป็นกล่องข้อมูล)</label><textarea id="ipF" rows="5" maxlength="2000">${esc(f.features||'')}</textarea></div>
+   <div class="fld"><label>เงื่อนไข (พิมพ์บรรทัดละข้อ หรือขึ้นต้นด้วย 1. 2. 3. ระบบจะจัดเป็นกล่องเรียงเลขให้)</label><textarea id="ipC" rows="5" maxlength="2000">${esc(f.conditions||'')}</textarea></div>
    <div class="fld"><label>ลิงก์ดูรายละเอียดเต็ม (https://…)</label><input id="ipL" maxlength="600" value="${esc(f.link||'')}" placeholder="https://…"></div>
    <div id="ipE" class="err"></div><div class="mrow"><button class="btn primary" id="ipGo">บันทึก</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
-  let newImg='',rmImg=false;const pv=$('#ipPv'),rm=$('#ipRm');
-  const showPv=u=>{if(u){pv.src=u;pv.style.display='';rm.hidden=false}else{pv.removeAttribute('src');pv.style.display='none';rm.hidden=true}};
-  if(f.hasImg){$('#ipFn').textContent='กำลังโหลดรูปเดิม…';loadPImg(pid).then(u=>{$('#ipFn').textContent='';if(!newImg&&!rmImg)showPv(u)})}else if(f.image)showPv(scImg(f.image));
-  $('#ipFile').onchange=async e=>{const fl=e.target.files[0];if(!fl)return;$('#ipFn').textContent='กำลังย่อรูป…';try{newImg=await pImgResize(fl);rmImg=false;showPv(newImg);$('#ipFn').textContent='✅ เลือกรูปแล้ว ('+Math.round(newImg.length/1024)+' KB)'}catch(er){$('#ipFn').textContent='';$('#ipE').textContent=er.message}};
-  rm.onclick=()=>{newImg='';rmImg=true;showPv('');$('#ipFn').textContent='จะลบรูปเมื่อกดบันทึก'};
-  $('#ipGo').onclick=async()=>{$('#ipGo').disabled=true;try{await api('prodInfoSave',{product:pid,img:newImg,imgRemove:rmImg,features:$('#ipF').value,conditions:$('#ipC').value,link:$('#ipL').value});closeModal();toast('✅ บันทึกข้อมูลสินค้าแล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(e){$('#ipE').textContent=e.message;$('#ipGo').disabled=false}};
+  const imgs=[undefined,undefined,undefined,undefined,undefined];
+  const show=(i,u)=>{const v=document.querySelector(`[data-ipv="${i}"]`),ph=document.querySelector(`[data-ipph="${i}"]`),rm=document.querySelector(`[data-ipr="${i}"]`);if(!v)return;if(u){v.src=u;v.style.display='';ph.style.display='none';rm.hidden=false}else{v.removeAttribute('src');v.style.display='none';ph.style.display='';rm.hidden=true}};
+  const note=(i,t)=>{const n=document.querySelector(`[data-ipn="${i}"]`);if(n)n.textContent=t};
+  const slots=f.slots||(f.hasImg?[0]:[]);
+  if(slots.length){slots.forEach(sl=>{note(sl,'โหลด…');loadPImg(pid,sl).then(u=>{note(sl,'');if(imgs[sl]===undefined)show(sl,u)})})}
+  else if(f.image)show(0,scImg(f.image));
+  document.querySelectorAll('[data-ipf]').forEach(inp=>inp.onchange=async e=>{const i=+inp.dataset.ipf,fl=e.target.files[0];if(!fl)return;note(i,'กำลังย่อรูป…');$('#ipE').textContent='';try{const u=await pImgResize(fl);imgs[i]=u;show(i,u);note(i,'✅ '+Math.round(u.length/1024)+' KB')}catch(er){note(i,'');$('#ipE').textContent=er.message}});
+  document.querySelectorAll('[data-ipr]').forEach(b=>b.onclick=()=>{const i=+b.dataset.ipr;imgs[i]='';show(i,'');note(i,'จะลบเมื่อกดบันทึก')});
+  $('#ipGo').onclick=async()=>{$('#ipGo').disabled=true;try{await api('prodInfoSave',{product:pid,imgs:imgs.map(v=>v===undefined?null:v),features:$('#ipF').value,conditions:$('#ipC').value,link:$('#ipL').value});closeModal();toast('✅ บันทึกข้อมูลสินค้าแล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(e){$('#ipE').textContent=e.message;$('#ipGo').disabled=false}};
 }
 function scCard(x,adm){
   const gen=!x.product,body=esc(x.body).replace(/\n/g,'<br>');
@@ -2688,6 +2815,7 @@ document.addEventListener('click',async e=>{
   const g=t.closest('[data-scgo]');if(g){const s=document.getElementById('sc-'+g.dataset.scgo);if(s)s.scrollIntoView({behavior:'smooth',block:'start'});return}
   const a=t.closest('[data-scalt]');if(a){SC.prod=a.dataset.scalt;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}renderScript();const s=document.getElementById('sc-pitch');if(s)s.scrollIntoView({behavior:'smooth',block:'start'});toast('🎁 สลับเป็น '+scPName(SC.prod)+' แล้ว');return}
   const cp=t.closest('[data-sccp]');if(cp){const x=SC.d.items.find(i=>i.id===cp.dataset.sccp);if(x){try{await navigator.clipboard.writeText(x.body);toast('📋 คัดลอกสคริปต์แล้ว')}catch(er){toast('⚠️ คัดลอกไม่ได้ ลองเลือกข้อความแล้วคัดลอกเอง')}}return}
+  const th=t.closest('[data-pthumb]');if(th){const c=th.closest('[data-pcard]'),m=c&&c.querySelector('[data-pmain]');if(m){m.dataset.pslot=th.dataset.pthumb;const pid=th.dataset.pimg,k=pid+':'+th.dataset.pthumb+':'+(((SC.d.info||{})[pid]||{}).iv),u=SC.imgs[k];if(u)m.src=u;else{m.removeAttribute('src');loadPImgs(c)}c.querySelectorAll('[data-pthumb]').forEach(x=>x.classList.toggle('on',x===th))}return}
   const zi=t.closest('[data-zoomimg]');if(zi){if(zi.src)openLightbox(zi.src,zi.alt);return}
   const se=t.closest('[data-stedit]');if(se){const x=SC.d.products.find(p=>p.id===se.dataset.stedit);if(x)typeModal(x);return}
   const sd=t.closest('[data-stdel]');if(sd){const x=SC.d.products.find(p=>p.id===sd.dataset.stdel),n=SC.d.items.filter(i=>i.product===sd.dataset.stdel||i.alt===sd.dataset.stdel).length;if(!confirm('ลบชนิดสินค้า "'+(x?x.name:'')+'" ?'+(n?'\nมีสคริปต์ที่ผูกกับชนิดนี้ '+n+' รายการ จะไม่แสดงจนกว่าจะแก้ให้เป็นสินค้าอื่น':'')))return;try{await api('scriptTypeDelete',{id:sd.dataset.stdel});toast('🗑 ลบแล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(er){toast('⚠️ '+er.message)}return}
@@ -3114,7 +3242,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-07.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-07.4';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -3416,12 +3544,12 @@ function renderTalk(){
       <div class="hint" style="margin:6px 0">1 บรรทัด = 1 รายการ รูปแบบ <b>วันที่, รหัสพนักงาน, นาที</b> เช่น <code>${today}, m2, 210</code> (ครั้งละไม่เกิน 500 บรรทัด)</div>
       <textarea id="tkBulk" rows="5" placeholder="${today}, m2, 210&#10;${today}, m3, 95"></textarea><div class="mrow" style="justify-content:flex-start"><button class="btn" id="tkBulkGo">นำเข้า</button></div></details>
     <div id="tkErr" class="err"></div><div class="hint">💡 หรือแตะช่องในตารางด้านล่างเพื่อแก้ไขนาทีของวันนั้นโดยตรง</div></div>`;
-  const C=S.tkc||(S.tkc={type:'candle',per:'day',who:'all'});if(C.who!=='all'&&!ids.includes(C.who))C.who='all';
+  const C=S.tkc||(S.tkc={type:'candle',per:'day',who:'all'});const tOpt=TEAMS.filter(t=>ids.some(id=>memOf(id).team===t.id));if(C.who!=='all'&&!ids.includes(C.who)&&!(String(C.who).startsWith('T:')&&tOpt.some(t=>'T:'+t.id===C.who)))C.who='all';
   h+=`<div class="panel sec"><h3>📈 กราฟ Talk Time เฉลี่ย (ชม./วัน) <span class="hint" style="font-weight:400">นับเฉพาะวันที่ ≥ ${TKOFF()} นาที ไม่รวมวันลา</span></h3>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
       <div class="seg" id="tkcT">${[['candle','🕯 แท่งเทียน'],['line','📈 เส้น'],['bar','📊 แท่ง']].map(([k,l])=>`<button data-v="${k}" class="${C.type===k?'on':''}">${l}</button>`).join('')}</div>
       <div class="seg" id="tkcP">${[['day','รายวัน'],['month','รายเดือน']].map(([k,l])=>`<button data-v="${k}" class="${C.per===k?'on':''}">${l}</button>`).join('')}</div>
-      <select id="tkcW"><option value="all">👥 ทุกคนที่แสดง (เฉลี่ย)</option>${ids.map(id=>`<option value="${esc(id)}" ${C.who===id?'selected':''}>${esc(memName(id))}</option>`).join('')}</select></div>
+      <select id="tkcW"><option value="all">👥 ทุกคนที่แสดง (เฉลี่ย)</option>${tOpt.length?`<optgroup label="รายทีม (เฉลี่ยทั้งทีม)">${tOpt.map(t=>`<option value="T:${esc(t.id)}" ${C.who==='T:'+t.id?'selected':''}>🏷 ${esc(t.name)}</option>`).join('')}</optgroup>`:''}<optgroup label="รายบุคคล">${ids.map(id=>`<option value="${esc(id)}" ${C.who===id?'selected':''}>${esc(memName(id))}</option>`).join('')}</optgroup></select></div>
     <div id="tkChart" style="width:100%"></div><div id="tkLg" class="hint" style="margin-top:4px"></div></div>`;
   h+=tkTeamHTML(ids,ym);
   h+=`<div class="panel"><h3>📅 ตาราง Talk Time · ${THMON[+ym.slice(5)-1]} ${+ym.slice(0,4)+543}</h3>
@@ -3443,7 +3571,7 @@ function renderTalk(){
   });
   h+=`</tbody></table></div><div class="hint" style="margin-top:8px">เฉลี่ย = ค่าเฉลี่ยนาทีของวันที่มีข้อมูล (ไม่รวมวันลา, NA และวันที่ Talk Time ต่ำกว่า ${TKOFF()} นาที ซึ่งถือเป็นวันหยุด) · แถว “(เฉลี่ย)” คือค่าเฉลี่ยของทั้งทีมในแต่ละวัน</div></div>`;
   $('#tkBody').innerHTML=h;
-  drawTalkChart(C.who==='all'?ids:[C.who],ym);
+  drawTalkChart(C.who==='all'?ids:String(C.who).startsWith('T:')?ids.filter(id=>'T:'+memOf(id).team===C.who):[C.who],ym);
   $$('#tkcT button').forEach(b=>b.onclick=()=>{C.type=b.dataset.v;renderTalk()});$$('#tkcP button').forEach(b=>b.onclick=()=>{C.per=b.dataset.v;renderTalk()});
   $('#tkcW').onchange=e=>{C.who=e.target.value;renderTalk()};
   $$('[data-tkt]').forEach(tr=>tr.onclick=()=>{const o=S.tkO||(S.tkO={});o[tr.dataset.tkt]=!o[tr.dataset.tkt];renderTalk()});
