@@ -1698,11 +1698,20 @@ function pcState(R){
   if(!C.anchor)C.anchor=D.psAsOf||D.asOf||today;if(C.anchor>today)C.anchor=today;
   return C;
 }
-function pcVal(C,p){
+function pcValF(met,p,mf,pf){
   let t=0,any=false;
-  PS.forEach(r=>{if(!okM(r.m)||(C.prod&&r.p!==C.prod))return;if(p.lv==='d'?r.per===p.key:r.per.startsWith(p.key)){any=true;t+=C.met==='pt'?PTV(r):r[C.met]}});
+  PS.forEach(r=>{if(!mf(r.m)||!pf(r.p))return;if(p.lv==='d'?r.per===p.key:r.per.startsWith(p.key)){any=true;t+=met==='pt'?PTV(r):r[met]}});
   if(any)return t;
   if(p.lv==='d')return p.key<=(D.psAsOf||D.asOf||'')?0:null;   // วันที่ยังไม่ถึงวันที่บันทึกล่าสุด = ยังไม่มีข้อมูล
+  return null;
+}
+function pcVal(C,p){return pcValF(C.met,p,okM,x=>!C.prod||x===C.prod)}
+// เทียบหลายรายการบนกราฟเดียว: คีย์ a:<รหัส Agent> · t:<รหัสทีม> · p:<รหัสสินค้า>
+function pcCmpInfo(C,k){
+  const id=k.slice(2),sfx=C.prod&&k[0]!=='p'?' · '+prodName(C.prod):'';
+  if(k[0]==='a'){const m=memOf(id);return m?{name:(m.nick||m.name)+sfx,mf:x=>x===id,pf:x=>!C.prod||x===C.prod}:null}
+  if(k[0]==='t'){const t=TEAMS.find(x=>x.id===id);return t?{name:t.name+sfx,mf:x=>{const m=memOf(x);return !!m&&AG(m)&&m.team===id},pf:x=>!C.prod||x===C.prod}:null}
+  if(k[0]==='p'){return PRODS.some(x=>x.id===id)?{name:'📦 '+prodName(id),mf:okM,pf:x=>x===id}:null}
   return null;
 }
 function prodChartHTML(R){
@@ -1711,6 +1720,13 @@ function prodChartHTML(R){
   const used=[...new Set(PS.filter(r=>okM(r.m)).map(r=>r.p))],prods=PRODS.filter(p=>used.includes(p.id)||p.active);
   const mt={a:['💰 ยอดขาย (฿)','#f0b90b',x=>'฿'+fmt(x),x=>'฿'+compact(x)],pt:['🎯 POINT','#0ecb81',x=>(+x).toLocaleString('en-US',{maximumFractionDigits:2}),x=>compact(x)],q:['📦 จำนวนชิ้น (SUB)','#5b9cf6',x=>fmt(x),x=>compact(x)]}[C.met];
   const E=ext.map(p=>pcVal(C,p)),vals=E.slice(off),known=vals.filter(v=>v!=null);
+  C.cmp=(C.cmp||[]).filter(k=>pcCmpInfo(C,k));
+  const multi=C.cmp.length>0,SR=[];
+  if(multi){
+    const base=(S.pAg?(memOf(S.pAg)||{}).nick||(memOf(S.pAg)||{}).name:S.tf?(TEAMS.find(t=>t.id===S.tf)||{}).name:'ทุกคน')+' · '+(C.prod?prodName(C.prod):'ทุกสินค้า');
+    SR.push({n:base,c:'#f0b90b',v:vals});
+    C.cmp.forEach((k,i)=>{const o=pcCmpInfo(C,k);SR.push({n:o.name,c:palC(i+1),v:ext.map(p=>pcValF(C.met,p,o.mf,o.pf)).slice(off)})});
+  }
   const nm=C.prod?prodName(C.prod):'ทุกสินค้ารวม',unit=C.mode==='day'?'วัน':C.mode==='month'?'เดือน':'ปี';
   let li=vals.length-1;while(li>0&&vals[li]==null)li--;
   const cur=vals[li],prv=li>0?vals[li-1]:null,diff=cur!=null&&prv!=null?cur-prv:null,pct=diff!=null&&prv?diff/prv*100:null;
@@ -1718,12 +1734,15 @@ function prodChartHTML(R){
   const rngs=['1W','1M','3M','1Y','ALL'],rk=C.range==='custom'?'custom':rngs.find(k=>RANGES[k].m===C.mode&&RANGES[k].n===n);
   // ---- วาดกราฟ ----
   const W=900,H=300,pl=54,pr=12,pt=14,pb=28,iw=W-pl-pr,ih=H-pt-pb,N=P.length,step=iw/N;
-  const mx=Math.max(1,...vals.map(z)),ymax=niceMax(mx*1.08),X=i=>pl+step*(i+.5),Y=v=>pt+ih-(v/ymax)*ih;
+  const mx=Math.max(1,...(multi?SR.flatMap(x=>x.v):vals).map(z)),ymax=niceMax(mx*1.08),X=i=>pl+step*(i+.5),Y=v=>pt+ih-(v/ymax)*ih;
   const partial=P[N-1].end>today&&N>1,col=mt[1];let g='';
   for(let i=0;i<=5;i++){const v=ymax*i/5,y=Y(v);g+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="#222c37" stroke-dasharray="3 5"/><text x="${pl-8}" y="${y+4}" text-anchor="end" font-size="11" fill="#848e9c" font-family="JetBrains Mono,monospace">${compact(v)}</text>`}
   const every=Math.ceil(N/12);P.forEach((p,i)=>{if(i%every===(N-1)%every)g+=`<text x="${X(i)}" y="${H-8}" text-anchor="middle" font-size="11" fill="#848e9c">${p.label}</text>`});
   let defs='';
-  if(C.type==='candle'){const bw=Math.max(2,Math.min(26,step*.7));vals.forEach((v,i)=>{if(v==null)return;const o0=E[off+i-1],o=o0==null?v:o0,c=v>=o?'#0ecb81':'#f6465d',yT=Y(Math.max(o,v)),yB=Y(Math.min(o,v)),last=partial&&i===N-1;g+=`<rect x="${X(i)-bw/2}" y="${yT}" width="${bw}" height="${Math.max(1.5,yB-yT)}" rx="1.5" fill="${c}" fill-opacity="${last?.3:1}" stroke="${c}" ${last?'stroke-dasharray="3 2"':''}/>`})}
+  if(multi){
+    if(C.type==='bar'&&SR.length<=8){const gw=Math.min(38,step*.8),bw=Math.max(1.5,gw/SR.length);SR.forEach((x,j)=>x.v.forEach((v,i)=>{if(v==null)return;const y=Y(v);g+=`<rect x="${X(i)-gw/2+j*bw}" y="${y}" width="${Math.max(1,bw-.6)}" height="${Math.max(0,pt+ih-y)}" fill="${x.c}" opacity=".9"/>`}))}
+    else SR.forEach(x=>{const segs=[];let c=[];x.v.forEach((v,i)=>{if(v==null){if(c.length)segs.push(c);c=[]}else c.push(`${X(i)},${Y(v)}`)});if(c.length)segs.push(c);segs.forEach(sg=>{g+=sg.length>1?`<polyline points="${sg.join(' ')}" fill="none" stroke="${x.c}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`:`<circle cx="${sg[0].split(',')[0]}" cy="${sg[0].split(',')[1]}" r="3" fill="${x.c}"/>`})})}
+  else if(C.type==='candle'){const bw=Math.max(2,Math.min(26,step*.7));vals.forEach((v,i)=>{if(v==null)return;const o0=E[off+i-1],o=o0==null?v:o0,c=v>=o?'#0ecb81':'#f6465d',yT=Y(Math.max(o,v)),yB=Y(Math.min(o,v)),last=partial&&i===N-1;g+=`<rect x="${X(i)-bw/2}" y="${yT}" width="${bw}" height="${Math.max(1.5,yB-yT)}" rx="1.5" fill="${c}" fill-opacity="${last?.3:1}" stroke="${c}" ${last?'stroke-dasharray="3 2"':''}/>`})}
   else if(C.type==='bar'){const bw=Math.max(2,Math.min(38,step*.78));vals.forEach((v,i)=>{if(v==null)return;const y=Y(v);g+=`<rect x="${X(i)-bw/2}" y="${y}" width="${bw-1}" height="${Math.max(0,pt+ih-y)}" rx="2" fill="${col}" opacity="${partial&&i===N-1?.45:.85}"/>`})}
   else{const segs=[];let c=[];vals.forEach((v,i)=>{if(v==null){if(c.length)segs.push(c);c=[]}else c.push([i,v])});if(c.length)segs.push(c);
     segs.forEach((sg,j)=>{const pts=sg.map(([i,v])=>`${X(i)},${Y(v)}`).join(' ');
@@ -1732,16 +1751,19 @@ function prodChartHTML(R){
     const lv=vals[N-1];if(lv!=null)g+=`<circle cx="${X(N-1)}" cy="${Y(lv)}" r="4.5" fill="${col}"/><circle cx="${X(N-1)}" cy="${Y(lv)}" r="9" fill="${col}" opacity=".25"/>`}
   const MA={},EM={};MAL.forEach(k=>{MA[k]=maCalc(E,k).slice(off);EM[k]=emaCalc(E,k).slice(off)});
   const drawL=(a,c,dash)=>{const segs=[];let cu=[];a.forEach((v,i)=>{if(v==null){if(cu.length)segs.push(cu);cu=[]}else cu.push(`${X(i)},${Y(v)}`)});if(cu.length)segs.push(cu);segs.forEach(sg=>{if(sg.length>1)g+=`<polyline points="${sg.join(' ')}" fill="none" stroke="${c}" stroke-width="1.5" ${dash?'stroke-dasharray="5 3"':''} opacity=".9" stroke-linejoin="round" pointer-events="none"/>`})};
-  MAL.forEach(k=>{if(C.ma)drawL(MA[k],MAC[k],false);if(C.ema)drawL(EM[k],MAC[k],true)});
+  if(!multi)MAL.forEach(k=>{if(C.ma)drawL(MA[k],MAC[k],false);if(C.ema)drawL(EM[k],MAC[k],true)});
   // จุดแตะดูตัวเลข (ชี้เมาส์/แตะ)
-  vals.forEach((v,i)=>{g+=`<rect x="${X(i)-step/2}" y="${pt}" width="${step}" height="${ih}" fill="transparent"><title>${esc(P[i].full)}: ${v==null?'ยังไม่มีข้อมูล':mt[2](v)}</title></rect>`});
+  vals.forEach((v,i)=>{g+=`<rect x="${X(i)-step/2}" y="${pt}" width="${step}" height="${ih}" fill="transparent"><title>${esc(P[i].full)}: ${multi?SR.map(x=>x.n+' = '+(x.v[i]==null?'–':mt[2](x.v[i]))).join(' | '):v==null?'ยังไม่มีข้อมูล':mt[2](v)}</title></rect>`});
   const lastV=a=>{for(let i=a.length-1;i>=0;i--)if(a[i]!=null)return a[i];return null};
-  let leg='';MAL.forEach(k=>{if(C.ma){const v=lastV(MA[k]);if(v!=null)leg+=`<span><i style="border-color:${MAC[k]}"></i>MA${k} <b style="color:${MAC[k]}">${mt[2](v)}</b></span>`}});
-  MAL.forEach(k=>{if(C.ema){const v=lastV(EM[k]);if(v!=null)leg+=`<span><i style="border-color:${MAC[k]};border-top-style:dashed"></i>EMA${k} <b style="color:${MAC[k]}">${mt[2](v)}</b></span>`}});
+  let leg='';if(multi)SR.forEach(x=>{const lv=lastV(x.v);leg+=`<span><i style="border-color:${x.c};background:${x.c}"></i>${esc(x.n)} <b style="color:${x.c}">${lv==null?'–':mt[2](lv)}</b></span>`});
+  if(!multi)MAL.forEach(k=>{if(C.ma){const v=lastV(MA[k]);if(v!=null)leg+=`<span><i style="border-color:${MAC[k]}"></i>MA${k} <b style="color:${MAC[k]}">${mt[2](v)}</b></span>`}});
+  if(!multi)MAL.forEach(k=>{if(C.ema){const v=lastV(EM[k]);if(v!=null)leg+=`<span><i style="border-color:${MAC[k]};border-top-style:dashed"></i>EMA${k} <b style="color:${MAC[k]}">${mt[2](v)}</b></span>`}});
   const up=diff==null||diff>=0;
-  return `<div class="panel sec" id="pcPanel"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>📈 กราฟสินค้า · ${esc(nm)}</span><select id="pcProd"><option value="">★ ทุกสินค้ารวม</option>${prods.map(p=>`<option value="${esc(p.id)}" ${C.prod===p.id?'selected':''}>${esc(p.name)} · ${esc(p.skill)}</option>`).join('')}</select></h3>
+  return `<div class="panel sec" id="pcPanel"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>📈 กราฟสินค้า · ${esc(nm)}</span><select id="pcProd" title="สินค้าหลักของกราฟ"><option value="">★ ทุกสินค้ารวม</option>${prods.map(p=>`<option value="${esc(p.id)}" ${C.prod===p.id?'selected':''}>${esc(p.name)} · ${esc(p.skill)}</option>`).join('')}</select></h3>
    <div class="controls" style="margin-bottom:8px"><div class="seg" id="pcMode">${[['day','รายวัน'],['month','รายเดือน'],['year','รายปี']].map(([k,l])=>`<button data-v="${k}" class="${C.mode===k?'on':''}">${l}</button>`).join('')}</div>
     <div class="seg" id="pcMet">${[['a','💰 ยอดขาย'],['pt','🎯 POINT'],['q','📦 จำนวนชิ้น']].map(([k,l])=>`<button data-v="${k}" class="${C.met===k?'on':''}">${l}</button>`).join('')}</div>
+    <select id="pcCmp" title="เพิ่ม Agent / TEAM / สินค้า เพื่อเทียบบนกราฟเดียวกัน"${C.cmp.length>=99?' disabled':''}><option value="">＋ เทียบกับ…</option><optgroup label="TEAM">${TEAMS.filter(t=>MEM.some(m=>AG(m)&&m.team===t.id)).map(t=>`<option value="t:${esc(t.id)}">${esc(t.name)}</option>`).join('')}</optgroup>${TEAMS.map(t=>{const L=MEM.filter(m=>AG(m)&&m.team===t.id);return L.length?`<optgroup label="AGENT — ${esc(t.name)}">${L.map(m=>`<option value="a:${esc(m.id)}">${esc(m.name)}${m.tick?' ('+esc(m.tick)+')':''}</option>`).join('')}</optgroup>`:''}).join('')}<optgroup label="สินค้า">${prods.map(x=>`<option value="p:${esc(x.id)}">${esc(x.name)}</option>`).join('')}</optgroup></select>
+    <span id="pcChips" style="display:inline-flex;gap:6px;flex-wrap:wrap">${C.cmp.map((k,i)=>{const o=pcCmpInfo(C,k);return `<span class="cchip" data-pcx="${i}" title="กดเพื่อเอาออก"><i style="background:${palC(i+1)}"></i>${esc(o.name)} ✕</span>`}).join('')}${C.cmp.length?'<span class="cchip" data-pcx="all">ล้างการเทียบ</span>':''}</span>
     <div class="seg" id="pcType">${[['candle','🕯 แท่งเทียน'],['line','เส้น'],['bar','แท่ง']].map(([k,l])=>`<button data-v="${k}" class="${C.type===k?'on':''}">${l}</button>`).join('')}</div></div>
    <div class="rangebar" style="margin-bottom:8px"><div class="seg" id="pcRange">${rngs.map(k=>`<button data-v="${k}" class="${rk===k?'on':''}">${k}</button>`).join('')}<button data-v="custom" class="${rk==='custom'?'on':''}">กำหนดเอง</button></div>
     ${C.range==='custom'?`<span>จาก <input type="date" id="pcFrom" max="${today}" value="${esc(C.from||'')}"> ถึง <input type="date" id="pcTo" max="${today}" value="${esc(C.anchor)}"></span>`:`<span>สิ้นสุด <input type="date" id="pcAnchor" max="${today}" value="${esc(C.anchor)}"></span>`}
@@ -1755,6 +1777,8 @@ function prodChartHTML(R){
 function bindPc(R,again){
   const C=pcState(R),$$b=(id,f)=>$$(id+' button').forEach(b=>b.onclick=()=>{f(b.dataset.v);again()});
   if($('#pcProd'))$('#pcProd').onchange=e=>{C.prod=e.target.value;again()};
+  if($('#pcCmp'))$('#pcCmp').onchange=e=>{const v=e.target.value;C.cmp=C.cmp||[];if(v&&C.cmp.indexOf(v)<0&&C.cmp.length<99)C.cmp.push(v);again()};
+  if($('#pcChips'))$('#pcChips').onclick=e=>{const c=e.target.closest('[data-pcx]');if(!c)return;if(c.dataset.pcx==='all')C.cmp=[];else C.cmp.splice(+c.dataset.pcx,1);again()};
   $$b('#pcMet',v=>C.met=v);$$b('#pcType',v=>C.type=v);
   $$b('#pcMode',v=>{C.mode=v;C.range=v==='day'?'1M':v==='month'?'1Y':'ALL';C.count=null});
   $$b('#pcRange',v=>{if(v==='custom'){C.range='custom';const f=buildPeriods(C.mode,C.anchor,C.count||DEFN[C.mode])[0];C.from=f.lv==='d'?f.key:f.lv==='m'?f.key+'-01':f.key+'-01-01'}else{C.range=v;C.mode=RANGES[v].m;C.count=RANGES[v].n}});
@@ -1778,6 +1802,7 @@ function prodSections(R,key,pk){
     return `<tr class="row"><td class="rk"><span class="medal">${medal(i)}</span></td><td><b>${esc(prodName(x.id))}</b></td><td><span class="role">${esc(skillOf(x.id))}</span></td><td class="num"><b>${pf(x.pv)}</b>${by==='amount'&&x.q?`<div class="hint">${fmt(x.q)} ชิ้น</div>`:''}<div class="pbar"><i style="width:${x.pv/ptop*100}%"></i></div></td><td class="num">${(x.pv/ptot*100).toFixed(1)}%</td><td class="num ${k}">${pc==null?'–':(pc>=0?'▲ +':'▼ ')+pc.toFixed(1)+'%'}</td></tr>`}).join('')}</tbody></table></div>`
     :`<div class="empty">ยังไม่มียอดขายรายสินค้าของ${rkLabel(key)} (แอดมินบันทึกที่ แอดมิน → สินค้า/Skill หรือแท็บ ProductSales ในชีต)</div>`;
   h+=`<div class="hint" style="margin-top:6px">นับเฉพาะข้อมูลของคนที่คุณมีสิทธิ์เห็น · ไม่เกี่ยวกับยอดในแท็บ Sales และไม่ทำให้ TOKEN เพิ่ม</div></div>`;
+  h+=prodRankHTML(R,key,by);
   h+=prodWhoHTML(key,by);
   h+=agentMixHTML(R,key);
   h+=skillTableHTML(R,key,by,pv,bl,cur);
@@ -1807,6 +1832,7 @@ function renderProdPg(){
     $('#prBody').innerHTML=prodSections(R,key,pk);
     $$('#rkBy button').forEach(b=>b.onclick=()=>{R.pby=b.dataset.v;renderProdPg()});
     bindPc(R,renderProdPg);
+    if($('#rkProd'))$('#rkProd').onchange=e=>{R.rkProd=e.target.value;renderProdPg()};
     if($('#mixWho'))$('#mixWho').onchange=e=>{R.mixWho=e.target.value;renderProdPg()};
     if($('#mixWho2'))$('#mixWho2').onchange=e=>{R.mixWho2=e.target.value;renderProdPg()};
     $$('[data-mxs]').forEach(b=>b.onclick=()=>{R.mixSort=b.dataset.mxs;renderProdPg()});
@@ -1950,10 +1976,13 @@ function renderSpotTab(fromEnsure){
   const list=(kind,title,sub)=>{
     const L=P.filter(p=>p.kind===kind&&p.cat==='all').sort((a,b)=>a.rank-b.rank);
     return `<div class="panel sec"><h3>${title}</h3><div class="hint" style="margin-bottom:8px">${sub}</div>${L.length?`<div style="max-width:360px;margin:0 auto 10px">${card(L[0],true)}</div>${L.length>1?`<div class="spgrid">${L.slice(1).map(p=>card(p,false)).join('')}</div>`:''}`:`<div class="empty">${kind==='i'?'ยังไม่มีคนที่ยอดเพิ่มขึ้นจากช่วงเดียวกันของเดือนก่อน (ต้องมียอดเดือนก่อนเพื่อเทียบ)':'ยังไม่มีข้อมูลยอดขายของเดือนนี้'}</div>`}</div>`};
+  const talkCard=(x,i,big)=>`<div class="spcard ${big?'big':''}" style="${big?'align-items:center;text-align:center':''}"><div style="font-size:${big?26:20}px">${spMed(i+1)}</div>${spAvatar(x.m,x.name,big?190:120)}<div style="font-weight:800;font-size:${big?20:15}px">${esc(x.name)}</div><div class="hint">${esc(teamOf(x.team).name)}</div><div class="num up" style="font-weight:800;font-size:${big?22:17}px">⏱ ${hms(x.avg)}</div><div class="hint">เฉลี่ย/วัน · ${x.n} วันทำงาน · ผ่านเกณฑ์ ${x.pass} วัน</div>${ph({m:x.m})}</div>`;
+  const talkPanel=()=>{const T=SP.talk||[];return `<div class="panel sec"><h3>🎧 TOP TALK TIME เฉลี่ยสูงสุด · ${spYm(SP.ym)}</h3><div class="hint" style="margin-bottom:8px">เฉลี่ย Talk Time ต่อวันทำงาน ตั้งแต่วันที่ 1 ถึง ${dEnd} · อันดับ 1–5 (นับเฉพาะ Agent · วันที่ต่ำกว่าเกณฑ์วันหยุดและวันลาไม่นับ · ต้องมีข้อมูลอย่างน้อย 3 วัน)</div>${T.length?`<div style="max-width:360px;margin:0 auto 10px">${talkCard(T[0],0,true)}</div>${T.length>1?`<div class="spgrid">${T.slice(1).map((x,i)=>talkCard(x,i+1,false)).join('')}</div>`:''}`:`<div class="empty">ยังไม่มีข้อมูล Talk Time ของเดือนนี้ (ต้องมีอย่างน้อย 3 วันต่อคน) — ถ้าเพิ่งอัปเดตระบบ ให้แอดมินอัปเดต Code.gs ล่าสุดด้วย</div>`}</div>`};
   const dEnd=dShort(SP.day),mini=(p,t)=>p?`<div class="spcard" style="flex:1;min-width:200px"><div class="st" style="color:#f0b90b;font-weight:700;font-size:12px">${t}</div><div style="display:flex;gap:8px;align-items:center">${spAvatar(p.m,p.name,84)}<div><div style="font-weight:800">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)}</div></div></div><div class="num up" style="font-weight:800;font-size:17px">${spVal(p)}</div>${p.kind==='i'?`<div class="hint">${esc(spSub(p))}</div>`:(p.q?`<div class="hint">${fmt(p.q)} ชิ้น</div>`:'')}<div>${spLikes(p)}</div>${ph(p)}</div>`:`<div class="spcard" style="flex:1;min-width:200px"><div class="st" style="color:var(--mute);font-weight:700;font-size:12px">${t}</div><div class="hint">ยังไม่มีข้อมูล</div></div>`;
   const cats=[...new Set(P.filter(p=>p.cat!=='all').map(p=>p.cat))].sort((a,b)=>String(P.find(p=>p.cat===a).catName).localeCompare(String(P.find(p=>p.cat===b).catName)));
   let h=list('m',`🏆 TOP SALE ประจำเดือน · ${spYm(SP.ym)}`,`ยอดขายสะสมตั้งแต่วันที่ 1 ถึง ${dEnd} · อันดับ 1–5 (นับเฉพาะ Agent)`)+
     list('i',`📈 TOP SALE Improvement · ${spYm(SP.ym)}`,`เทียบยอดสะสมวันที่ 1–${SP.n} ของเดือนนี้ กับช่วงเดียวกันของ ${spYm(SP.pym)} · เรียงตามยอดที่เพิ่มขึ้น (฿) · อันดับ 1–5`)+
+    talkPanel()+
     `<div class="panel sec"><h3>🛍 TOP SALE และ Improvement แยกตามสินค้า (อย่างละ 1 อันดับ)</h3>${cats.length?cats.map(c=>{const nm=P.find(p=>p.cat===c).catName;return `<div style="margin:10px 0"><div style="font-weight:800;margin-bottom:4px">🛍 ${esc(nm)}</div><div style="display:flex;gap:10px;flex-wrap:wrap">${mini(P.find(p=>p.cat===c&&p.kind==='m'),'🏆 TOP SALE')}${mini(P.find(p=>p.cat===c&&p.kind==='i'),'📈 Improvement')}</div></div>`}).join(''):'<div class="empty">ยังไม่มียอดขายรายสินค้าของเดือนนี้ (บันทึกที่ชีต ProductSales)</div>'}</div>`;
   if(adm)h+=`<div class="panel sec"><h3>📷 รูปประจำตัว Agent (แอดมิน)</h3><div class="hint" style="margin-bottom:8px">ใส่รูปให้ Agent คนใดก็ได้ ระบบย่อรูปให้อัตโนมัติ (ตัดเป็นสี่เหลี่ยมจัตุรัสจากกลางภาพ) · รูปจะแสดงที่แบนเนอร์ ป๊อปอัป และหน้านี้ เมื่อคนนั้นติดอันดับ</div>
     <div class="mrow" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><select id="phWho">${MEM.filter(AG).map(m=>`<option value="${esc(m.id)}">${esc(m.name)}${m.nick?' ('+esc(m.nick)+')':''}</option>`).join('')}</select><label class="btn primary" style="cursor:pointer">📷 เลือกรูป<input type="file" accept="image/*" hidden id="phFile"></label><button class="btn danger" id="phDel">🗑 ลบรูปคนนี้</button></div><div id="phErr" class="err"></div></div>`;
@@ -2138,6 +2167,41 @@ function histHTML(P){
    <div style="display:flex;gap:3px">${H.map(x=>`<div style="flex:1;text-align:center;font-size:9px;color:var(--mute);min-width:0;overflow:hidden">${THMON[+x.ym.slice(5)-1]}</div>`).join('')}</div>
    <div class="hint" style="margin-top:4px">${m==='a'?'ยอดขายรายเดือน':m==='p'?'POINT รายเดือน (ตามสูตรที่ใช้คิดค่าคอม)':m==='s'?'จำนวน SUB รายเดือน':'Talk Time เฉลี่ยต่อวันที่มีข้อมูล (รูปแบบ ชม:นาที:วินาที) แต่ละเดือน'} · แท่งทอง = เดือนที่ดีที่สุด · เดือนที่ไม่มีข้อมูลจะว่าง</div>`}`;
 }
+let PFRG=0;
+S.pr=S.pr||{mode:'month',key:''};
+/* ---- 🔎 ย้อนหลังระบุ วัน/เดือน/ปี + สินค้าแต่ละชนิด ---- */
+function pfRgCtl(P){
+  const R=S.pr,Y=+today.slice(0,4);if(!R.key)R.key=today.slice(0,7);
+  const inp=R.mode==='day'?`<input type="date" data-rg="key" max="${today}" value="${esc(R.key)}">`:R.mode==='month'?`<input type="month" data-rg="key" max="${today.slice(0,7)}" value="${esc(R.key)}">`:`<select data-rg="key">${[0,1,2,3,4].map(i=>`<option value="${Y-i}" ${String(Y-i)===R.key?'selected':''}>${Y-i+543} (${Y-i})</option>`).join('')}</select>`;
+  return `<h3 style="margin:12px 0 6px">🔎 ดูย้อนหลังตามที่ระบุ · สินค้าแต่ละชนิด</h3><div class="controls" style="margin-bottom:8px"><div class="seg">${[['day','รายวัน'],['month','รายเดือน'],['year','รายปี']].map(([k,l])=>`<button data-rgm="${k}" class="${R.mode===k?'on':''}">${l}</button>`).join('')}</div>${inp}</div>`;
+}
+function pfRgLabel(R){return R.mode==='day'?dShort(R.key):R.mode==='month'?ymLabel(R.key):'ปี '+(+R.key+543)}
+async function pfRgLoad(P){
+  const host=document.getElementById(P._rg);if(!host)return;
+  const R=S.pr;if(R.mode==='day'&&!/^\d{4}-\d{2}-\d{2}$/.test(R.key)||R.mode==='month'&&!/^\d{4}-\d{2}$/.test(R.key)||R.mode==='year'&&!/^\d{4}$/.test(R.key))R.key=R.mode==='day'?today:R.mode==='month'?today.slice(0,7):today.slice(0,4);
+  host.innerHTML=pfRgCtl(P)+'<div class="hint">กำลังโหลด…</div>';pfRgBind(P);
+  let r;try{r=await api('profileRange',{m:P.m,mode:R.mode,key:R.key})}catch(e){if(document.getElementById(P._rg))host.innerHTML=pfRgCtl(P)+`<div class="empty">${esc(e.message)}${/Unknown|ไม่รู้จัก|action/i.test(e.message)?' — ให้แอดมินอัปเดต Code.gs ล่าสุด':''}</div>`;pfRgBind(P);return}
+  if(!document.getElementById(P._rg)||R.mode!==r.mode||R.key!==r.key)return;
+  const T=r.tot,lab=pfRgLabel(R),sub=k=>R.mode==='month'?dShort(k):R.mode==='year'?THMON[+k.slice(5)-1]:'',mx=Math.max(1,...r.rows.map(x=>x.a));
+  const tiles=`<div class="pst"><div><small>ยอดขาย · ${esc(lab)}</small><b class="num">฿${fmt(T.a)}</b></div><div><small>POINT</small><b class="num">${fmt(T.p)}</b></div><div><small>SUB</small><b class="num">${fmt(T.s)}</b></div>${r.tkOk?`<div><small>Talk Time เฉลี่ย/วัน</small><b class="num">${T.tm==null?'–':hms(T.tm)}</b><small>${T.td} วันที่มีข้อมูล</small></div>`:''}</div>`;
+  let tbl='';
+  if(R.mode!=='day'){
+    tbl=`<div style="display:flex;gap:2px;align-items:flex-end;height:90px;margin:8px 0 2px">${r.rows.map(x=>`<div style="flex:1;display:flex;align-items:flex-end;height:100%;min-width:0" title="${esc(sub(x.k))}: ฿${fmt(x.a)}"><div style="width:100%;height:${Math.round(x.a/mx*100)}%;min-height:${x.a>0?2:0}px;background:#f0b90b;border-radius:2px;opacity:${x.a>0?.9:.15}"></div></div>`).join('')}</div>
+    <div class="tblwrap" style="max-height:320px;overflow:auto"><table class="tbl"><thead><tr><th>${R.mode==='month'?'วัน':'เดือน'}</th><th>ยอดขาย</th><th>POINT</th><th>SUB</th>${r.tkOk?'<th>Talk Time</th>':''}</tr></thead><tbody>${r.rows.map(x=>`<tr><td>${esc(sub(x.k))}</td><td class="num">${x.a?'฿'+fmt(x.a):'–'}</td><td class="num">${x.p?fmt(x.p):'–'}</td><td class="num">${x.s?fmt(x.s):'–'}</td>${r.tkOk?`<td class="num">${x.tm==null?'–':hms(x.tm)}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
+  }
+  const cl=c=>c==='_m'?'รายเดือน':c==='_y'?'รายปี':R.mode==='month'?String(+c.slice(8)):THMON[+c.slice(5)-1];
+  const prod=r.prods.length?`<h4 style="margin:12px 0 6px">🛍 สินค้าที่ขายได้ · ${esc(lab)}</h4><div class="tblwrap"><table class="tbl"><thead><tr><th>สินค้า</th><th>ยอดขาย</th><th>จำนวน</th><th>POINT</th></tr></thead><tbody>${r.prods.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td class="num">฿${fmt(x.a)}</td><td class="num">${fmt(x.q)}</td><td class="num">${fmt(x.pt)}</td></tr>`).join('')}</tbody></table></div>`
+   +(R.mode!=='day'&&r.cols.length?`<h4 style="margin:12px 0 6px">🗓 ยอดขายแต่ละสินค้า แยกตาม${R.mode==='month'?'วัน':'เดือน'} (฿)</h4><div class="tblwrap" style="overflow:auto"><table class="tbl"><thead><tr><th style="position:sticky;left:0;background:var(--panel)">สินค้า</th>${r.cols.map(c=>`<th>${cl(c)}</th>`).join('')}</tr></thead><tbody>${r.prods.map(x=>`<tr><td style="position:sticky;left:0;background:var(--panel)"><b>${esc(x.name)}</b></td>${r.cols.map(c=>`<td class="num">${x.by[c]?fmt(x.by[c].a):'·'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:''):`<div class="hint" style="margin-top:10px">ไม่มีข้อมูลสินค้าที่ขายใน ${esc(lab)}${R.mode==='day'?' (ข้อมูลสินค้าต้องบันทึกเป็นรายวัน)':''}</div>`;
+  host.innerHTML=pfRgCtl(P)+tiles+tbl+prod;pfRgBind(P);
+}
+function pfRgBind(P){
+  const h=document.getElementById(P._rg);if(!h)return;
+  h.querySelectorAll('[data-rgm]').forEach(b=>b.onclick=()=>{
+    const m=b.dataset.rgm,k=S.pr.key||today,cy=today.slice(0,4),cm=today.slice(0,7);
+    const y=k.slice(0,4),ym=k.length>=7?k.slice(0,7):(y===cy?cm:y+'-01');
+    S.pr.mode=m;S.pr.key=m==='year'?y:m==='month'?ym:(k.length===10?k:(ym===cm?today:ym+'-01'));pfRgLoad(P)});
+  const i=h.querySelector('[data-rg]');if(i)i.onchange=e=>{if(e.target.value){S.pr.key=e.target.value;pfRgLoad(P)}};
+}
 function profileInner(P){
   S.hmP=P;
   const col=P.color||tcol(P.team)||'#0ecb81',st=P.stat,mxp=P.prods.length?P.prods[0].a:1;
@@ -2148,11 +2212,13 @@ function profileInner(P){
    <div class="pst"><div><small>ยอดขายเดือนนี้</small><b class="num">฿${fmt(st.amt)}</b></div><div><small>POINT</small><b class="num">${fmt(st.pt)}</b></div><div><small>SUB</small><b class="num">${fmt(st.sub)}</b></div><div><small>ขายต่อเนื่อง</small><b class="num">${st.streak} วัน</b></div><div><small>TOP SALE รายวัน</small><b class="num">${st.dayWins} ครั้ง</b></div></div>
    <h3 style="margin:10px 0 6px">🏅 เหรียญรางวัล</h3>${P.badges.length?`<div class="bgs">${P.badges.map(b=>`<div class="bgi" title="${esc(b.d)}"><span>${b.e}</span><b>${esc(b.n)}</b><small>${esc(b.d)}</small></div>`).join('')}</div>`:'<div class="hint">ยังไม่มีเหรียญ — ขายต่อเนื่อง 3 วัน หรือขึ้นอันดับ Top 3 เพื่อรับเหรียญแรก 🔥</div>'}
    <div id="pfHist">${histHTML(P)}</div>
+   <div id="${P._rg=('pfRg'+(++PFRG))}" class="pfrg"></div>
    <h3 style="margin:10px 0 6px">📈 ยอดขาย 30 วันล่าสุด</h3>${sparkBars(st.ser,P.labels,col)}<div class="hint" style="display:flex;justify-content:space-between"><span>${THFULL(P.labels[0])}</span><span>${THFULL(P.labels[29])}</span></div>
    <h3 style="margin:10px 0 6px">🛍 สินค้าที่ขายเดือนนี้</h3>${P.prods.length?P.prods.slice(0,8).map(p=>`<div class="chr"><span class="chnm" style="min-width:110px">${esc(p.name)}</span><span class="chbar"><i style="width:${Math.max(4,Math.round(p.a/mxp*100))}%"></i></span><b class="num">฿${fmt(p.a)}</b></div>`).join(''):'<div class="hint">ยังไม่มีข้อมูลแยกสินค้า</div>'}
    ${P.canPhoto?`<div style="margin-top:10px"><label class="btn sm" style="cursor:pointer">📷 ใส่/เปลี่ยนรูป<input type="file" accept="image/*" hidden id="pfPh"></label></div>`:''}`;
 }
 function bindProfile(P,again){
+  pfRgLoad(P);
   if(P.canPhoto)$('#pfPh').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const img=await spResize(f);await api('photoSet',{m:P.m,img});toast('✅ บันทึกรูปแล้ว');if(S.spot)S.spot.ts=0;await ensureFeed(true);again()}catch(er){toast('⚠️ '+esc(er.message))}};
 }
 async function openProfile(id){
@@ -3278,6 +3344,20 @@ function admProducts(el){
 
 /* ---------- render ---------- */
 let LASTTAB='';
+function prodRankHTML(R,key,by){
+  const P={},T={};
+  PS.forEach(r=>{if(!r.per.startsWith(key)||!okM(r.m))return;const pr=P[r.p]||(P[r.p]={}),m=pr[r.m]||(pr[r.m]={q:0,a:0,pt:0});m.q+=r.q;m.a+=r.a;m.pt+=PTV(r);T[r.p]=(T[r.p]||0)+(by==='amount'?r.a:by==='point'?PTV(r):r.q)});
+  const val=x=>by==='amount'?x.a:by==='point'?x.pt:x.q,fm=x=>by==='amount'?'฿'+fmt(x):by==='point'?fmt(x)+' Point':fmt(x)+' ชิ้น';
+  const pids=Object.keys(T).filter(p=>T[p]>0).sort((a,b)=>T[b]-T[a]);
+  let h=`<div class="panel sec"><h3>🏅 อันดับคนขาย แยกรายสินค้า · ${rkLabel(key)} <span class="hint" style="font-weight:400">(เรียงจากมากสุดไปน้อยสุด · ตามตัวเลือก ${by==='amount'?'ยอดขาย':by==='point'?'POINT':'จำนวนชิ้น'} ด้านบน)</span></h3>`;
+  if(!pids.length)return h+`<div class="empty">ยังไม่มียอดขายรายสินค้าของ${rkLabel(key)}</div></div>`;
+  if(!R.rkProd||!P[R.rkProd]||!(T[R.rkProd]>0))R.rkProd=pids[0];
+  const pid=R.rkProd,rows=Object.keys(P[pid]).map(id=>({id,...P[pid][id],v:val(P[pid][id])})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v),tot=rows.reduce((t,x)=>t+x.v,0),top=Math.max(1,...rows.map(x=>x.v));
+  h+=`<div class="rule" style="margin:8px 0;align-items:center;gap:8px;flex-wrap:wrap"><select id="rkProd" style="max-width:100%">${pids.map(p=>`<option value="${esc(p)}" ${p===pid?'selected':''}>${esc(prodName(p))} · ${esc(skillOf(p))} (${fm(T[p])})</option>`).join('')}</select><span class="hint">${rows.length} คนที่ขายได้ · รวม <b>${fm(tot)}</b></span></div>`;
+  h+=`<div class="tblwrap"><table class="tbl"><thead><tr><th>#</th><th>AGENT</th><th>ทีม</th><th>ยอดขาย</th><th>ชิ้น</th><th>POINT</th><th>สัดส่วน</th></tr></thead><tbody>${rows.map((x,i)=>{const m=memOf(x.id)||{},t=TEAMS.find(q=>q.id===m.team)||{};
+    return `<tr class="row"><td class="rk"><span class="medal">${medal(i)}</span></td><td><b>${esc(m.nick||m.name||x.id)}</b>${m.name&&m.nick&&m.name!==m.nick?`<div class="hint">${esc(m.name)}</div>`:''}</td><td>${esc(t.name||'')}</td><td class="num">${by==='amount'?'<b>':''}฿${fmt(x.a)}${by==='amount'?'</b>':''}</td><td class="num">${by!=='amount'&&by!=='point'?'<b>':''}${fmt(x.q)}${by!=='amount'&&by!=='point'?'</b>':''}</td><td class="num">${by==='point'?'<b>':''}${fmt(x.pt)}${by==='point'?'</b>':''}</td><td><div class="pbar"><i style="width:${x.v/top*100}%"></i></div><span class="hint">${(x.v/tot*100).toFixed(1)}%</span></td></tr>`}).join('')}</tbody></table></div>`;
+  return h+`<div class="hint" style="margin-top:6px">แสดงเฉพาะคนที่คุณมีสิทธิ์เห็น · เลือกดูทีละสินค้าได้จากช่องด้านบน</div></div>`;
+}
 function prodWhoHTML(key,by){
   const val1=x=>by==='amount'?x.a:by==='point'?x.pt:x.q,fm=x=>by==='amount'?'฿'+fmt(x):by==='point'?fmt(x)+' Point':fmt(x)+' ชิ้น';
   const P={};PS.forEach(r=>{if(!r.per.startsWith(key)||!okM(r.m))return;const pr=P[r.p]||(P[r.p]={}),m=pr[r.m]||(pr[r.m]={q:0,a:0,pt:0});m.q+=r.q;m.a+=r.a;m.pt+=PTV(r)});
@@ -3312,7 +3392,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-09.7';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-09.9';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
