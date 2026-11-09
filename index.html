@@ -1604,7 +1604,7 @@ const rkNext=k=>{const m=RK().mode;return m==='day'?addDays(k,1):m==='month'?add
 const rkLabel=k=>{const m=RK().mode;return m==='day'?dShort(k):m==='month'?`${THMON[+k.slice(5)-1]} ${+k.slice(0,4)+543}`:`ปี ${+k+543}`};
 const rkFull=k=>RK().mode==='day'?k:RK().mode==='month'?k+'-01':k+'-01-01';
 const AG=m=>!m.role||m.role==='leader';          // Agent (ไม่รวม Senior / แอดมิน)
-const teamOk=m=>!S.tf||m.team===S.tf;             // ตัวกรองทีม (กลุ่ม Senior)
+const teamOk=m=>(!S.tf||m.team===S.tf)&&(!S.pAg||m.id===S.pAg);             // ตัวกรองทีม (กลุ่ม Senior)
 const okM=id=>{const m=memOf(id);return !!m&&AG(m)&&teamOk(m)};
 const AGM=()=>MEM.filter(m=>AG(m)&&teamOk(m));
 const inGrp=m=>AG(m)&&teamOk(m);
@@ -1788,14 +1788,19 @@ function renderProdPg(){
   const R=S.prodPg;if(!R.anchor)R.anchor=D.psAsOf||D.asOf||today;if(R.anchor>today)R.anchor=today;
   S.rank=R;
   try{
+    S.pAg='';const agL=MEM.filter(m=>AG(m)&&(!S.tf||m.team===S.tf)).sort((a,b)=>(a.nick||a.name).localeCompare(b.nick||b.name,'th'));
+    if(R.agent&&!agL.some(m=>m.id===R.agent))R.agent='';
+    S.pAg=R.agent||'';
     const key=rkKey(),pk=rkPrev(key),maxKey=R.mode==='day'?today:R.mode==='month'?today.slice(0,7):today.slice(0,4);
     const groups=['all','member','leader','senior'].filter(g=>g==='all'||MEM.some(m=>g==='member'?!m.role:m.role===g));
     $('#prCtl').innerHTML=`<div class="seg" id="prMode"><button data-v="day" class="${R.mode==='day'?'on':''}">รายวัน</button><button data-v="month" class="${R.mode==='month'?'on':''}">รายเดือน</button><button data-v="year" class="${R.mode==='year'?'on':''}">รายปี</button></div>
       <button class="btn" id="prPrev">◀</button><span class="lbl">${rkLabel(key)}</span><button class="btn" id="prNext" ${key>=maxKey?'disabled':''}>▶</button>
       <input type="date" id="prDate" max="${today}" value="${rkFull(key)}">
-      ${teamSelHTML('prTeam')}`;
+      ${teamSelHTML('prTeam')}
+      <select id="prAg" title="เลือกรายคน (AGENT)"><option value="">🧑 ทุก AGENT</option>${agL.map(m=>`<option value="${esc(m.id)}" ${R.agent===m.id?'selected':''}>${esc(m.name)}${m.tick?' ('+esc(m.tick)+')':''}</option>`).join('')}</select>`;
     $$('#prMode button').forEach(b=>b.onclick=()=>{const a=rkFull(key);R.mode=b.dataset.v;R.anchor=a>today?today:a;renderProdPg()});
-    bindTeamSel('prTeam',renderProdPg);
+    bindTeamSel('prTeam',()=>{R.agent='';renderProdPg()});
+    $('#prAg').onchange=e=>{R.agent=e.target.value;renderProdPg()};
     $('#prPrev').onclick=()=>{R.anchor=rkFull(pk);renderProdPg()};
     $('#prNext').onclick=()=>{const n=rkNext(key);R.anchor=rkFull(n)>today?today:rkFull(n);renderProdPg()};
     $('#prDate').onchange=e=>{if(e.target.value){R.anchor=e.target.value>today?today:e.target.value;renderProdPg()}};
@@ -1807,7 +1812,7 @@ function renderProdPg(){
     $$('[data-mxs]').forEach(b=>b.onclick=()=>{R.mixSort=b.dataset.mxs;renderProdPg()});
     $$('[data-sk]').forEach(t=>t.onclick=()=>{const k=t.dataset.sk;if(R.sort===k)R.dir=R.dir==='asc'?'desc':'asc';else{R.sort=k;R.dir='desc'}renderProdPg()});
     $$('[data-tv]').forEach(t=>t.onclick=()=>{R.tv=t.dataset.tv;R.sort='_t';R.dir='desc';renderProdPg()});
-  }finally{S.rank=keep}
+  }finally{S.rank=keep;S.pAg=''}
 }
 /* ---------- TOP SALE: แบนเนอร์ / ป๊อปอัป / หน้าเต็ม + Like ❤️ ---------- */
 const SPK='sx_spot_';
@@ -3307,7 +3312,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-09.6';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-09.7';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
