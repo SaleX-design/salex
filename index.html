@@ -559,7 +559,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
       <button data-c="line">เส้น</button>
       <button data-c="bar">แท่ง</button>
     </div>
-    <button class="btn" id="csvBtn">⬇ CSV</button>
+    <button class="btn" id="colBtn" title="เปลี่ยนสีกราฟ">🎨 สี</button><button class="btn" id="csvBtn">⬇ CSV</button>
   </div>
   <div class="rangebar">
     <div class="seg" id="rangeSeg">
@@ -995,6 +995,19 @@ function renderQuote(){
      ${S.metric==='amount'?`<div class="stat"><small>TOKEN จากยอดช่วงนี้</small><b class="flat">⭐ ${fmt(pts)}</b></div>`:`<div class="stat"><small>รวมทุกช่วงที่มีข้อมูล</small><b class="flat">${compact(known.reduce((a,b)=>a+b,0))}</b></div>`}
    </div>`;
 }
+let CCOL={};try{CCOL=JSON.parse(localStorage.getItem('sx_ccol')||'{}')||{}}catch(e){}
+const ccol=(k,d)=>CCOL[k]||d;
+const LSER={sales:[],prod:[],agS:null,agP:null};
+const toHex=c=>{try{const x=document.createElement('canvas').getContext('2d');x.fillStyle='#000';x.fillStyle=c;const v=x.fillStyle;return v[0]==='#'?v:'#888888'}catch(e){return '#888888'}};
+function colorDlg(which){
+  const L=LSER[which]||[],ud=[['ud:up','แท่งเทียน · เพิ่ม/เท่าเดิม','#0ecb81'],['ud:down','แท่งเทียน · ลดลง','#f6465d']];
+  const row=(k,n,d)=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)"><input type="color" data-ck="${esc(k)}" value="${toHex(ccol(k,d))}" style="width:44px;height:30px;padding:0;border:none;background:none;cursor:pointer"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(n)}</span><button class="btn" data-cr="${esc(k)}" data-cd="${esc(d)}" title="คืนสีเดิม">↺</button></div>`;
+  openModal(`<h2>🎨 เปลี่ยนสีกราฟ</h2><div class="hint" style="margin-bottom:8px">เลือกสีของแต่ละรายการ · บันทึกในเครื่องนี้อัตโนมัติ · ใช้กับกราฟแท่ง/เส้น (แท่งเทียนใช้สีเพิ่ม/ลดด้านล่าง)</div><div style="max-height:55vh;overflow:auto">${L.length?L.map(x=>row(x.key,x.name,x.def)).join(''):'<div class="empty">ยังไม่มีรายการบนกราฟ</div>'}<div class="hint" style="margin:10px 0 2px"><b>สีแท่งเทียน</b></div>${ud.map(u=>row(u[0],u[1],u[2])).join('')}</div><div class="mrow"><button class="btn danger" id="ccReset">รีเซ็ตสีทั้งหมด</button><button class="btn primary" id="ccClose">เสร็จ</button></div>`);
+  const redraw=()=>{try{localStorage.setItem('sx_ccol',JSON.stringify(CCOL))}catch(e){}const f=LSER[which==='sales'?'agS':'agP'];if(f)f()};
+  $$('#mbox [data-ck]').forEach(i=>i.oninput=()=>{CCOL[i.dataset.ck]=i.value;redraw()});
+  $$('#mbox [data-cr]').forEach(b=>b.onclick=()=>{delete CCOL[b.dataset.cr];const i=$('#mbox [data-ck="'+b.dataset.cr+'"]');if(i)i.value=toHex(b.dataset.cd);redraw()});
+  $('#ccReset').onclick=()=>{CCOL={};redraw();colorDlg(which)};$('#ccClose').onclick=closeModal;
+}
 const PAL=['#0ecb81','#40c4ff','#f0b90b','#ff6e9c','#b388ff'];
 const palC=i=>i<PAL.length?PAL[i]:`hsl(${Math.round((i*137.508)%360)},${70+(i%3)*8}%,${58+(i%4)*4}%)`;
 function niceMax(v){const p=Math.pow(10,Math.floor(Math.log10(v))),f=v/p;return(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p}
@@ -1033,6 +1046,7 @@ function renderChart(){
   else if(S.split&&S.scope.type==='all')sers=TEAMS.length>1?TEAMS.map(t=>({name:t.name,color:t.color,ids:memIds(t.id)})):MEM.map((m,i)=>({name:m.nick||m.name,color:PAL[i%PAL.length],ids:[m.id]}));
   else if(S.split&&S.scope.type==='team')sers=memIds(S.scope.id).map((id,i)=>({name:memOf(id).nick||memOf(id).name,color:PAL[i%PAL.length],ids:[id]}));
   else{const p=perf(si.ids);sers=[{name:si.name,color:p.diff>=0?'#0ecb81':'#f6465d',ids:si.ids}]}
+  sers.forEach(s=>{s.def=s.color;s.key='s:'+s.name;s.color=ccol(s.key,s.color)});LSER.sales=sers.map(s=>({key:s.key,name:s.name,def:s.def}));LSER.agS=renderChart;
   sers.forEach(s=>s.vals=series(s.ids));
   const single=sers.length===1,ct=(S.ctype==='candle'&&!single)?'line':S.ctype;
   const off=S.ext.length-P.length,MAA={},EMA={};
@@ -1053,7 +1067,7 @@ function renderChart(){
       const bw=Math.max(2,Math.min(26,step*0.7)),E=s.ext;
       s.vals.forEach((v,i)=>{
         if(v==null)return;
-        const o0=E[off+i-1],o=o0==null?v:o0,col=v>=o?'#0ecb81':'#f6465d';
+        const o0=E[off+i-1],o=o0==null?v:o0,col=v>=o?ccol('ud:up','#0ecb81'):ccol('ud:down','#f6465d');
         const yT=Y(Math.max(o,v)),yB=Y(Math.min(o,v)),last=partial&&i===N-1;
         g+=`<rect x="${X(i)-bw/2}" y="${yT}" width="${bw}" height="${Math.max(1.5,yB-yT)}" rx="1.5" fill="${col}" fill-opacity="${last?.3:1}" stroke="${col}" ${last?'stroke-dasharray="3 2"':''}/>`;
       });
@@ -1733,9 +1747,10 @@ function prodChartHTML(R){
   const multi=C.cmp.length>0,SR=[];
   if(multi){
     const base=(S.pAg?(memOf(S.pAg)||{}).nick||(memOf(S.pAg)||{}).name:S.tf?(TEAMS.find(t=>t.id===S.tf)||{}).name:'ทุกคน')+' · '+(C.prod?prodName(C.prod):'ทุกสินค้า');
-    SR.push({n:base,c:'#f0b90b',v:vals});
-    C.cmp.forEach((k,i)=>{const o=pcCmpInfo(C,k);SR.push({n:o.name,c:palC(i+1),v:ext.map(p=>pcValF(C.met,p,o.mf,o.pf)).slice(off)})});
-  }
+    SR.push({n:base,c:'#f0b90b',v:vals,d:'#f0b90b'});
+    C.cmp.forEach((k,i)=>{const o=pcCmpInfo(C,k);SR.push({n:o.name,c:palC(i+1),d:palC(i+1),v:ext.map(p=>pcValF(C.met,p,o.mf,o.pf)).slice(off)})});
+    SR.forEach(x=>{x.k='p:'+x.n;x.c=ccol(x.k,x.c)});LSER.prod=SR.map(x=>({key:x.k,name:x.n,def:x.d}));
+  }else LSER.prod=[{key:'p:single:'+C.met,name:mt[0],def:mt[1]}];
   const nm=C.prod?prodName(C.prod):'ทุกสินค้ารวม',unit=C.mode==='day'?'วัน':C.mode==='month'?'เดือน':'ปี';
   let li=vals.length-1;while(li>0&&vals[li]==null)li--;
   const cur=vals[li],prv=li>0?vals[li-1]:null,diff=cur!=null&&prv!=null?cur-prv:null,pct=diff!=null&&prv?diff/prv*100:null;
@@ -1744,14 +1759,14 @@ function prodChartHTML(R){
   // ---- วาดกราฟ ----
   const W=900,H=300,pl=54,pr=12,pt=14,pb=28,iw=W-pl-pr,ih=H-pt-pb,N=P.length,step=iw/N;
   const mx=Math.max(1,...(multi?SR.flatMap(x=>x.v):vals).map(z)),ymax=niceMax(mx*1.08),X=i=>pl+step*(i+.5),Y=v=>pt+ih-(v/ymax)*ih;
-  const partial=P[N-1].end>today&&N>1,col=mt[1];let g='';
+  const partial=P[N-1].end>today&&N>1,col=ccol('p:single:'+C.met,mt[1]);let g='';
   for(let i=0;i<=5;i++){const v=ymax*i/5,y=Y(v);g+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="#222c37" stroke-dasharray="3 5"/><text x="${pl-8}" y="${y+4}" text-anchor="end" font-size="11" fill="#848e9c" font-family="JetBrains Mono,monospace">${compact(v)}</text>`}
   const every=Math.ceil(N/12);P.forEach((p,i)=>{if(i%every===(N-1)%every)g+=`<text x="${X(i)}" y="${H-8}" text-anchor="middle" font-size="11" fill="#848e9c">${p.label}</text>`});
   let defs='';
   if(multi){
     if(C.type==='bar'&&SR.length<=8){const gw=Math.min(38,step*.8),bw=Math.max(1.5,gw/SR.length);SR.forEach((x,j)=>x.v.forEach((v,i)=>{if(v==null)return;const y=Y(v);g+=`<rect x="${X(i)-gw/2+j*bw}" y="${y}" width="${Math.max(1,bw-.6)}" height="${Math.max(0,pt+ih-y)}" fill="${x.c}" opacity=".9"/>`}))}
     else SR.forEach(x=>{const segs=[];let c=[];x.v.forEach((v,i)=>{if(v==null){if(c.length)segs.push(c);c=[]}else c.push(`${X(i)},${Y(v)}`)});if(c.length)segs.push(c);segs.forEach(sg=>{g+=sg.length>1?`<polyline points="${sg.join(' ')}" fill="none" stroke="${x.c}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`:`<circle cx="${sg[0].split(',')[0]}" cy="${sg[0].split(',')[1]}" r="3" fill="${x.c}"/>`})})}
-  else if(C.type==='candle'){const bw=Math.max(2,Math.min(26,step*.7));vals.forEach((v,i)=>{if(v==null)return;const o0=E[off+i-1],o=o0==null?v:o0,c=v>=o?'#0ecb81':'#f6465d',yT=Y(Math.max(o,v)),yB=Y(Math.min(o,v)),last=partial&&i===N-1;g+=`<rect x="${X(i)-bw/2}" y="${yT}" width="${bw}" height="${Math.max(1.5,yB-yT)}" rx="1.5" fill="${c}" fill-opacity="${last?.3:1}" stroke="${c}" ${last?'stroke-dasharray="3 2"':''}/>`})}
+  else if(C.type==='candle'){const bw=Math.max(2,Math.min(26,step*.7));vals.forEach((v,i)=>{if(v==null)return;const o0=E[off+i-1],o=o0==null?v:o0,c=v>=o?ccol('ud:up','#0ecb81'):ccol('ud:down','#f6465d'),yT=Y(Math.max(o,v)),yB=Y(Math.min(o,v)),last=partial&&i===N-1;g+=`<rect x="${X(i)-bw/2}" y="${yT}" width="${bw}" height="${Math.max(1.5,yB-yT)}" rx="1.5" fill="${c}" fill-opacity="${last?.3:1}" stroke="${c}" ${last?'stroke-dasharray="3 2"':''}/>`})}
   else if(C.type==='bar'){const bw=Math.max(2,Math.min(38,step*.78));vals.forEach((v,i)=>{if(v==null)return;const y=Y(v);g+=`<rect x="${X(i)-bw/2}" y="${y}" width="${bw-1}" height="${Math.max(0,pt+ih-y)}" rx="2" fill="${col}" opacity="${partial&&i===N-1?.45:.85}"/>`})}
   else{const segs=[];let c=[];vals.forEach((v,i)=>{if(v==null){if(c.length)segs.push(c);c=[]}else c.push([i,v])});if(c.length)segs.push(c);
     segs.forEach((sg,j)=>{const pts=sg.map(([i,v])=>`${X(i)},${Y(v)}`).join(' ');
@@ -1773,7 +1788,7 @@ function prodChartHTML(R){
     <div class="seg" id="pcMet">${[['a','💰 ยอดขาย'],['pt','🎯 POINT'],['q','📦 จำนวนชิ้น']].map(([k,l])=>`<button data-v="${k}" class="${C.met===k?'on':''}">${l}</button>`).join('')}</div>
     <select id="pcCmp" title="เพิ่ม Agent / TEAM / สินค้า เพื่อเทียบบนกราฟเดียวกัน"${C.cmp.length>=99?' disabled':''}><option value="">＋ เทียบกับ…</option><optgroup label="TEAM">${TEAMS.filter(t=>MEM.some(m=>AG(m)&&m.team===t.id)).map(t=>`<option value="t:${esc(t.id)}">${esc(t.name)}</option>`).join('')}</optgroup>${TEAMS.map(t=>{const L=MEM.filter(m=>AG(m)&&m.team===t.id);return L.length?`<optgroup label="AGENT — ${esc(t.name)}">${L.map(m=>`<option value="a:${esc(m.id)}">${esc(m.name)}${m.tick?' ('+esc(m.tick)+')':''}</option>`).join('')}</optgroup>`:''}).join('')}<optgroup label="สินค้า">${prods.map(x=>`<option value="p:${esc(x.id)}">${esc(x.name)}</option>`).join('')}</optgroup></select>
     <span id="pcChips" style="display:inline-flex;gap:6px;flex-wrap:wrap">${C.cmp.map((k,i)=>{const o=pcCmpInfo(C,k);return `<span class="cchip" data-pcx="${i}" title="กดเพื่อเอาออก"><i style="background:${palC(i+1)}"></i>${esc(o.name)} ✕</span>`}).join('')}${C.cmp.length?'<span class="cchip" data-pcx="all">ล้างการเทียบ</span>':''}</span>
-    <div class="seg" id="pcType">${[['candle','🕯 แท่งเทียน'],['line','เส้น'],['bar','แท่ง']].map(([k,l])=>`<button data-v="${k}" class="${C.type===k?'on':''}">${l}</button>`).join('')}</div></div>
+    <div class="seg" id="pcType">${[['candle','🕯 แท่งเทียน'],['line','เส้น'],['bar','แท่ง']].map(([k,l])=>`<button data-v="${k}" class="${C.type===k?'on':''}">${l}</button>`).join('')}</div><button class="btn" id="pcCol" title="เปลี่ยนสีกราฟ">🎨 สี</button></div>
    <div class="rangebar" style="margin-bottom:8px"><div class="seg" id="pcRange">${rngs.map(k=>`<button data-v="${k}" class="${rk===k?'on':''}">${k}</button>`).join('')}<button data-v="custom" class="${rk==='custom'?'on':''}">กำหนดเอง</button></div>
     ${C.range==='custom'?`<span>จาก <input type="date" id="pcFrom" max="${today}" value="${esc(C.from||'')}"> ถึง <input type="date" id="pcTo" max="${today}" value="${esc(C.anchor)}"></span>`:`<span>สิ้นสุด <input type="date" id="pcAnchor" max="${today}" value="${esc(C.anchor)}"></span>`}
     <span class="tgl"><label class="chk"><input type="checkbox" id="pcMa" ${C.ma?'checked':''}> MA</label><label class="chk"><input type="checkbox" id="pcEma" ${C.ema?'checked':''}> EMA</label></span></div>
@@ -1784,6 +1799,7 @@ function prodChartHTML(R){
    <div class="hint" style="margin-top:6px">${C.type==='candle'?'เขียว = เพิ่มจากช่วงก่อนหน้า · แดง = ลดลง · ':''}ทีมเลือกที่แถบด้านบน · ชี้/แตะแท่งเพื่อดูตัวเลข · ${C.mode==='day'?'ข้อมูลสินค้าต้องบันทึกเป็นรายวัน (period เช่น 2026-10-20) จึงจะเห็นในโหมดรายวัน':'ข้อมูลรายวันจะถูกรวมเป็นรายเดือน/ปีให้อัตโนมัติ'}</div></div>`;
 }
 function bindPc(R,again){
+  LSER.agP=again;if($('#pcCol'))$('#pcCol').onclick=()=>colorDlg('prod');
   const C=pcState(R),$$b=(id,f)=>$$(id+' button').forEach(b=>b.onclick=()=>{f(b.dataset.v);again()});
   if($('#pcProd'))$('#pcProd').onchange=e=>{C.prod=e.target.value;again()};
   if($('#pcCmp'))$('#pcCmp').onchange=e=>{const v=e.target.value;C.cmp=C.cmp||[];if(v&&C.cmp.indexOf(v)<0&&C.cmp.length<99)C.cmp.push(v);again()};
@@ -3401,7 +3417,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-10.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-10.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -3456,6 +3472,7 @@ $$('#whoSeg button').forEach(b=>b.onclick=()=>{const w=b.dataset.w;
   else{const ms=S.scope.type==='team'?MEM.filter(m=>m.team===S.scope.id):MEM;S.scope={type:'member',id:(ms[0]||MEM[0]).id};S.split=false}
   render()});
 $('#cmpSel').onchange=e=>{const v=e.target.value;if(v&&v!==scopeVal()){S.cmp=S.cmp||[];if(S.cmp.indexOf(v)<0&&S.cmp.length<99)S.cmp.push(v)}render()};
+$('#colBtn').onclick=()=>colorDlg('sales');
 $('#cmpChips').onclick=e=>{const c=e.target.closest('[data-cx]');if(!c)return;if(c.dataset.cx==='all')S.cmp=[];else S.cmp.splice(+c.dataset.cx,1);render()};
 $$('#admSeg button').forEach(b=>b.onclick=()=>{S.adm=b.dataset.a;if(S.adm==='reds')ADM.reds=null;render()});
 $('#scopeSel').onchange=e=>{const v=e.target.value;S.scope=v==='all'?{type:'all'}:v.startsWith('t:')?{type:'team',id:v.slice(2)}:{type:'member',id:v.slice(2)};if(S.scope.type==='member')S.split=false;render()};
