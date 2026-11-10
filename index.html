@@ -650,6 +650,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
     <button data-a="reds">คำขอแลกรางวัล <span id="pendCnt"></span></button>
     <button data-a="news">📰 ข่าว/ประกาศ</button>
     <button data-a="rw">🎁 จัดการรางวัล</button>
+    <button data-a="imp">📥 นำเข้ายอด</button>
     <button data-a="prod">🏷 สินค้า/Skill</button>
     <button data-a="ops">⚙️ งานบริการ/เกม</button>
     <button data-a="scr">📞 สคริปต์ขาย</button>
@@ -1298,6 +1299,7 @@ async function renderAdmin(){
   else if(S.adm==='rw'){if(!ADM.content)await admLoad('content');admRewards(body)}
   else if(S.adm==='prod'){if(!ADM.content)await admLoad('content');if(!ADM.psales)await admLoad('psales');admProducts(body)}
   else if(S.adm==='ops'){if(!ADM.content)await admLoad('content');admOps(body)}
+  else if(S.adm==='imp'){admImport(body)}
   else if(S.adm==='live'){admLive(body)}
   else if(S.adm==='plog'){admPlog(body)}
   else if(S.adm==='scr'){await ensureScripts(true);admScripts(body)}
@@ -1305,6 +1307,97 @@ async function renderAdmin(){
   else{if(!ADM.content)await admLoad('content');admSettings(body)}
 }
 
+/* ---- 📥 นำเข้ายอดขายอัตโนมัติ: Daily TOL_UPSELL + V_LOOK_UP_AGENT (ประมวลผลในเครื่อง ไม่ต้องใช้ไลบรารีภายนอก) ---- */
+const IMP={dailyName:'',lookName:'',sheets:null,buf:null,lk:null,rows:null,info:null,prev:null,busy:false,msg:''};
+async function zipIdx(buf){const dv=new DataView(buf),u8=new Uint8Array(buf);let e=u8.length-22;while(e>=0&&dv.getUint32(e,true)!==0x06054b50)e--;if(e<0)throw new Error('ไม่ใช่ไฟล์ .xlsx (ลองเปิดแล้วบันทึกเป็น Excel Workbook .xlsx ใหม่)');
+  const n=dv.getUint16(e+10,true);let p=dv.getUint32(e+16,true);const out={};
+  for(let i=0;i<n;i++){if(dv.getUint32(p,true)!==0x02014b50)break;const meth=dv.getUint16(p+10,true),cs=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),el=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lo=dv.getUint32(p+42,true);
+    out[new TextDecoder().decode(u8.subarray(p+46,p+46+nl))]={meth,cs,lo};p+=46+nl+el+cl}
+  return out}
+async function zipTxt(buf,ent){const dv=new DataView(buf),u8=new Uint8Array(buf),nl=dv.getUint16(ent.lo+26,true),el=dv.getUint16(ent.lo+28,true),st=ent.lo+30+nl+el,data=u8.subarray(st,st+ent.cs);
+  if(ent.meth===0)return new TextDecoder().decode(data);
+  if(typeof DecompressionStream==='undefined')throw new Error('เบราว์เซอร์นี้ยังไม่รองรับการอ่านไฟล์ (ใช้ Chrome/Edge รุ่นใหม่)');
+  const ds=new DecompressionStream('deflate-raw'),w=ds.writable.getWriter();w.write(data);w.close();return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer())}
+const xUnesc=t=>t.indexOf('&')<0?t:t.replace(/&(#x?[0-9a-fA-F]+|amp|lt|gt|quot|apos);/g,(m,k)=>k==='amp'?'&':k==='lt'?'<':k==='gt'?'>':k==='quot'?'"':k==='apos'?"'":String.fromCodePoint(k[1]==='x'?parseInt(k.slice(2),16):+k.slice(1)));
+async function xlsxOpen(file){
+  const buf=await file.arrayBuffer(),idx=await zipIdx(buf);
+  const wb=await zipTxt(buf,idx['xl/workbook.xml']),rel=await zipTxt(buf,idx['xl/_rels/workbook.xml.rels']);
+  const rmap={};(rel.match(/<Relationship [^>]*>/g)||[]).forEach(r=>{const i=/Id="([^"]+)"/.exec(r),t=/Target="([^"]+)"/.exec(r);if(i&&t)rmap[i[1]]=t[1]});
+  const sheets=[];(wb.match(/<sheet [^>]*>/g)||[]).forEach(x=>{const n=/name="([^"]*)"/.exec(x),r=/r:id="([^"]+)"/.exec(x);if(n&&r&&rmap[r[1]]){let t=rmap[r[1]];t=t.replace(/^\//,'');if(!/^xl\//.test(t))t='xl/'+t.replace(/^\.\.\//,'');sheets.push({name:xUnesc(n[1]),path:t,hidden:/state="(hidden|veryHidden)"/.test(x)})}});
+  let sst=null;
+  const load=async name=>{const sh=sheets.find(s=>s.name===name);if(!sh||!idx[sh.path])throw new Error('ไม่พบชีต '+name);
+    if(sst===null){sst=[];if(idx['xl/sharedStrings.xml']){const t=await zipTxt(buf,idx['xl/sharedStrings.xml']);(t.match(/<si>[\s\S]*?<\/si>|<si\/>/g)||[]).forEach(si=>{let o='';si.replace(/<t[^>]*>([\s\S]*?)<\/t>/g,(m,v)=>{o+=v;return m});sst.push(xUnesc(o))})}}
+    const x=await zipTxt(buf,idx[sh.path]),rows=[];
+    x.replace(/<row [^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g,(m0,inner)=>{const rm=/ r="(\d+)"/.exec(m0);const ri=rm?+rm[1]-1:rows.length;const row=[];
+      (inner||'').replace(/<c ([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g,(m,at,body)=>{const r=/ ?r="([A-Z]+)\d+"/.exec(at);if(!r)return m;let c=0;for(const ch of r[1])c=c*26+ch.charCodeAt(0)-64;c--;
+        const t=(/ t="([^"]+)"/.exec(at)||[])[1];let v='';if(body){const vm=/<v>([\s\S]*?)<\/v>/.exec(body);if(t==='inlineStr'){const im=body.match(/<t[^>]*>([\s\S]*?)<\/t>/g);v=im?xUnesc(im.map(z=>z.replace(/<[^>]+>/g,'')).join('')):''}
+          else if(vm){v=t==='s'?sst[+vm[1]]:t==='str'||t==='e'?xUnesc(vm[1]):t==='b'?vm[1]==='1':(vm[1]===''?'':Number(vm[1]))}}
+        row[c]=v;return m});
+      rows[ri]=row;return m0});
+    for(let i=0;i<rows.length;i++)if(!rows[i])rows[i]=[];return rows};
+  return {sheets,load}}
+const xDate=v=>{if(v===''||v==null)return '';if(typeof v==='number'){if(v<30000||v>80000)return '';return new Date(Date.UTC(1899,11,30)+Math.floor(v)*864e5).toISOString().slice(0,10)}
+  const s=String(v).trim();let m;if((m=/^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s)))return m[1]+'-'+pad(+m[2])+'-'+pad(+m[3]);
+  if((m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s))){let y=+m[3];if(y>2400)y-=543;return y+'-'+pad(+m[2])+'-'+pad(+m[1])}return ''};
+const xNum=v=>{if(typeof v==='number')return v;const s=String(v==null?'':v).replace(/[^0-9.\-]/g,'');const n=parseFloat(s);return isFinite(n)?n:0};
+const xKey=v=>String(v==null?'':typeof v==='number'?Math.round(v):v).replace(/[\s​]/g,'');
+function impBuild(daily,look){
+  const H=r=>{const o={};(r||[]).forEach((h,i)=>{const k=String(h==null?'':h).trim().toUpperCase().replace(/[\s.]+/g,'_');if(k&&o[k]==null)o[k]=i});return o};
+  const lh=H(look[0]),lc=lh.CODE,le=lh.EMP_ID!=null?lh.EMP_ID:lh.EMPID;
+  if(lc==null||le==null)throw new Error('ไฟล์ V_LOOK_UP ต้องมีหัวคอลัมน์ CODE และ EMP.ID (หรือ EMP_ID)');
+  const mp={};look.slice(1).forEach(r=>{const c=xKey(r[lc]),e=xKey(r[le]);if(c&&e)mp[c]=e});
+  const dh=H(daily[0]),need=['SL_PARTNER_CODE','CAMPAIGN_NAME','NET_RC'];for(const k of need)if(dh[k]==null)throw new Error('ไฟล์ Daily ไม่มีคอลัมน์ '+k+' (เลือกชีตให้ถูก เช่น Upsell)');
+  const dcol=dh.INTRACN_DT_CMPLET!=null?dh.INTRACN_DT_CMPLET:dh.INTRACN_DT;
+  const agg={},info={total:0,mapped:0,noDate:0,unm:{},types:{}};
+  for(let i=1;i<daily.length;i++){const r=daily[i];if(!r||!r.length)continue;const code=xKey(r[dh.SL_PARTNER_CODE]);if(!code&&!r[dh.CAMPAIGN_NAME])continue;info.total++;
+    const emp=mp[code];if(!emp){info.unm[code]=(info.unm[code]||0)+1;continue}
+    let d=xDate(r[dcol]);if(!d&&dh.INTRACN_DT!=null)d=xDate(r[dh.INTRACN_DT]);if(!d){info.noDate++;continue}
+    const ty=String(r[dh.UPSELL_TYPE]||'').trim().toUpperCase(),a=ty==='VAS'&&dh.DIFF_RC!=null?xNum(r[dh.DIFF_RC]):xNum(r[dh.NET_RC]);
+    const p=String(r[dh.CAMPAIGN_NAME]||'').trim()||String(r[dh.PROD_OFR_NM]||'').trim()||'(ไม่ระบุแคมเปญ)';
+    const k=d+'|'+emp+'|'+p,o=agg[k]||(agg[k]={d,m:emp,p,q:0,a:0});o.q+=1;o.a+=a;info.mapped++;info.types[ty||'?']=(info.types[ty||'?']||0)+1}
+  const rows=Object.keys(agg).map(k=>{const o=agg[k];o.a=Math.round(o.a*100)/100;return o});
+  return {rows,info,lookN:Object.keys(mp).length}}
+function impCmpHTML(c){
+  if(!c)return '';const sg=v=>(v>0?'+':v<0?'−':'')+fmt(Math.abs(v)),cl=v=>v>0?'up':v<0?'down':'flat';
+  if(!c.hadOld)return `<div class="panel" style="margin-top:10px;padding:10px"><b>📊 เทียบกับข้อมูลเดิม</b><div class="hint">เดือนนี้ยังไม่มีข้อมูลรายวันในระบบ — นี่คือการนำเข้าครั้งแรกของเดือน ยอดรวม ${fmt(c.nw.q)} ชิ้น · ฿${fmt(c.nw.a)}</div></div>`;
+  const dq=c.nw.q-c.old.q,da=Math.round((c.nw.a-c.old.a)*100)/100;
+  const lst=(L,sign)=>L.length?L.map(x=>`<tr class="row"><td>${esc(x.name)}</td><td class="num">${fmt(x.oq)} → ${fmt(x.nq)}</td><td class="num ${cl(x.da)}"><b>${sg(x.da)}</b></td></tr>`).join(''):`<tr><td colspan="3" class="hint">—</td></tr>`;
+  const tb=(title,L)=>`<div style="flex:1;min-width:260px"><div class="hint" style="margin:6px 0 2px"><b>${title}</b></div><div class="tblwrap"><table class="tbl"><thead><tr><th>ชื่อ</th><th>ชิ้น (เดิม → ใหม่)</th><th>ยอดเปลี่ยน ฿</th></tr></thead><tbody>${lst(L)}</tbody></table></div></div>`;
+  return `<div class="panel" style="margin-top:10px;padding:10px"><b>📊 เทียบกับข้อมูลเดิมในระบบ (เดือนนี้)</b>
+    <div class="stats" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"><div class="stat"><small>ยอดเดิม</small><b class="flat">฿${fmt(c.old.a)}</b><small>${fmt(c.old.q)} ชิ้น</small></div><div class="stat"><small>ยอดใหม่ (ไฟล์)</small><b class="flat">฿${fmt(c.nw.a)}</b><small>${fmt(c.nw.q)} ชิ้น</small></div><div class="stat"><small>เพิ่ม/ลด</small><b class="${cl(da)}">${sg(da)}</b><small>${sg(dq)} ชิ้น</small></div></div>
+    ${c.newDays.length?`<div class="hint">วันที่เพิ่มใหม่: ${c.newDays.map(d=>esc(dShort(d))).join(', ')}</div>`:''}
+    <div class="tblwrap" style="margin-top:6px"><table class="tbl"><thead><tr><th>วัน</th><th>ชิ้น (เดิม → ใหม่)</th><th>ยอด ฿ (เดิม → ใหม่)</th><th>เปลี่ยน</th></tr></thead><tbody>${c.days.map(x=>`<tr class="row"><td>${esc(dShort(x.k))}${x.oq===0?' <span class="role">ใหม่</span>':''}</td><td class="num">${fmt(x.oq)} → ${fmt(x.nq)}</td><td class="num">${fmt(x.oa)} → ${fmt(x.na)}</td><td class="num ${cl(x.da)}"><b>${sg(x.da)}</b></td></tr>`).join('')||'<tr><td colspan="4" class="hint">ไม่มีวันไหนเปลี่ยน — เหมือนเดิมทุกวัน</td></tr>'}</tbody></table></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">${tb('👤 พนักงานที่ยอดเพิ่มมากสุด',c.members.up)}${tb('👤 พนักงานที่ยอดลดลง',c.members.down)}</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">${tb('🛍 สินค้าที่ยอดเพิ่มมากสุด',c.products.up)}${tb('🛍 สินค้าที่ยอดลดลง',c.products.down)}</div></div>`}
+async function admImport(body){
+  clearInterval(LIVE_T);const pv=IMP.prev;
+  const sheetSel=IMP.sheets?`<select id="impSheet">${IMP.sheets.filter(s=>true).map(s=>`<option value="${esc(s.name)}" ${IMP.sheet===s.name?'selected':''}>${esc(s.name)}${s.hidden?' (ซ่อน)':''}</option>`).join('')}</select>`:'';
+  body.innerHTML=`<div class="panel sec"><h3>📥 นำเข้ายอดขายอัตโนมัติ (Daily TOL_UPSELL + V_LOOK_UP_AGENT)</h3>
+    <div class="hint" style="margin-bottom:10px">ระบบทำ V_LOOK_UP แทนคุณ: รหัส Agent (SL_PARTNER_CODE) → รหัสพนักงาน (EMP.ID) · รวมยอดเป็น <b>วัน × พนักงาน × แคมเปญ</b> · ยอดเงิน = Diff RC ของ VAS / NET_RC ของสินค้าอื่น · วันที่ = INTRACN_DT_CMPLET แล้วบันทึกลงทั้ง <b>ProductSales</b> และ <b>SalesDaily</b> ให้ในครั้งเดียว<br>ไฟล์ถูกอ่านในเครื่องคุณ — ส่งขึ้นระบบเฉพาะตัวเลขที่รวมแล้ว</div>
+    <div class="rule" style="gap:10px;flex-wrap:wrap;align-items:center"><label class="btn" style="cursor:pointer">① เลือกไฟล์ Daily TOL_UPSELL (.xlsx)<input type="file" id="impF1" accept=".xlsx" hidden></label><span class="hint">${esc(IMP.dailyName||'ยังไม่ได้เลือก')}</span>${sheetSel?'<span class="hint">ชีต:</span>'+sheetSel:''}</div>
+    <div class="rule" style="gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px"><label class="btn" style="cursor:pointer">② เลือกไฟล์ V_LOOK_UP_AGENT (.xlsx)<input type="file" id="impF2" accept=".xlsx" hidden></label><span class="hint">${esc(IMP.lookName||'ยังไม่ได้เลือก')}</span></div>
+    <div style="margin-top:10px"><button class="btn primary" id="impGo" ${IMP.buf&&IMP.lk&&!IMP.busy?'':'disabled'}>🔍 ตรวจสอบและดูตัวอย่าง</button> <span class="hint" id="impMsg">${esc(IMP.msg)}</span></div></div>
+    <div id="impOut"></div>`;
+  const out=$('#impOut');
+  if(pv){const s=pv.sum,inf=IMP.info;
+    out.innerHTML=`<div class="panel sec"><h3>📋 สรุปก่อนนำเข้า ${pv.committed?'· ✅ นำเข้าแล้ว':''}</h3>
+      <div class="stats" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <div class="stat"><small>ช่วงวันที่</small><b class="flat">${esc(dShort(s.from))} – ${esc(dShort(s.to))}</b></div><div class="stat"><small>จำนวนวัน</small><b class="flat">${s.days}</b></div>
+        <div class="stat"><small>พนักงาน</small><b class="flat">${s.members}</b></div><div class="stat"><small>จำนวนชิ้น (SUB)</small><b class="flat">${fmt(s.q)}</b></div><div class="stat"><small>ยอดรวม</small><b class="flat">฿${fmt(s.a)}</b></div></div>
+      <div class="tblwrap"><table class="tbl"><thead><tr><th>วันที่</th><th>แถวที่จะบันทึก</th><th>ชิ้น</th><th>ยอด</th><th>ข้อมูลเดิมที่จะถูกแทนที่</th></tr></thead><tbody>${pv.perDay.map(r=>`<tr class="row"><td>${esc(dShort(r.d))}</td><td class="num">${fmt(r.rows)}</td><td class="num">${fmt(r.q)}</td><td class="num">฿${fmt(r.a)}</td><td class="num">${r.old?fmt(r.old)+' แถว':'—'}${!r.rows&&r.old?' <span class="err">· วันนี้ไม่มีในไฟล์ใหม่ จะถูกลบ</span>':''}</td></tr>`).join('')}</tbody></table></div>
+      <div class="hint" style="margin-top:8px">ในไฟล์ ${fmt(inf.total)} แถว · จับคู่ V_LOOK_UP ได้ ${fmt(inf.mapped)} แถว · ไม่ใช่พนักงานในรายชื่อ ${fmt(inf.total-inf.mapped-inf.noDate)} แถว (ข้ามตามปกติ)${inf.noDate?` · ไม่มีวันที่ ${fmt(inf.noDate)} แถว (ข้าม)`:''}<br>ข้อมูลรายวันของ <b>เดือนปัจจุบัน (${esc(s.ym)})</b> จะถูกแทนที่ด้วยไฟล์นี้ทั้งเดือน (ProductSales ${fmt(s.replacePS)} แถว · SalesDaily ${fmt(s.replaceSD)} แถวเดิม) — <b>เดือนก่อน ๆ ไม่ถูกแตะ</b> · นำเข้าซ้ำได้ ไม่ซ้อนทับ${s.skippedOld?`<br>ข้ามข้อมูลของเดือนก่อน ๆ ในไฟล์ ${fmt(s.skippedOld)} แถว (ไม่นำเข้า)`:''}</div>
+
+      ${impCmpHTML(pv.cmp)}
+      ${pv.badMembersN?`<div class="err" style="margin-top:8px">⚠️ มี ${pv.badMembersN} รหัสพนักงานที่ไม่อยู่ในชีต Members จะไม่ถูกนำเข้า: ${pv.badMembers.slice(0,12).map(x=>esc(x.m)+' (฿'+fmt(x.a)+')').join(', ')}${pv.badMembersN>12?' …':''} → เพิ่มในชีต Members แล้วนำเข้าใหม่</div>`:''}
+      ${pv.badProducts.length?`<div class="err" style="margin-top:8px">⚠️ มี ${pv.badProducts.length} แคมเปญที่ยังไม่อยู่ในชีต Products (POINT จะคิด Factor = 1 จนกว่าจะเพิ่ม): ${pv.badProducts.slice(0,10).map(x=>esc(x.p)+' ('+fmt(x.n)+' ชิ้น)').join(' · ')}</div>`:''}
+      ${pv.committed?'':`<div style="margin-top:12px"><button class="btn primary" id="impCommit" ${IMP.busy?'disabled':''}>✅ ยืนยันนำเข้า ${s.psRows} แถว</button> <span class="hint">ตรวจดูตัวเลขข้างบนก่อนกดยืนยัน</span></div>`}</div>`}
+  const run=async(fn)=>{IMP.busy=true;IMP.msg='กำลังประมวลผล…';admImport(body);try{await fn();IMP.msg=''}catch(e){IMP.msg='⚠️ '+e.message}IMP.busy=false;admImport(body)};
+  $('#impF1').onchange=async e=>{const f=e.target.files[0];if(!f)return;IMP.dailyName=f.name;IMP.prev=null;await run(async()=>{const x=await xlsxOpen(f);IMP.xl=x;IMP.sheets=x.sheets;IMP.sheet=(x.sheets.find(s=>/^upsell$/i.test(s.name))||x.sheets.find(s=>!s.hidden)||x.sheets[0]).name;IMP.buf=true})};
+  if($('#impSheet'))$('#impSheet').onchange=e=>{IMP.sheet=e.target.value;IMP.prev=null;admImport(body)};
+  $('#impF2').onchange=async e=>{const f=e.target.files[0];if(!f)return;IMP.lookName=f.name;IMP.prev=null;await run(async()=>{const x=await xlsxOpen(f);IMP.lk=await x.load(x.sheets[0].name);if(!IMP.lk.length)throw new Error('ไฟล์ V_LOOK_UP ว่าง')})};
+  $('#impGo').onclick=()=>run(async()=>{const d=await IMP.xl.load(IMP.sheet),R=impBuild(d,IMP.lk);if(!R.rows.length)throw new Error('ไม่พบแถวที่จับคู่พนักงานได้ — ตรวจว่าเลือกชีตถูก และ CODE ในไฟล์ V_LOOK_UP ตรงกับ SL_PARTNER_CODE');IMP.rows=R.rows;IMP.info=R.info;IMP.prev=await api('importPreview',{rows:R.rows})});
+  if($('#impCommit'))$('#impCommit').onclick=()=>{if(!confirm('ยืนยันนำเข้า? ข้อมูลรายวันของเดือนปัจจุบันจะถูกแทนที่ด้วยไฟล์นี้ (เดือนก่อน ๆ ไม่ถูกแตะ)'))return;run(async()=>{IMP.prev=await api('importCommit',{rows:IMP.rows});ADM.psales=null;await load();toast('✅ นำเข้าสำเร็จ')})};
+}
 /* ---- 🗓 ประวัติเข้าใช้งานย้อนหลัง 30 วัน (เฉพาะแอดมิน) ---- */
 const PL={d:null,view:'day',q:'',open:{}};
 async function admPlog(body){
@@ -1974,7 +2067,7 @@ document.addEventListener('click',async e=>{
   const b=e.target.closest&&e.target.closest('[data-lk]');if(!b)return;
   const [key,r]=b.dataset.lk.split('|');if(b.dataset.busy)return;b.dataset.busy='1';
   try{const x=await api('spotLike',{key,r});
-    [S.spot&&S.spot.posts,SOC.feed&&SOC.feed.items,TP.d&&TP.d.tips].forEach(L=>{const p=L&&L.find(z=>z.key===key);if(p){if(r==='heart'){p.heart=x.count;p.mHeart=x.on}else{p.like=x.count;p.mLike=x.on}}});
+    [S.spot&&S.spot.posts,S.spot&&S.spot.talk,SOC.feed&&SOC.feed.items,TP.d&&TP.d.tips].forEach(L=>{const p=L&&L.find(z=>z.key===key);if(p){if(r==='heart'){p.heart=x.count;p.mHeart=x.on}else{p.like=x.count;p.mLike=x.on}}});
     document.querySelectorAll(`[data-lk="${key}|${r}"]`).forEach(el=>{el.classList.toggle('on',x.on);el.querySelector('b').textContent=x.count})}
   catch(err){toast('⚠️ '+esc(err.message))}finally{delete b.dataset.busy}
 });
@@ -2001,7 +2094,7 @@ function renderSpotTab(fromEnsure){
   const list=(kind,title,sub)=>{
     const L=P.filter(p=>p.kind===kind&&p.cat==='all').sort((a,b)=>a.rank-b.rank);
     return `<div class="panel sec"><h3>${title}</h3><div class="hint" style="margin-bottom:8px">${sub}</div>${L.length?`<div class="spbig">${card(L[0],true)}</div>${L.length>1?`<div class="sprank">${L.slice(1).map(p=>card(p,false)).join('')}</div>`:''}`:`<div class="empty">${kind==='i'?'ยังไม่มีคนที่ยอดเพิ่มขึ้นจากช่วงเดียวกันของเดือนก่อน (ต้องมียอดเดือนก่อนเพื่อเทียบ)':'ยังไม่มีข้อมูลยอดขายของเดือนนี้'}</div>`}</div>`};
-  const talkCard=(x,i,big)=>`<div class="spcard ${big?'big':''}" style="${big?'align-items:center;text-align:center':''}"><div style="font-size:${big?26:20}px">${spMed(i+1)}</div>${spAvatar(x.m,x.name,big?190:120)}<div style="font-weight:800;font-size:${big?20:15}px">${esc(x.name)}</div><div class="hint">${esc(teamOf(x.team).name)}</div><div class="num up" style="font-weight:800;font-size:${big?22:17}px">⏱ ${hms(x.avg)}</div><div class="hint">เฉลี่ย/วัน · ${x.n} วันทำงาน · ผ่านเกณฑ์ ${x.pass} วัน</div>${ph({m:x.m})}</div>`;
+  const talkCard=(x,i,big)=>`<div class="spcard ${big?'big':''}" style="${big?'align-items:center;text-align:center':''}"><div style="font-size:${big?26:20}px">${spMed(i+1)}</div>${spAvatar(x.m,x.name,big?190:120)}<div style="font-weight:800;font-size:${big?20:15}px">${esc(x.name)}</div><div class="hint">${esc(teamOf(x.team).name)}</div><div class="num up" style="font-weight:800;font-size:${big?22:17}px">⏱ ${hms(x.avg)}</div><div class="hint">เฉลี่ย/วัน · ${x.n} วันทำงาน · ผ่านเกณฑ์ ${x.pass} วัน</div>${x.key?`<div>${spLikes(x)}</div>`:''}${ph({m:x.m})}</div>`;
   const talkPanel=()=>{const T=SP.talk||[];return `<div class="panel sec"><h3>🎧 TOP TALK TIME เฉลี่ยสูงสุด · ${spYm(SP.ym)}</h3><div class="hint" style="margin-bottom:8px">เฉลี่ย Talk Time ต่อวันทำงาน ตั้งแต่วันที่ 1 ถึง ${dEnd} · อันดับ 1–5 (นับเฉพาะ Agent · วันที่ต่ำกว่าเกณฑ์วันหยุดและวันลาไม่นับ · ต้องมีข้อมูลอย่างน้อย 3 วัน)</div>${T.length?`<div class="spbig">${talkCard(T[0],0,true)}</div>${T.length>1?`<div class="sprank">${T.slice(1).map((x,i)=>talkCard(x,i+1,false)).join('')}</div>`:''}`:`<div class="empty">ยังไม่มีข้อมูล Talk Time ของเดือนนี้ (ต้องมีอย่างน้อย 3 วันต่อคน) — ถ้าเพิ่งอัปเดตระบบ ให้แอดมินอัปเดต Code.gs ล่าสุดด้วย</div>`}</div>`};
   const dEnd=dShort(SP.day),mini=(p,t)=>p?`<div class="spcard" style="flex:1;min-width:200px"><div class="st" style="color:#f0b90b;font-weight:700;font-size:12px">${t}</div><div style="display:flex;gap:8px;align-items:center">${spAvatar(p.m,p.name,84)}<div><div style="font-weight:800">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)}</div></div></div><div class="num up" style="font-weight:800;font-size:17px">${spVal(p)}</div>${p.kind==='i'?`<div class="hint">${esc(spSub(p))}</div>`:(p.q?`<div class="hint">${fmt(p.q)} ชิ้น</div>`:'')}<div>${spLikes(p)}</div>${ph(p)}</div>`:`<div class="spcard" style="flex:1;min-width:200px"><div class="st" style="color:var(--mute);font-weight:700;font-size:12px">${t}</div><div class="hint">ยังไม่มีข้อมูล</div></div>`;
   const cats=[...new Set(P.filter(p=>p.cat!=='all').map(p=>p.cat))].sort((a,b)=>String(P.find(p=>p.cat===a).catName).localeCompare(String(P.find(p=>p.cat===b).catName)));
@@ -3417,7 +3510,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-10.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-10.6';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
