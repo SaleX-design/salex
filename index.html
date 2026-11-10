@@ -354,6 +354,15 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 .lkb{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;cursor:pointer;color:var(--text);margin-right:6px}
 .lkb.on{border-color:#f6465d;background:#f6465d22}.lkb b{font-family:var(--mono)}
 .spgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.sprank{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;max-width:1040px;margin:0 auto}
+.sprank .spcard{align-items:center;text-align:center;justify-content:flex-start;gap:5px;padding:14px 10px;transition:transform .15s,border-color .15s}
+.sprank .spcard:hover,.spcard.big:hover{transform:translateY(-2px);border-color:#f0b90baa}
+.sprank .spcard>div:nth-child(3){max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spbig{max-width:380px;margin:0 auto 14px;position:relative}
+.spbig .spcard.big{padding:18px 14px;box-shadow:0 0 28px #f0b90b22}
+.spbig::after{content:"";display:block;height:1px;margin:14px auto 0;width:min(520px,80%);background:linear-gradient(90deg,transparent,#f0b90b66,transparent)}
+@media(max-width:900px){.sprank{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.sprank{grid-template-columns:minmax(0,1fr)}}
 .spcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
 .spcard.big{border-color:#f0b90b88;background:linear-gradient(135deg,#2a2208,#14181e)}
 @media(max-width:700px){.topstats.c3{grid-template-columns:1fr}}
@@ -1975,9 +1984,9 @@ function renderSpotTab(fromEnsure){
   const card=(p,big)=>`<div class="spcard ${big?'big':''}" style="${big?'align-items:center;text-align:center':''}"><div style="font-size:${big?26:20}px">${spMed(p.rank)}</div>${spAvatar(p.m,p.name,big?190:120)}<div style="font-weight:800;font-size:${big?20:15}px">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)}</div><div class="num up" style="font-weight:800;font-size:${big?22:17}px">${spVal(p)}</div>${p.kind==='i'?`<div class="hint">${esc(spSub(p))}</div>`:(p.q?`<div class="hint">${fmt(p.q)} ชิ้น</div>`:'')}<div>${spLikes(p)}</div>${ph(p)}</div>`;
   const list=(kind,title,sub)=>{
     const L=P.filter(p=>p.kind===kind&&p.cat==='all').sort((a,b)=>a.rank-b.rank);
-    return `<div class="panel sec"><h3>${title}</h3><div class="hint" style="margin-bottom:8px">${sub}</div>${L.length?`<div style="max-width:360px;margin:0 auto 10px">${card(L[0],true)}</div>${L.length>1?`<div class="spgrid">${L.slice(1).map(p=>card(p,false)).join('')}</div>`:''}`:`<div class="empty">${kind==='i'?'ยังไม่มีคนที่ยอดเพิ่มขึ้นจากช่วงเดียวกันของเดือนก่อน (ต้องมียอดเดือนก่อนเพื่อเทียบ)':'ยังไม่มีข้อมูลยอดขายของเดือนนี้'}</div>`}</div>`};
+    return `<div class="panel sec"><h3>${title}</h3><div class="hint" style="margin-bottom:8px">${sub}</div>${L.length?`<div class="spbig">${card(L[0],true)}</div>${L.length>1?`<div class="sprank">${L.slice(1).map(p=>card(p,false)).join('')}</div>`:''}`:`<div class="empty">${kind==='i'?'ยังไม่มีคนที่ยอดเพิ่มขึ้นจากช่วงเดียวกันของเดือนก่อน (ต้องมียอดเดือนก่อนเพื่อเทียบ)':'ยังไม่มีข้อมูลยอดขายของเดือนนี้'}</div>`}</div>`};
   const talkCard=(x,i,big)=>`<div class="spcard ${big?'big':''}" style="${big?'align-items:center;text-align:center':''}"><div style="font-size:${big?26:20}px">${spMed(i+1)}</div>${spAvatar(x.m,x.name,big?190:120)}<div style="font-weight:800;font-size:${big?20:15}px">${esc(x.name)}</div><div class="hint">${esc(teamOf(x.team).name)}</div><div class="num up" style="font-weight:800;font-size:${big?22:17}px">⏱ ${hms(x.avg)}</div><div class="hint">เฉลี่ย/วัน · ${x.n} วันทำงาน · ผ่านเกณฑ์ ${x.pass} วัน</div>${ph({m:x.m})}</div>`;
-  const talkPanel=()=>{const T=SP.talk||[];return `<div class="panel sec"><h3>🎧 TOP TALK TIME เฉลี่ยสูงสุด · ${spYm(SP.ym)}</h3><div class="hint" style="margin-bottom:8px">เฉลี่ย Talk Time ต่อวันทำงาน ตั้งแต่วันที่ 1 ถึง ${dEnd} · อันดับ 1–5 (นับเฉพาะ Agent · วันที่ต่ำกว่าเกณฑ์วันหยุดและวันลาไม่นับ · ต้องมีข้อมูลอย่างน้อย 3 วัน)</div>${T.length?`<div style="max-width:360px;margin:0 auto 10px">${talkCard(T[0],0,true)}</div>${T.length>1?`<div class="spgrid">${T.slice(1).map((x,i)=>talkCard(x,i+1,false)).join('')}</div>`:''}`:`<div class="empty">ยังไม่มีข้อมูล Talk Time ของเดือนนี้ (ต้องมีอย่างน้อย 3 วันต่อคน) — ถ้าเพิ่งอัปเดตระบบ ให้แอดมินอัปเดต Code.gs ล่าสุดด้วย</div>`}</div>`};
+  const talkPanel=()=>{const T=SP.talk||[];return `<div class="panel sec"><h3>🎧 TOP TALK TIME เฉลี่ยสูงสุด · ${spYm(SP.ym)}</h3><div class="hint" style="margin-bottom:8px">เฉลี่ย Talk Time ต่อวันทำงาน ตั้งแต่วันที่ 1 ถึง ${dEnd} · อันดับ 1–5 (นับเฉพาะ Agent · วันที่ต่ำกว่าเกณฑ์วันหยุดและวันลาไม่นับ · ต้องมีข้อมูลอย่างน้อย 3 วัน)</div>${T.length?`<div class="spbig">${talkCard(T[0],0,true)}</div>${T.length>1?`<div class="sprank">${T.slice(1).map((x,i)=>talkCard(x,i+1,false)).join('')}</div>`:''}`:`<div class="empty">ยังไม่มีข้อมูล Talk Time ของเดือนนี้ (ต้องมีอย่างน้อย 3 วันต่อคน) — ถ้าเพิ่งอัปเดตระบบ ให้แอดมินอัปเดต Code.gs ล่าสุดด้วย</div>`}</div>`};
   const dEnd=dShort(SP.day),mini=(p,t)=>p?`<div class="spcard" style="flex:1;min-width:200px"><div class="st" style="color:#f0b90b;font-weight:700;font-size:12px">${t}</div><div style="display:flex;gap:8px;align-items:center">${spAvatar(p.m,p.name,84)}<div><div style="font-weight:800">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)}</div></div></div><div class="num up" style="font-weight:800;font-size:17px">${spVal(p)}</div>${p.kind==='i'?`<div class="hint">${esc(spSub(p))}</div>`:(p.q?`<div class="hint">${fmt(p.q)} ชิ้น</div>`:'')}<div>${spLikes(p)}</div>${ph(p)}</div>`:`<div class="spcard" style="flex:1;min-width:200px"><div class="st" style="color:var(--mute);font-weight:700;font-size:12px">${t}</div><div class="hint">ยังไม่มีข้อมูล</div></div>`;
   const cats=[...new Set(P.filter(p=>p.cat!=='all').map(p=>p.cat))].sort((a,b)=>String(P.find(p=>p.cat===a).catName).localeCompare(String(P.find(p=>p.cat===b).catName)));
   let h=list('m',`🏆 TOP SALE ประจำเดือน · ${spYm(SP.ym)}`,`ยอดขายสะสมตั้งแต่วันที่ 1 ถึง ${dEnd} · อันดับ 1–5 (นับเฉพาะ Agent)`)+
@@ -3392,7 +3401,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-09.9';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-10.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
