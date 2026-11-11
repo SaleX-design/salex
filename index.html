@@ -475,6 +475,30 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 .pbh{font-weight:800;font-size:17px;margin-bottom:8px}
 .pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px}
 .pcl{display:grid;gap:6px}
+.hl{background:linear-gradient(transparent 52%,color-mix(in srgb,#f0b90b 55%,transparent) 52%);font-weight:800;border-radius:3px;padding:0 1px}
+.hlw{background:color-mix(in srgb,#f6465d 16%,transparent);border:1px solid color-mix(in srgb,#f6465d 55%,transparent);border-radius:6px;padding:0 6px;font-weight:800}
+.hlw::before{content:"⚠️ ";font-weight:400}
+.hla{background:color-mix(in srgb,#f0b90b 20%,transparent);border-radius:4px;padding:0 3px;font-weight:700}
+body.nohl .hl,body.nohl .hlw,body.nohl .hla{background:none;border:none;padding:0;font-weight:inherit}
+body.nohl .hlw::before{content:""}
+.mustbar{margin:8px 0;padding:8px 12px;border-radius:10px;border:1px solid color-mix(in srgb,#f6465d 55%,transparent);background:color-mix(in srgb,#f6465d 10%,var(--panel));font-size:15px}
+.mustbar b{color:#f6465d}
+#festFx{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+#festFx i{position:absolute;font-style:normal;will-change:transform;user-select:none;opacity:.85;filter:drop-shadow(0 0 4px color-mix(in srgb,var(--fest,#f0b90b) 60%,transparent))}
+@keyframes ffall{0%{transform:translate3d(0,-12vh,0) rotate(0)}50%{transform:translate3d(var(--sw,20px),55vh,0) rotate(180deg)}100%{transform:translate3d(calc(var(--sw,20px) * -1),112vh,0) rotate(360deg)}}
+@keyframes frise{0%{transform:translate3d(0,112vh,0) scale(.8)}50%{transform:translate3d(var(--sw,20px),50vh,0) scale(1)}100%{transform:translate3d(calc(var(--sw,20px) * -1),-14vh,0) scale(1.05)}}
+@keyframes ffloat{0%{transform:translate3d(-12vw,0,0) translateY(0)}25%{transform:translate3d(20vw,0,0) translateY(-5px)}50%{transform:translate3d(50vw,0,0) translateY(3px)}75%{transform:translate3d(80vw,0,0) translateY(-4px)}100%{transform:translate3d(112vw,0,0) translateY(0)}}
+#festLine{position:fixed;top:0;left:0;right:0;height:3px;z-index:61;background:linear-gradient(90deg,transparent,var(--fest,#f0b90b),transparent);pointer-events:none}
+#festBar{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:8px 14px;border-radius:12px;border:1px solid color-mix(in srgb,var(--fest,#f0b90b) 55%,transparent);background:linear-gradient(90deg,color-mix(in srgb,var(--fest,#f0b90b) 22%,var(--panel)),var(--panel));font-weight:700}
+#festBar .fx{margin-left:auto;cursor:pointer;opacity:.6;font-weight:400}
+@keyframes frain{0%{transform:translate3d(0,-12vh,0) rotate(12deg)}100%{transform:translate3d(-14vh,112vh,0) rotate(12deg)}}
+@keyframes fwind{0%{transform:translate3d(-12vw,0,0) rotate(0)}30%{transform:translate3d(30vw,-6vh,0) rotate(260deg)}60%{transform:translate3d(65vw,8vh,0) rotate(520deg)}100%{transform:translate3d(115vw,-3vh,0) rotate(900deg)}}
+@keyframes frays{to{transform:rotate(360deg)}}@keyframes fglow{0%,100%{opacity:.85}50%{opacity:1}}
+#festFx i.fl{border-radius:50%;background:radial-gradient(circle,#fff,rgba(255,255,255,.55) 60%,transparent 70%);filter:blur(.4px);opacity:.9}
+#festFx i.fr{width:1.6px;border-radius:2px;background:linear-gradient(transparent,color-mix(in srgb,#8ecbff 85%,transparent));filter:none;opacity:.7}
+#festSun{position:fixed;top:-80px;right:-80px;width:260px;height:260px;pointer-events:none;z-index:59;border-radius:50%;background:radial-gradient(circle,rgba(255,214,102,.42) 0,rgba(255,190,60,.16) 38%,transparent 68%);animation:fglow 5s ease-in-out infinite}
+#festSun::before{content:"";position:absolute;inset:-40px;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,215,100,.15) 0 6deg,transparent 6deg 22deg);-webkit-mask:radial-gradient(circle,transparent 26%,#000 40%,transparent 72%);mask:radial-gradient(circle,transparent 26%,#000 40%,transparent 72%);animation:frays 70s linear infinite}
+@media(prefers-reduced-motion:reduce){#festFx{display:none}#festSun,#festSun::before{animation:none}}
 .pit{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;line-height:1.55;font-size:16px}
 .pck,.pno{flex:0 0 24px;height:24px;border-radius:50%;color:#0D1117;font-weight:800;text-align:center;line-height:24px;font-size:13px}
 .pck{background:var(--up)}.pno{background:#40c4ff}
@@ -519,6 +543,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
     <button class="tabbtn" data-tab="admin" id="adminTab" hidden>🛠 แอดมิน</button>
   </nav>
   <button class="btn" id="themeBtn" title="เปลี่ยนโหมดสี">🌙</button>
+  <button class="btn" id="festBtn" title="เปิด/ปิดธีมเทศกาล" hidden>✨</button>
   <button class="btn" id="refBtn" title="โหลดข้อมูลล่าสุด">⟳</button>
   <button class="btn" id="bellBtn" title="แจ้งเตือน" style="position:relative">🔔<i class="bdg" id="bellN" hidden></i></button>
   <div class="userchip" id="userChip"></div>
@@ -552,7 +577,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
     <span id="prodCtl" hidden style="display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap"><select id="prodSel" title="เลือกสินค้า/Skill"></select><span class="seg" id="prodMeas"><button data-q="q">จำนวนชิ้น</button><button data-q="a">฿ ยอดเงิน</button><button data-q="pt">POINT</button></span></span>
     <span class="seg" id="whoSeg" title="เลือกดูทั้งหมด / ทีม / รายคน"><button data-w="all">👥 ทุกคน</button><button data-w="team">🏷 TEAM</button><button data-w="member">🧑 AGENT</button></span>
     <select id="scopeSel" title="เลือกชื่อ"></select>
-    <select id="cmpSel" title="เพิ่มชื่อ/ทีมเพื่อเปรียบเทียบบนกราฟเดียวกัน"></select><span id="cmpChips" style="display:inline-flex;gap:6px;flex-wrap:wrap"></span>
+    <select id="cmpSel" title="เพิ่มชื่อ/ทีมเพื่อเปรียบเทียบบนกราฟเดียวกัน"></select><button class="btn" id="cmpSets" title="บันทึก/เรียกชุดที่เทียบไว้">💾 ชุดที่บันทึก</button><span id="cmpChips" style="display:inline-flex;gap:6px;flex-wrap:wrap"></span>
     <label class="chk" id="splitLbl"><input type="checkbox" id="splitChk"> แยกเส้นเทียบกัน</label>
     <div class="seg" id="ctypeSeg">
       <button data-c="candle" class="on">🕯 แท่งเทียน</button>
@@ -687,6 +712,61 @@ function thmApply(){
   const b=document.getElementById('themeBtn');if(b){b.textContent=THM.m==='auto'?'🌓':l?'☀️':'🌙';b.title='โหมดสี: '+(THM.m==='auto'?'อัตโนมัติ (06:00–18:00 สว่าง)':THM.m==='light'?'สว่าง':'มืด')+' — กดเพื่อเปลี่ยน'}
 }
 function thmCycle(){THM.m=THM.m==='dark'?'light':THM.m==='light'?'auto':'dark';LS.set('sx_theme',THM.m);thmApply();toast(THM.m==='auto'?'🌓 โหมดอัตโนมัติ: กลางวัน (06:00–18:00) สว่าง กลางคืนมืด':THM.m==='light'?'☀️ โหมดสว่าง':'🌙 โหมดมืด')}
+/* ---- 🎉 ธีมตามเทศกาล/ฤดูกาล (เปลี่ยนอัตโนมัติตามปฏิทิน) ---- */
+const FEST_Y=[ // วันที่ไม่ตายตัว (ลอยกระทง/ตรุษจีน) — ช่วงกว้างเผื่อวันเพ็ญ/ปฏิทินคลาดเคลื่อน
+ {id:'loy',from:'2026-11-22',to:'2026-11-25'},{id:'loy',from:'2027-11-12',to:'2027-11-15'},{id:'loy',from:'2028-10-31',to:'2028-11-03'},
+ {id:'cny',from:'2027-02-04',to:'2027-02-08'},{id:'cny',from:'2028-01-24',to:'2028-01-28'}];
+const FEST_F=[ // วันที่คงที่ (เดือน-วัน)
+ {id:'songkran',a:'04-12',b:'04-16'},{id:'valentine',a:'02-12',b:'02-14'},{id:'halloween',a:'10-29',b:'10-31'},
+ {id:'mother',a:'08-10',b:'08-12'},{id:'father',a:'12-03',b:'12-05'},{id:'xmas',a:'12-22',b:'12-26'},{id:'newyear',a:'12-29',b:'01-03'}];
+const FEST_S=[{id:'winter',a:'11-01',b:'02-15'},{id:'summer',a:'03-01',b:'05-15'},{id:'rainy',a:'05-16',b:'10-31'}];
+const FEST_D={
+ loy:{n:'ลอยกระทง',e:'🪷',col:'#ff9f43',msg:'สุขสันต์วันลอยกระทง ขอให้ทุกคนขายดี โชคดี ลอยทุกข์ลอยโศกไปกับสายน้ำ',fx:[{e:['🏮'],m:'rise',n:9},{e:['🪷','🕯️'],m:'float',n:6}]},
+ cny:{n:'ตรุษจีน',e:'🧧',col:'#e53935',msg:'สุขสันต์วันตรุษจีน ซินนี้ฮวดไช้ ขอให้ร่ำรวย ยอดขายปัง',fx:[{e:['🧧','🏮','✨'],m:'fall',n:14}]},
+ songkran:{n:'สงกรานต์',e:'💦',col:'#29b6f6',msg:'สุขสันต์วันสงกรานต์ ขอให้ทุกคนเย็นกาย เย็นใจ เดินทางปลอดภัย',fx:[{e:['💧','💦'],m:'fall',n:18}]},
+ valentine:{n:'วาเลนไทน์',e:'💖',col:'#ec407a',msg:'Happy Valentine’s Day ส่งต่อความรักให้ทีมและลูกค้า',fx:[{e:['💖','💗','💕'],m:'rise',n:14}]},
+ halloween:{n:'ฮาโลวีน',e:'🎃',col:'#ff7043',msg:'Happy Halloween! ขายให้เป็นเรื่องสนุก',fx:[{e:['🎃','🦇','👻'],m:'fall',n:12}]},
+ mother:{n:'วันแม่',e:'💙',col:'#42a5f5',msg:'สุขสันต์วันแม่แห่งชาติ ขอบคุณคุณแม่ทุกท่าน',fx:[{e:['💙','🌸'],m:'fall',n:12}]},
+ father:{n:'วันพ่อ',e:'💛',col:'#fbc02d',msg:'สุขสันต์วันพ่อแห่งชาติ ขอบคุณคุณพ่อทุกท่าน',fx:[{e:['💛','🌼'],m:'fall',n:12}]},
+ xmas:{n:'คริสต์มาส',e:'🎄',col:'#43a047',msg:'Merry Christmas! ขอให้ทุกคนมีความสุขและยอดขายปัง',fx:[{e:['❄️','🎄','⭐'],m:'fall',n:16}]},
+ newyear:{n:'ปีใหม่',e:'🎆',col:'#ab47bc',msg:'สวัสดีปีใหม่! ขอให้ทุกคนสุขภาพดี ยอดขายพุ่งตลอดปี',fx:[{e:['🎉','🎊','✨'],m:'fall',n:18}]},
+ winter:{n:'ฤดูหนาว',e:'❄️',col:'#4fc3f7',msg:'ฤดูหนาวแล้ว อากาศเย็น ลมแรง ดูแลสุขภาพ ดื่มน้ำอุ่นกันด้วยนะ',fx:[{m:'snow',n:28},{e:['🍂','🍃'],m:'wind',n:5}]},
+ summer:{n:'ฤดูร้อน',e:'☀️',col:'#ffb300',msg:'ฤดูร้อน แดดแรง อากาศร้อนจัด ดื่มน้ำเยอะ ๆ พักสายตาระหว่างคุยสายด้วยนะ',sun:1,fx:[]},
+ rainy:{n:'ฤดูฝน',e:'🌧️',col:'#78909c',msg:'ฤดูฝน ฝนตก ลมพัด พกร่ม ดูแลสุขภาพ และเดินทางปลอดภัยนะครับ',fx:[{m:'rain',n:46},{e:['🍃'],m:'wind',n:3}]}};
+function festPick(d,force){
+  if(force&&FEST_D[force])return force;
+  const p2=n=>String(n).padStart(2,'0'),iso=d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()),md=iso.slice(5);
+  const inR=(a,b)=>a<=b?(md>=a&&md<=b):(md>=a||md<=b);
+  for(const y of FEST_Y)if(iso>=y.from&&iso<=y.to)return y.id;
+  for(const f of FEST_F)if(inR(f.a,f.b))return f.id;
+  for(const f of FEST_S)if(inR(f.a,f.b))return f.id;
+  return ''}
+let FEST_CUR='';
+function festApply(){
+  try{document.getElementById('festFx')?.remove();document.getElementById('festLine')?.remove();document.getElementById('festBar')?.remove();document.getElementById('festSun')?.remove()}catch(e){}
+  const force=(new URLSearchParams(location.search).get('fest')||''),id=festPick(new Date(),force),btn=$('#festBtn');FEST_CUR=id;
+  if(!id){btn.hidden=true;document.documentElement.style.removeProperty('--fest');return}
+  const F=FEST_D[id];btn.hidden=false;btn.textContent=F.e;btn.title='ธีม'+F.n+' · กดเพื่อเปิด/ปิด';
+  let off='';try{off=localStorage.getItem('sx_fest')||''}catch(e){}
+  if(off==='off')return;
+  document.documentElement.style.setProperty('--fest',F.col);
+  const ln=document.createElement('div');ln.id='festLine';document.body.appendChild(ln);
+  const key=id+'|'+new Date().toDateString();let hide='';try{hide=localStorage.getItem('sx_fest_hide')||''}catch(e){}
+  const main=document.querySelector('main');
+  if(main&&hide!==key){const b=document.createElement('div');b.id='festBar';b.innerHTML=`<span style="font-size:22px">${F.e}</span><span>${esc(F.msg)}</span><span class="fx" title="ซ่อนวันนี้">✕</span>`;main.insertBefore(b,main.firstChild);b.querySelector('.fx').onclick=()=>{b.remove();try{localStorage.setItem('sx_fest_hide',key)}catch(e){}}}
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  const fx=document.createElement('div');fx.id='festFx';const lite=innerWidth<700;
+  F.fx.forEach(g=>{const n=lite?Math.ceil(g.n/2):g.n;for(let i=0;i<n;i++){const el=document.createElement('i'),r=Math.random;let dur,css;
+    if(g.m==='snow'){dur=9+r()*9;const z=3+r()*6;el.className='fl';css=`left:${r()*100}%;top:0;width:${z}px;height:${z}px;--sw:${(r()*80-40).toFixed(0)}px;animation:ffall ${dur.toFixed(1)}s linear ${(-r()*dur).toFixed(1)}s infinite`}
+    else if(g.m==='rain'){dur=.7+r()*.7;el.className='fr';css=`left:${r()*115}%;top:0;height:${14+r()*14}px;animation:frain ${dur.toFixed(2)}s linear ${(-r()*dur).toFixed(2)}s infinite`}
+    else if(g.m==='wind'){dur=9+r()*8;el.textContent=g.e[Math.floor(r()*g.e.length)];css=`left:0;top:${(6+r()*70).toFixed(0)}vh;font-size:${16+r()*12}px;animation:fwind ${dur.toFixed(1)}s linear ${(-r()*dur).toFixed(1)}s infinite`}
+    else{dur=g.m==='float'?30+r()*20:10+r()*14;const sz=g.m==='float'?22+r()*10:14+r()*16;el.textContent=g.e[Math.floor(r()*g.e.length)];
+      css=`left:${g.m==='float'?0:r()*100}%;${g.m==='float'?'bottom:'+(2+r()*6)+'vh;':'top:0;'}font-size:${sz}px;--sw:${(r()*60-30).toFixed(0)}px;animation:${g.m==='fall'?'ffall':g.m==='rise'?'frise':'ffloat'} ${dur.toFixed(1)}s linear ${(-r()*dur).toFixed(1)}s infinite`}
+    el.style.cssText=css;fx.appendChild(el)}});
+  if(F.sun){const sn=document.createElement('div');sn.id='festSun';document.body.appendChild(sn)}
+  if(fx.children.length)document.body.appendChild(fx)}
+$('#festBtn').onclick=()=>{let off='';try{off=localStorage.getItem('sx_fest')||''}catch(e){}try{localStorage.setItem('sx_fest',off==='off'?'':'off')}catch(e){}festApply();toast(off==='off'?'✨ เปิดธีมเทศกาลแล้ว':'ปิดธีมเทศกาลแล้ว')};
+festApply();setInterval(()=>{if(festPick(new Date(),new URLSearchParams(location.search).get('fest')||'')!==FEST_CUR)festApply()},600000);
 document.getElementById('themeBtn').onclick=thmCycle;thmApply();setInterval(()=>{if(THM.m==='auto')thmApply()},60000);
 const OKURL=u=>/^https:\/\/script\.google\.com\/.+\/exec$/.test(u||'');
 let API_URL=(typeof window.SB_API_URL==='string'&&OKURL(window.SB_API_URL.trim()))?window.SB_API_URL.trim():(OKURL(LS.get('sb_api'))?LS.get('sb_api'):'');
@@ -910,7 +990,7 @@ setInterval(()=>{const n=new Date();$('#clock').textContent=`${n.getDate()} ${TH
 /* ---------- แดชบอร์ด ---------- */
 function syncControls(){
   const multi=MEM.length>1;
-  $('#scopeSel').hidden=!multi;$('#splitLbl').hidden=!multi;$('#whoSeg').hidden=!multi;$('#cmpSel').hidden=!multi;
+  $('#scopeSel').hidden=!multi;$('#splitLbl').hidden=!multi;$('#whoSeg').hidden=!multi;$('#cmpSel').hidden=!multi;$('#cmpSets').hidden=!multi;
   if(multi){
     const kind=S.scope.type,tm=TEAMS.length>1;
     $$('#whoSeg button').forEach(b=>{b.classList.toggle('on',b.dataset.w===kind);if(b.dataset.w==='team')b.hidden=!tm});
@@ -918,7 +998,8 @@ function syncControls(){
     if(kind==='team')sel.innerHTML=TEAMS.map(t=>`<option value="t:${esc(t.id)}">${esc(t.name)}</option>`).join('');
     else if(kind==='member')sel.innerHTML=TEAMS.map(t=>`<optgroup label="${esc(t.name)}">${MEM.filter(m=>m.team===t.id).map(m=>`<option value="m:${esc(m.id)}">${esc(m.name)} (${esc(m.tick)})</option>`).join('')}</optgroup>`).join('');
     if(kind!=='all')sel.value=scopeVal();
-    S.cmp=(S.cmp||[]).filter(k=>k!==scopeVal()&&scopeFromKey(k));
+    if(S.cmp===undefined&&!S._cmpInit){S._cmpInit=1;S.cmp=cmpLastGet('sales')}
+    S.cmp=(S.cmp||[]).filter(k=>k!==scopeVal()&&scopeFromKey(k));cmpLastPut('sales',S.cmp);
     const cs=$('#cmpSel');
     cs.innerHTML=`<option value="">＋ เทียบกับ…</option><option value="all">👥 ทุกคนรวม</option>`+(tm?`<optgroup label="TEAM">${TEAMS.map(t=>`<option value="t:${esc(t.id)}">${esc(t.name)}</option>`).join('')}</optgroup>`:'')+TEAMS.map(t=>`<optgroup label="AGENT — ${esc(t.name)}">${MEM.filter(m=>m.team===t.id).map(m=>`<option value="m:${esc(m.id)}">${esc(m.name)} (${esc(m.tick)})</option>`).join('')}</optgroup>`).join('');
     cs.value='';cs.disabled=S.cmp.length>=99;
@@ -1009,6 +1090,27 @@ function colorDlg(which){
   $$('#mbox [data-cr]').forEach(b=>b.onclick=()=>{delete CCOL[b.dataset.cr];const i=$('#mbox [data-ck="'+b.dataset.cr+'"]');if(i)i.value=toHex(b.dataset.cd);redraw()});
   $('#ccReset').onclick=()=>{CCOL={};redraw();colorDlg(which)};$('#ccClose').onclick=closeModal;
 }
+/* ---- 💾 บันทึกชุด "เทียบกับ" (จำในเบราว์เซอร์นี้) ---- */
+const cmpLS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||'null')||d}catch(e){return d}};
+const cmpSave=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const cmpLastGet=w=>{const o=cmpLS('sx_cmplast',{});return o.auto===false?[]:(o[w]||[]).slice()};
+const cmpLastPut=(w,l)=>{const o=cmpLS('sx_cmplast',{});if(o.auto===false)return;if(JSON.stringify(o[w]||[])!==JSON.stringify(l)){o[w]=l.slice();cmpSave('sx_cmplast',o)}};
+function cmpDlg(w,getL,setL,nameOf){
+  const draw=()=>{const sets=cmpLS('sx_cmpsets',{})[w]||{},names=Object.keys(sets),cur=getL(),auto=cmpLS('sx_cmplast',{}).auto!==false;
+    openModal(`<h2>💾 ชุด "เทียบกับ" ที่บันทึกไว้</h2><div class="hint" style="margin-bottom:8px">บันทึกรายชื่อ Agent / TEAM${w==='prod'?' / สินค้า':''} ที่เทียบไว้ แล้วเรียกกลับมาใช้ได้ในคลิกเดียว · เก็บในเบราว์เซอร์/เครื่องนี้</div>
+    <div class="panel" style="padding:10px;margin-bottom:10px"><b>ชุดที่เทียบอยู่ตอนนี้ (${cur.length} รายการ)</b>
+      <div class="hint" style="margin:4px 0">${cur.length?cur.slice(0,12).map(k=>esc(nameOf(k))).join(' · ')+(cur.length>12?' …':''):'ยังไม่ได้เลือกรายการเทียบ'}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="cmpName" maxlength="40" placeholder="ตั้งชื่อชุด เช่น ทีม A เทียบทีม B" style="flex:1;min-width:180px"><button class="btn primary" id="cmpSaveBtn" ${cur.length?'':'disabled'}>💾 บันทึกชุดนี้</button></div></div>
+    <div style="max-height:40vh;overflow:auto">${names.length?names.map(n=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)"><div style="flex:1;min-width:0"><b>${esc(n)}</b><div class="hint">${sets[n].length} รายการ</div></div><button class="btn primary" data-use="${esc(n)}">ใช้ชุดนี้</button><button class="btn" data-add="${esc(n)}" title="เพิ่มเข้ากับที่เทียบอยู่">＋</button><button class="btn danger" data-del="${esc(n)}">🗑</button></div>`).join(''):'<div class="empty">ยังไม่มีชุดที่บันทึกไว้</div>'}</div>
+    <label class="hint" style="display:flex;gap:6px;align-items:center;margin-top:10px"><input type="checkbox" id="cmpAuto" ${auto?'checked':''}> จำชุดที่เทียบล่าสุดให้อัตโนมัติ (เปิดหน้ากราฟแล้วขึ้นชุดเดิมทันที)</label>
+    <div class="mrow"><button class="btn" id="cmpClose">ปิด</button></div>`);
+    $('#cmpClose').onclick=closeModal;
+    $('#cmpAuto').onchange=e=>{const o=cmpLS('sx_cmplast',{});o.auto=e.target.checked;if(!o.auto)delete o[w];cmpSave('sx_cmplast',o)};
+    $('#cmpSaveBtn').onclick=()=>{const n=($('#cmpName').value||'').trim();if(!n){toast('ตั้งชื่อชุดก่อน');return}const all=cmpLS('sx_cmpsets',{});all[w]=all[w]||{};if(all[w][n]&&!confirm('มีชุดชื่อ "'+n+'" แล้ว — บันทึกทับหรือไม่?'))return;all[w][n]=getL().slice();cmpSave('sx_cmpsets',all);toast('✅ บันทึกชุด "'+n+'" แล้ว');draw()};
+    $$('#mbox [data-use]').forEach(b=>b.onclick=()=>{setL((sets[b.dataset.use]||[]).slice(0,99));closeModal()});
+    $$('#mbox [data-add]').forEach(b=>b.onclick=()=>{const l=getL().slice();(sets[b.dataset.add]||[]).forEach(k=>{if(l.indexOf(k)<0&&l.length<99)l.push(k)});setL(l);closeModal()});
+    $$('#mbox [data-del]').forEach(b=>b.onclick=()=>{if(!confirm('ลบชุด "'+b.dataset.del+'" ?'))return;const all=cmpLS('sx_cmpsets',{});if(all[w])delete all[w][b.dataset.del];cmpSave('sx_cmpsets',all);draw()})};
+  draw()}
 const PAL=['#0ecb81','#40c4ff','#f0b90b','#ff6e9c','#b388ff'];
 const palC=i=>i<PAL.length?PAL[i]:`hsl(${Math.round((i*137.508)%360)},${70+(i%3)*8}%,${58+(i%4)*4}%)`;
 function niceMax(v){const p=Math.pow(10,Math.floor(Math.log10(v))),f=v/p;return(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p}
@@ -1841,7 +1943,8 @@ function prodChartHTML(R){
   const used=[...new Set(PS.filter(r=>okM(r.m)).map(r=>r.p))],prods=PRODS.filter(p=>used.includes(p.id)||p.active);
   const mt={a:['💰 ยอดขาย (฿)','#f0b90b',x=>'฿'+fmt(x),x=>'฿'+compact(x)],pt:['🎯 POINT','#0ecb81',x=>(+x).toLocaleString('en-US',{maximumFractionDigits:2}),x=>compact(x)],q:['📦 จำนวนชิ้น (SUB)','#5b9cf6',x=>fmt(x),x=>compact(x)]}[C.met];
   const E=ext.map(p=>pcVal(C,p)),vals=E.slice(off),known=vals.filter(v=>v!=null);
-  C.cmp=(C.cmp||[]).filter(k=>pcCmpInfo(C,k));
+  if(C.cmp===undefined)C.cmp=cmpLastGet('prod');
+  C.cmp=(C.cmp||[]).filter(k=>pcCmpInfo(C,k));cmpLastPut('prod',C.cmp);
   const multi=C.cmp.length>0,SR=[];
   if(multi){
     const base=(S.pAg?(memOf(S.pAg)||{}).nick||(memOf(S.pAg)||{}).name:S.tf?(TEAMS.find(t=>t.id===S.tf)||{}).name:'ทุกคน')+' · '+(C.prod?prodName(C.prod):'ทุกสินค้า');
@@ -1885,7 +1988,7 @@ function prodChartHTML(R){
    <div class="controls" style="margin-bottom:8px"><div class="seg" id="pcMode">${[['day','รายวัน'],['month','รายเดือน'],['year','รายปี']].map(([k,l])=>`<button data-v="${k}" class="${C.mode===k?'on':''}">${l}</button>`).join('')}</div>
     <div class="seg" id="pcMet">${[['a','💰 ยอดขาย'],['pt','🎯 POINT'],['q','📦 จำนวนชิ้น']].map(([k,l])=>`<button data-v="${k}" class="${C.met===k?'on':''}">${l}</button>`).join('')}</div>
     <select id="pcCmp" title="เพิ่ม Agent / TEAM / สินค้า เพื่อเทียบบนกราฟเดียวกัน"${C.cmp.length>=99?' disabled':''}><option value="">＋ เทียบกับ…</option><optgroup label="TEAM">${TEAMS.filter(t=>MEM.some(m=>AG(m)&&m.team===t.id)).map(t=>`<option value="t:${esc(t.id)}">${esc(t.name)}</option>`).join('')}</optgroup>${TEAMS.map(t=>{const L=MEM.filter(m=>AG(m)&&m.team===t.id);return L.length?`<optgroup label="AGENT — ${esc(t.name)}">${L.map(m=>`<option value="a:${esc(m.id)}">${esc(m.name)}${m.tick?' ('+esc(m.tick)+')':''}</option>`).join('')}</optgroup>`:''}).join('')}<optgroup label="สินค้า">${prods.map(x=>`<option value="p:${esc(x.id)}">${esc(x.name)}</option>`).join('')}</optgroup></select>
-    <span id="pcChips" style="display:inline-flex;gap:6px;flex-wrap:wrap">${C.cmp.map((k,i)=>{const o=pcCmpInfo(C,k);return `<span class="cchip" data-pcx="${i}" title="กดเพื่อเอาออก"><i style="background:${palC(i+1)}"></i>${esc(o.name)} ✕</span>`}).join('')}${C.cmp.length?'<span class="cchip" data-pcx="all">ล้างการเทียบ</span>':''}</span>
+    <button class="btn" id="pcSets" title="บันทึก/เรียกชุดที่เทียบไว้">💾 ชุดที่บันทึก</button><span id="pcChips" style="display:inline-flex;gap:6px;flex-wrap:wrap">${C.cmp.map((k,i)=>{const o=pcCmpInfo(C,k);return `<span class="cchip" data-pcx="${i}" title="กดเพื่อเอาออก"><i style="background:${palC(i+1)}"></i>${esc(o.name)} ✕</span>`}).join('')}${C.cmp.length?'<span class="cchip" data-pcx="all">ล้างการเทียบ</span>':''}</span>
     <div class="seg" id="pcType">${[['candle','🕯 แท่งเทียน'],['line','เส้น'],['bar','แท่ง']].map(([k,l])=>`<button data-v="${k}" class="${C.type===k?'on':''}">${l}</button>`).join('')}</div><button class="btn" id="pcCol" title="เปลี่ยนสีกราฟ">🎨 สี</button></div>
    <div class="rangebar" style="margin-bottom:8px"><div class="seg" id="pcRange">${rngs.map(k=>`<button data-v="${k}" class="${rk===k?'on':''}">${k}</button>`).join('')}<button data-v="custom" class="${rk==='custom'?'on':''}">กำหนดเอง</button></div>
     ${C.range==='custom'?`<span>จาก <input type="date" id="pcFrom" max="${today}" value="${esc(C.from||'')}"> ถึง <input type="date" id="pcTo" max="${today}" value="${esc(C.anchor)}"></span>`:`<span>สิ้นสุด <input type="date" id="pcAnchor" max="${today}" value="${esc(C.anchor)}"></span>`}
@@ -1901,6 +2004,7 @@ function bindPc(R,again){
   const C=pcState(R),$$b=(id,f)=>$$(id+' button').forEach(b=>b.onclick=()=>{f(b.dataset.v);again()});
   if($('#pcProd'))$('#pcProd').onchange=e=>{C.prod=e.target.value;again()};
   if($('#pcCmp'))$('#pcCmp').onchange=e=>{const v=e.target.value;C.cmp=C.cmp||[];if(v&&C.cmp.indexOf(v)<0&&C.cmp.length<99)C.cmp.push(v);again()};
+  if($('#pcSets'))$('#pcSets').onclick=()=>cmpDlg('prod',()=>C.cmp||[],l=>{C.cmp=l;again()},k=>{const o=pcCmpInfo(C,k);return o?o.name:k});
   if($('#pcChips'))$('#pcChips').onclick=e=>{const c=e.target.closest('[data-pcx]');if(!c)return;if(c.dataset.pcx==='all')C.cmp=[];else C.cmp.splice(+c.dataset.pcx,1);again()};
   $$b('#pcMet',v=>C.met=v);$$b('#pcType',v=>C.type=v);
   $$b('#pcMode',v=>{C.mode=v;C.range=v==='day'?'1M':v==='month'?'1Y':'ALL';C.count=null});
@@ -2908,7 +3012,16 @@ function openLightbox(src,alt,list,idx){
 }
 function lbKey(e){if(e.key==='Escape')closeLightbox();else if(window._lbGo&&e.key==='ArrowLeft')window._lbGo(-1);else if(window._lbGo&&e.key==='ArrowRight')window._lbGo(1)}
 function closeLightbox(){const d=document.getElementById('lb');if(d)d.remove();document.removeEventListener('keydown',lbKey)}
-function scLines(t){return String(t||'').split(/\n+/).map(s=>s.replace(/^\s*[-•·*]\s*/,'').trim()).filter(Boolean)}
+/* ---- 🖍 ไฮไลต์ในสคริปต์: **ข้อความ** = จุดเด่น · !!ข้อความ!! = ห้ามลืมแจ้งลูกค้า · ตัวเลขราคา/ระยะเวลา/คำสำคัญไฮไลต์อัตโนมัติ ---- */
+const SC_AUTO=/(\d[\d,]*(?:\.\d+)?\s*(?:บาท|฿|%|วัน|เดือน|ปี|นาที|ชั่วโมง|GB|Mbps|Gbps|เมกะ|กิกะ|อุปกรณ์|ช่อง|เครื่อง|จุด|ครั้ง|รอบ)|ไม่มีค่าใช้จ่าย|ไม่ผูกสัญญา|ผูกสัญญา|ค่าธรรมเนียม|ส่วนลด|โปรโมชั่น|ฟรี|VAT|ต่ออายุ|ยกเลิก|เฉพาะ[^\s<]{1,12})/g;
+function scFmt(t){
+  let h=esc(String(t==null?'':t));
+  h=h.replace(/!!([^\n]+?)!!/g,'<span class="hlw">$1</span>').replace(/\*\*([^\n]+?)\*\*/g,'<mark class="hl" style="color:inherit">$1</mark>');
+  return h.replace(/(<[^>]*>)|([^<]+)/g,(m,tag,txt)=>tag?tag:txt.replace(SC_AUTO,'<span class="hla">$1</span>'))}
+const scPlain=t=>String(t==null?'':t).replace(/!!([^\n]+?)!!/g,'$1').replace(/\*\*([^\n]+?)\*\*/g,'$1');
+const scMust=t=>{const o=[];String(t||'').replace(/!!([^\n]+?)!!/g,(m,v)=>{o.push(v.trim());return m});return o};
+try{if(localStorage.getItem('sx_sc_hl')==='0')document.body.classList.add('nohl')}catch(e){}
+function scLines(t){return String(t||'').split(/\n+/).map(s=>s.replace(/^\s*(?:[-•·]|\*(?!\*))\s*/,'').trim()).filter(Boolean)}
 function scSplit(t){   // แยกเป็นรายข้อ: ถ้าพิมพ์เป็นเลข 1. 2. 3. ให้รวมบรรทัดที่ตกลงมาเข้ากับข้อก่อนหน้า
   const L=scLines(t),isN=x=>/^\d{1,2}\s*[.)]\s*\S/.test(x);
   if(L.filter(isN).length<2)return {intro:[],items:L.map(x=>({n:'',t:x}))};
@@ -2919,7 +3032,7 @@ function scSplit(t){   // แยกเป็นรายข้อ: ถ้าพ�
 SC.seen=SC.seen||{};
 SC.seen=SC.seen||{};
 function scBox(cls,h,t){const x=scSplit(t);if(!x.items.length&&!x.intro.length)return '';
-  return `<div class="pbx ${cls}"><div class="pbh">${h}</div>${x.intro.length?`<div class="pintro">${esc(x.intro.join(' '))}</div>`:''}<div class="${cls==='pbf'?'pgrid':'pcl'}">${x.items.map(i=>`<div class="pit"><span class="${cls==='pbf'?'pck':'pno'}">${cls==='pbf'?'✓':esc(i.n||'•')}</span><span style="min-width:0;overflow-wrap:anywhere">${esc(i.t)}</span></div>`).join('')}</div></div>`
+  return `<div class="pbx ${cls}"><div class="pbh">${h}</div>${x.intro.length?`<div class="pintro">${scFmt(x.intro.join(' '))}</div>`:''}<div class="${cls==='pbf'?'pgrid':'pcl'}">${x.items.map(i=>`<div class="pit"><span class="${cls==='pbf'?'pck':'pno'}">${cls==='pbf'?'✓':esc(i.n||'•')}</span><span style="min-width:0;overflow-wrap:anywhere">${scFmt(i.t)}</span></div>`).join('')}</div></div>`
 }
 function scTrack(pid){if(!pid||SC.seen[pid])return;SC.seen[pid]=1;try{api('scView',{product:pid}).catch(function(){});if(SC.d){SC.d.views=SC.d.views||{};SC.d.views[pid]=(SC.d.views[pid]||0)+1}}catch(e){}}
 function scInfoDlg(pid,kind){
@@ -2964,13 +3077,13 @@ function infoModal(pid){
   $('#ipGo').onclick=async()=>{$('#ipGo').disabled=true;try{await api('prodInfoSave',{product:pid,imgs:imgs.map(v=>v===undefined?null:v),features:$('#ipF').value,conditions:$('#ipC').value,link:$('#ipL').value});closeModal();toast('✅ บันทึกข้อมูลสินค้าแล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(e){$('#ipE').textContent=e.message;$('#ipGo').disabled=false}};
 }
 function scCard(x,adm){
-  const gen=!x.product,body=esc(x.body).replace(/\n/g,'<br>');
+  const gen=!x.product,body=scFmt(x.body).replace(/\n/g,'<br>'),must=scMust(x.body),mustH=must.length?`<div class="mustbar"><b>⚠️ ห้ามลืมแจ้งลูกค้า (${must.length})</b> · ${must.map(v=>esc(v)).join(' · ')}</div>`:'';
   const alt=x.stage==='second'&&x.alt?`<button class="btn primary" data-scalt="${esc(x.alt)}">🎁 ไปเสนอ ${esc(scPName(x.alt))} แทน →</button>`:'';
   const tools=`<button class="btn sm" data-sccp="${esc(x.id)}">📋 คัดลอก</button>${adm?`<button class="btn sm" data-scedit="${esc(x.id)}">✏️</button><button class="btn sm" data-scdel="${esc(x.id)}">🗑</button>`:''}`;
   const head=`<b>${esc(x.title)}</b>${gen?' <span class="hint" style="font-size:11px;border:1px solid var(--line);border-radius:999px;padding:1px 8px">ทั่วไป</span>':''}`;
   const altCard=x.stage==='second'&&x.alt?scInfoCard(x.alt,adm,true):'';
   const aud=x.audio?`<div style="margin:8px 0"><div class="hint" style="margin-bottom:4px">🎧 ฟังเสียงตัวอย่าง</div>${scAudio(x.audio)}</div>`:'';
-  const inner=`<div class="scbody" style="font-size:18px;line-height:1.75;margin:10px 0">${body}</div>${aud}${altCard}<div style="display:flex;gap:6px;flex-wrap:wrap">${alt}${tools}</div>`;
+  const inner=`${mustH}<div class="scbody" style="font-size:18px;line-height:1.75;margin:10px 0">${body}</div>${aud}${altCard}<div style="display:flex;gap:6px;flex-wrap:wrap">${alt}${tools}</div>`;
   const cs='margin-bottom:8px;background:color-mix(in srgb,var(--sc) 9%,var(--panel));border:1px solid color-mix(in srgb,var(--sc) 35%,var(--line))';
   if(x.stage==='object')return `<details class="panel" style="${cs}" open><summary style="cursor:pointer;font-size:17px">${head}</summary>${inner}</details>`;
   return `<div class="panel" style="${cs};font-size:17px">${head}${inner}</div>`;
@@ -2997,7 +3110,7 @@ function renderScript(){
   L.sort((a,b)=>(!!a.product===!!b.product?0:a.product?-1:1));
   let h='';
   if(T.needSetup)h+='<div class="panel"><div class="empty">⚠️ ยังไม่มีชีต Scripts — ให้แอดมินรันฟังก์ชัน <b>setup</b> ใน Apps Script หนึ่งครั้ง แล้วรีเฟรชหน้านี้</div></div>';
-  h+=`<div class="panel sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="scP" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--text);font-size:16px"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${scOpts(SC.prod)}</select><input id="scQ" type="search" placeholder="🔎 ค้นหาสคริปต์…" value="${esc(SC.q)}" style="flex:1;min-width:160px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--text)">${adm?'<button class="btn primary" id="scAdd">➕ เพิ่มสคริปต์</button><button class="btn" id="scAddT">🏷 เพิ่มชนิดสินค้า</button>':''}</div></div>`;
+  h+=`<div class="panel sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="scP" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--text);font-size:16px"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${scOpts(SC.prod)}</select><input id="scQ" type="search" placeholder="🔎 ค้นหาสคริปต์…" value="${esc(SC.q)}" style="flex:1;min-width:160px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--text)"><button class="btn" id="scHl" title="เปิด/ปิดการไฮไลต์ตัวเลขและคำสำคัญ">🖍 ไฮไลต์: ${document.body.classList.contains('nohl')?'ปิด':'เปิด'}</button>${adm?'<button class="btn primary" id="scAdd">➕ เพิ่มสคริปต์</button><button class="btn" id="scAddT">🏷 เพิ่มชนิดสินค้า</button>':''}</div></div>`;
   if(SC.prod)h+=scInfoCard(SC.prod,adm,false);
   h+='<div class="mrow" id="scBar" style="justify-content:flex-start;position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;display:flex;gap:6px;flex-wrap:wrap">'+T.stages.map((s,i)=>`<button class="btn sm" data-scgo="${s.id}" style="border:2px solid ${SCCOL[s.id]};background:color-mix(in srgb,${SCCOL[s.id]} 18%,var(--panel2))">${i+1}. ${s.e} ${esc(s.name)}</button>`).join('')+'</div>';
   T.stages.forEach((s,i)=>{
@@ -3007,6 +3120,7 @@ function renderScript(){
   el.innerHTML=h;loadPImgs(el);
   $('#scP').onchange=e=>{SC.prod=e.target.value;scTrack(SC.prod);try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}renderScript()};
   $('#scQ').oninput=e=>{SC.q=e.target.value;clearTimeout(SC.t);SC.t=setTimeout(()=>{renderScript();const i=$('#scQ');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)};
+  $('#scHl').onclick=()=>{const on=document.body.classList.toggle('nohl');try{localStorage.setItem('sx_sc_hl',on?'0':'1')}catch(e){}renderScript()};
   if($('#scAdd'))$('#scAdd').onclick=()=>scriptModal({product:SC.prod});
   if($('#scAddT'))$('#scAddT').onclick=()=>typeModal();
 }
@@ -3017,11 +3131,12 @@ function scriptModal(x){
    <div class="row2"><div class="fld"><label>สินค้า</label><select id="smP"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${po(x.product)}</select></div>
    <div class="fld"><label>ขั้นตอน</label><select id="smS">${T.stages.map(s=>`<option value="${s.id}" ${x.stage===s.id?'selected':''}>${s.e} ${esc(s.name)}</option>`).join('')}</select></div></div>
    <div class="fld"><label>หัวข้อ</label><input id="smT" maxlength="120" value="${esc(x.title||'')}" placeholder="เช่น ลูกค้าบอกว่า “แพงไป”"></div>
-   <div class="fld"><label>เนื้อหาสคริปต์ (พนักงานอ่านตามได้เลย)</label><textarea id="smB" rows="8" maxlength="3000">${esc(x.body||'')}</textarea></div>
+   <div class="fld"><label>เนื้อหาสคริปต์ (พนักงานอ่านตามได้เลย)</label><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0"><button type="button" class="btn sm" data-hlm="**">🖍 ไฮไลต์จุดเด่น</button><button type="button" class="btn sm" data-hlm="!!">⚠️ ห้ามลืมแจ้งลูกค้า</button><button type="button" class="btn sm" data-hlm="x">ล้างไฮไลต์</button></div><textarea id="smB" rows="8" maxlength="3000">${esc(x.body||'')}</textarea><div class="hint">ลากเลือกข้อความ แล้วกดปุ่มด้านบน · หรือพิมพ์ <b>**ข้อความ**</b> = จุดเด่น · <b>!!ข้อความ!!</b> = ห้ามลืมแจ้ง · ตัวเลขราคา/ระยะเวลา/คำว่า ฟรี, VAT, ผูกสัญญา ฯลฯ ไฮไลต์ให้อัตโนมัติ</div></div>
    <div class="fld"><label>ลิงก์ไฟล์เสียง (ไม่บังคับ) — Google Drive (แชร์แบบ "ทุกคนที่มีลิงก์") หรือลิงก์ไฟล์ .mp3/.m4a ที่ขึ้นต้นด้วย https://</label><input id="smU" maxlength="600" value="${esc(x.audio||'')}" placeholder="https://drive.google.com/file/d/…"></div>
    <div class="row2"><div class="fld"><label>Second Offer: เสนอสินค้านี้แทน (เฉพาะขั้นตอน Second Offer)</label><select id="smA"><option value="">— ไม่ระบุ —</option>${po(x.alt)}</select></div>
    <div class="fld"><label>ลำดับ (เลขน้อยขึ้นก่อน)</label><input id="smO" type="number" min="0" value="${esc(x.order||'')}" placeholder="เว้นว่าง = ต่อท้าย"></div></div>
    <div id="smE" class="err"></div><div class="mrow"><button class="btn primary" id="smGo">${edit?'บันทึก':'เพิ่ม'}</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
+  $$('#mbox [data-hlm]').forEach(b=>b.onclick=()=>{const ta=$('#smB'),a=ta.selectionStart,z=ta.selectionEnd,m=b.dataset.hlm;let v=ta.value;if(m==='x'){const seg=v.slice(a,z||v.length).replace(/\*\*|!!/g,'');const from=z===a?0:a,to=z===a?v.length:z;ta.value=v.slice(0,from)+seg+v.slice(to);return}if(z<=a){toast('ลากเลือกข้อความก่อน');return}ta.value=v.slice(0,a)+m+v.slice(a,z)+m+v.slice(z);ta.focus();ta.setSelectionRange(a,z+m.length*2)});
   $('#smGo').onclick=async()=>{$('#smGo').disabled=true;try{await api('scriptSave',{id:x.id||'',product:$('#smP').value,stage:$('#smS').value,title:$('#smT').value,body:$('#smB').value,alt:$('#smA').value,audio:$('#smU').value,order:$('#smO').value});closeModal();toast('✅ บันทึกสคริปต์แล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(e){$('#smE').textContent=e.message;$('#smGo').disabled=false}};
 }
 function jvModal(id){
@@ -3073,7 +3188,7 @@ document.addEventListener('click',async e=>{
   const pd=t.closest('[data-pdlg]');if(pd){const q=pd.dataset.pdlg.split('|');scInfoDlg(q[0],q[1]);return}
   const g=t.closest('[data-scgo]');if(g){const s=document.getElementById('sc-'+g.dataset.scgo);if(s)s.scrollIntoView({behavior:'smooth',block:'start'});return}
   const a=t.closest('[data-scalt]');if(a){SC.prod=a.dataset.scalt;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}renderScript();const s=document.getElementById('sc-pitch');if(s)s.scrollIntoView({behavior:'smooth',block:'start'});toast('🎁 สลับเป็น '+scPName(SC.prod)+' แล้ว');return}
-  const cp=t.closest('[data-sccp]');if(cp){const x=SC.d.items.find(i=>i.id===cp.dataset.sccp);if(x){try{await navigator.clipboard.writeText(x.body);toast('📋 คัดลอกสคริปต์แล้ว')}catch(er){toast('⚠️ คัดลอกไม่ได้ ลองเลือกข้อความแล้วคัดลอกเอง')}}return}
+  const cp=t.closest('[data-sccp]');if(cp){const x=SC.d.items.find(i=>i.id===cp.dataset.sccp);if(x){try{await navigator.clipboard.writeText(scPlain(x.body));toast('📋 คัดลอกสคริปต์แล้ว')}catch(er){toast('⚠️ คัดลอกไม่ได้ ลองเลือกข้อความแล้วคัดลอกเอง')}}return}
   const th=t.closest('[data-pthumb]');if(th){const c=th.closest('[data-pcard]'),m=c&&c.querySelector('[data-pmain]');if(m){m.dataset.pslot=th.dataset.pthumb;const pid=th.dataset.pimg,k=pid+':'+th.dataset.pthumb+':'+(((SC.d.info||{})[pid]||{}).iv),u=SC.imgs[k];if(u)m.src=u;else{m.removeAttribute('src');loadPImgs(c)}c.querySelectorAll('[data-pthumb]').forEach(x=>x.classList.toggle('on',x===th))}return}
   const zi=t.closest('[data-zoomimg]');if(zi){if(zi.src)openLightbox(zi.src,zi.alt);return}
   const se=t.closest('[data-stedit]');if(se){const x=SC.d.products.find(p=>p.id===se.dataset.stedit);if(x)typeModal(x);return}
@@ -3255,7 +3370,7 @@ function jvBuild(){
     const tg=t.closest('[data-jvtog]');if(tg){JV.chipsOpen=true;jvChips();return}
     const st=t.closest('[data-jvstep]');if(st){const [a,b,c2]=st.dataset.jvstep.split('|'),g=jvStg(b);jvStep(a,b,c2,g?g.e+' '+g.name:'');return}
     const c=t.closest('[data-jvchip]');if(c){const it=jvInts().find(x=>x.id===c.dataset.jvchip);JV.chipsOpen=false;jvChips();jvSend(it?(it.chip||it.name):'',c.dataset.jvchip);return}
-    const cp=t.closest('[data-jvcp]');if(cp){const x=(SC.d?SC.d.items:[]).find(i=>i.id===cp.dataset.jvcp);if(x){try{await navigator.clipboard.writeText(x.body);toast('📋 คัดลอกสคริปต์แล้ว')}catch(er){toast('⚠️ คัดลอกไม่ได้ ลองเลือกข้อความแล้วคัดลอกเอง')}}return}
+    const cp=t.closest('[data-jvcp]');if(cp){const x=(SC.d?SC.d.items:[]).find(i=>i.id===cp.dataset.jvcp);if(x){try{await navigator.clipboard.writeText(scPlain(x.body));toast('📋 คัดลอกสคริปต์แล้ว')}catch(er){toast('⚠️ คัดลอกไม่ได้ ลองเลือกข้อความแล้วคัดลอกเอง')}}return}
     const al=t.closest('[data-jvalt]');if(al){JV.prod=al.dataset.jvalt;SC.prod=JV.prod;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}jvToggle(false);goTab('script');setTimeout(()=>{const s=document.getElementById('sc-pitch');if(s)s.scrollIntoView({behavior:'smooth',block:'start'})},400);toast('🎁 สลับเป็น '+scPName(SC.prod)+' แล้ว');return}
     const go=t.closest('[data-jvgo]');if(go){const [pid,stg]=go.dataset.jvgo.split('|');SC.prod=pid;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}jvToggle(false);goTab('script');setTimeout(()=>{const s=document.getElementById('sc-'+stg);if(s)s.scrollIntoView({behavior:'smooth',block:'start'})},400)}
   });
@@ -3515,7 +3630,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-11.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-12.4';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -3569,6 +3684,7 @@ $$('#whoSeg button').forEach(b=>b.onclick=()=>{const w=b.dataset.w;
   else if(w==='team')S.scope={type:'team',id:S.scope.type==='member'?memOf(S.scope.id).team:(S.scope.id||TEAMS[0].id)};
   else{const ms=S.scope.type==='team'?MEM.filter(m=>m.team===S.scope.id):MEM;S.scope={type:'member',id:(ms[0]||MEM[0]).id};S.split=false}
   render()});
+$('#cmpSets').onclick=()=>cmpDlg('sales',()=>S.cmp||[],l=>{S.cmp=l;render()},k=>{const o=scopeFromKey(k);return o?o.name:k});
 $('#cmpSel').onchange=e=>{const v=e.target.value;if(v&&v!==scopeVal()){S.cmp=S.cmp||[];if(S.cmp.indexOf(v)<0&&S.cmp.length<99)S.cmp.push(v)}render()};
 $('#colBtn').onclick=()=>colorDlg('sales');
 $('#cmpChips').onclick=e=>{const c=e.target.closest('[data-cx]');if(!c)return;if(c.dataset.cx==='all')S.cmp=[];else S.cmp.splice(+c.dataset.cx,1);render()};
