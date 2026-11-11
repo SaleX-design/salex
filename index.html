@@ -1347,12 +1347,15 @@ function impBuild(daily,look){
   if(lc==null||le==null)throw new Error('ไฟล์ V_LOOK_UP ต้องมีหัวคอลัมน์ CODE และ EMP.ID (หรือ EMP_ID)');
   const mp={};look.slice(1).forEach(r=>{const c=xKey(r[lc]),e=xKey(r[le]);if(c&&e)mp[c]=e});
   const dh=H(daily[0]),need=['SL_PARTNER_CODE','CAMPAIGN_NAME','NET_RC'];for(const k of need)if(dh[k]==null)throw new Error('ไฟล์ Daily ไม่มีคอลัมน์ '+k+' (เลือกชีตให้ถูก เช่น Upsell)');
+  if(dh.DIFF_RC==null&&daily.slice(1).some(r=>r&&String(r[dh.UPSELL_TYPE]||'').trim().toUpperCase()==='VAS'))throw new Error('ไฟล์นี้ไม่มีคอลัมน์ "Diff RC" แต่มีสินค้า VAS — ระบบต้องใช้ Diff RC เป็นยอดของ VAS จึงยังไม่นำเข้าเพื่อกันยอดผิด (ตรวจว่าเลือกไฟล์/ชีตถูกต้อง และมีหัวคอลัมน์ Diff RC)');
   const dcol=dh.INTRACN_DT_CMPLET!=null?dh.INTRACN_DT_CMPLET:dh.INTRACN_DT;
-  const agg={},info={total:0,mapped:0,noDate:0,unm:{},types:{}};
+  const agg={},info={total:0,mapped:0,noDate:0,unm:{},types:{},vasBlank:0,vasBlankNet:0,vasN:0,vasEq:0};
   for(let i=1;i<daily.length;i++){const r=daily[i];if(!r||!r.length)continue;const code=xKey(r[dh.SL_PARTNER_CODE]);if(!code&&!r[dh.CAMPAIGN_NAME])continue;info.total++;
     const emp=mp[code];if(!emp){info.unm[code]=(info.unm[code]||0)+1;continue}
     let d=xDate(r[dcol]);if(!d&&dh.INTRACN_DT!=null)d=xDate(r[dh.INTRACN_DT]);if(!d){info.noDate++;continue}
-    const ty=String(r[dh.UPSELL_TYPE]||'').trim().toUpperCase(),a=ty==='VAS'&&dh.DIFF_RC!=null?xNum(r[dh.DIFF_RC]):xNum(r[dh.NET_RC]);
+    const ty=String(r[dh.UPSELL_TYPE]||'').trim().toUpperCase(),a=ty==='VAS'?xNum(r[dh.DIFF_RC]):xNum(r[dh.NET_RC]);
+    if(ty==='VAS'){info.vasN++;if(xNum(r[dh.DIFF_RC])===xNum(r[dh.NET_RC])&&r[dh.DIFF_RC]!=='')info.vasEq++}
+    if(ty==='VAS'&&(r[dh.DIFF_RC]===''||r[dh.DIFF_RC]==null)){info.vasBlank++;info.vasBlankNet+=xNum(r[dh.NET_RC])}
     const p=String(r[dh.CAMPAIGN_NAME]||'').trim()||String(r[dh.PROD_OFR_NM]||'').trim()||'(ไม่ระบุแคมเปญ)';
     const k=d+'|'+emp+'|'+p,o=agg[k]||(agg[k]={d,m:emp,p,q:0,a:0});o.q+=1;o.a+=a;info.mapped++;info.types[ty||'?']=(info.types[ty||'?']||0)+1}
   const rows=Object.keys(agg).map(k=>{const o=agg[k];o.a=Math.round(o.a*100)/100;return o});
@@ -1388,6 +1391,8 @@ async function admImport(body){
       <div class="hint" style="margin-top:8px">ในไฟล์ ${fmt(inf.total)} แถว · จับคู่ V_LOOK_UP ได้ ${fmt(inf.mapped)} แถว · ไม่ใช่พนักงานในรายชื่อ ${fmt(inf.total-inf.mapped-inf.noDate)} แถว (ข้ามตามปกติ)${inf.noDate?` · ไม่มีวันที่ ${fmt(inf.noDate)} แถว (ข้าม)`:''}<br>ข้อมูลรายวันของ <b>เดือนปัจจุบัน (${esc(s.ym)})</b> จะถูกแทนที่ด้วยไฟล์นี้ทั้งเดือน (ProductSales ${fmt(s.replacePS)} แถว · SalesDaily ${fmt(s.replaceSD)} แถวเดิม) — <b>เดือนก่อน ๆ ไม่ถูกแตะ</b> · นำเข้าซ้ำได้ ไม่ซ้อนทับ${s.skippedOld?`<br>ข้ามข้อมูลของเดือนก่อน ๆ ในไฟล์ ${fmt(s.skippedOld)} แถว (ไม่นำเข้า)`:''}</div>
 
       ${impCmpHTML(pv.cmp)}
+      ${inf.vasN>=50&&inf.vasEq/inf.vasN>0.9?`<div class="err" style="margin-top:8px;font-weight:700">⛔ ตรวจพบความผิดปกติ: VAS ${fmt(inf.vasEq)} จาก ${fmt(inf.vasN)} แถว (${Math.round(inf.vasEq/inf.vasN*100)}%) มี Diff RC <u>เท่ากับ NET_RC</u> พอดี — ปกติควรเป็นส่วนต่างจริง (มีทั้งน้อยกว่าและติดลบ) แปลว่าคอลัมน์ Diff RC ในไฟล์นี้น่าจะยังไม่ได้คำนวณ ยอด VAS จะสูงเกินจริง <b>ห้ามกดยืนยันจนกว่าจะตรวจไฟล์</b></div>`:''}
+      ${inf.vasBlank?`<div class="err" style="margin-top:8px">⚠️ มีสินค้า VAS ${fmt(inf.vasBlank)} แถวที่ <b>Diff RC ว่าง</b> (ระบบนับยอดเป็น 0 · NET_RC ของแถวเหล่านี้รวม ฿${fmt(inf.vasBlankNet)}) — ถ้าไฟล์ควรมี Diff RC ครบ ให้ตรวจไฟล์ก่อนกดยืนยัน (สูตรในไฟล์ต้องคำนวณค่าแล้ว)</div>`:''}
       ${pv.badMembersN?`<div class="err" style="margin-top:8px">⚠️ มี ${pv.badMembersN} รหัสพนักงานที่ไม่อยู่ในชีต Members จะไม่ถูกนำเข้า: ${pv.badMembers.slice(0,12).map(x=>esc(x.m)+' (฿'+fmt(x.a)+')').join(', ')}${pv.badMembersN>12?' …':''} → เพิ่มในชีต Members แล้วนำเข้าใหม่</div>`:''}
       ${pv.badProducts.length?`<div class="err" style="margin-top:8px">⚠️ มี ${pv.badProducts.length} แคมเปญที่ยังไม่อยู่ในชีต Products (POINT จะคิด Factor = 1 จนกว่าจะเพิ่ม): ${pv.badProducts.slice(0,10).map(x=>esc(x.p)+' ('+fmt(x.n)+' ชิ้น)').join(' · ')}</div>`:''}
       ${pv.committed?'':`<div style="margin-top:12px"><button class="btn primary" id="impCommit" ${IMP.busy?'disabled':''}>✅ ยืนยันนำเข้า ${s.psRows} แถว</button> <span class="hint">ตรวจดูตัวเลขข้างบนก่อนกดยืนยัน</span></div>`}</div>`}
@@ -1396,7 +1401,7 @@ async function admImport(body){
   if($('#impSheet'))$('#impSheet').onchange=e=>{IMP.sheet=e.target.value;IMP.prev=null;admImport(body)};
   $('#impF2').onchange=async e=>{const f=e.target.files[0];if(!f)return;IMP.lookName=f.name;IMP.prev=null;await run(async()=>{const x=await xlsxOpen(f);IMP.lk=await x.load(x.sheets[0].name);if(!IMP.lk.length)throw new Error('ไฟล์ V_LOOK_UP ว่าง')})};
   $('#impGo').onclick=()=>run(async()=>{const d=await IMP.xl.load(IMP.sheet),R=impBuild(d,IMP.lk);if(!R.rows.length)throw new Error('ไม่พบแถวที่จับคู่พนักงานได้ — ตรวจว่าเลือกชีตถูก และ CODE ในไฟล์ V_LOOK_UP ตรงกับ SL_PARTNER_CODE');IMP.rows=R.rows;IMP.info=R.info;IMP.prev=await api('importPreview',{rows:R.rows})});
-  if($('#impCommit'))$('#impCommit').onclick=()=>{if(!confirm('ยืนยันนำเข้า? ข้อมูลรายวันของเดือนปัจจุบันจะถูกแทนที่ด้วยไฟล์นี้ (เดือนก่อน ๆ ไม่ถูกแตะ)'))return;run(async()=>{IMP.prev=await api('importCommit',{rows:IMP.rows});ADM.psales=null;await load();toast('✅ นำเข้าสำเร็จ')})};
+  if($('#impCommit'))$('#impCommit').onclick=()=>{if(IMP.info&&IMP.info.vasN>=50&&IMP.info.vasEq/IMP.info.vasN>0.9&&!confirm('⚠️ Diff RC ของ VAS ดูเหมือนยังไม่ได้คำนวณ (เท่ากับ NET_RC เกือบทั้งหมด)\nยอดจะสูงเกินจริง — ยังต้องการนำเข้าต่อหรือไม่?'))return;if(!confirm('ยืนยันนำเข้า? ข้อมูลรายวันของเดือนปัจจุบันจะถูกแทนที่ด้วยไฟล์นี้ (เดือนก่อน ๆ ไม่ถูกแตะ)'))return;run(async()=>{IMP.prev=await api('importCommit',{rows:IMP.rows});ADM.psales=null;await load();toast('✅ นำเข้าสำเร็จ')})};
 }
 /* ---- 🗓 ประวัติเข้าใช้งานย้อนหลัง 30 วัน (เฉพาะแอดมิน) ---- */
 const PL={d:null,view:'day',q:'',open:{}};
@@ -3510,7 +3515,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-10.6';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-11.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
