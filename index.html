@@ -3079,7 +3079,7 @@ function infoModal(pid){
 function scCard(x,adm){
   const gen=!x.product,body=scFmt(x.body).replace(/\n/g,'<br>'),must=scMust(x.body),mustH=must.length?`<div class="mustbar"><b>⚠️ ห้ามลืมแจ้งลูกค้า (${must.length})</b> · ${must.map(v=>esc(v)).join(' · ')}</div>`:'';
   const alt=x.stage==='second'&&x.alt?`<button class="btn primary" data-scalt="${esc(x.alt)}">🎁 ไปเสนอ ${esc(scPName(x.alt))} แทน →</button>`:'';
-  const tools=`<button class="btn sm" data-sccp="${esc(x.id)}">📋 คัดลอก</button>${adm?`<button class="btn sm" data-scedit="${esc(x.id)}">✏️</button><button class="btn sm" data-scdel="${esc(x.id)}">🗑</button>`:''}`;
+  const tools=`<button class="btn sm" data-sccp="${esc(x.id)}">📋 คัดลอก</button>${adm?`<button class="btn sm" data-scedit="${esc(x.id)}">✏️</button><button class="btn sm" data-scdel="${esc(x.id)}">🗑</button>`:`<button class="btn sm" data-screp="${esc(x.id)}" title="ข้อความนี้ควรแก้ไข? แจ้งแอดมินได้">🚩 แจ้งแก้ไข</button>`}`;
   const head=`<b>${esc(x.title)}</b>${gen?' <span class="hint" style="font-size:11px;border:1px solid var(--line);border-radius:999px;padding:1px 8px">ทั่วไป</span>':''}`;
   const altCard=x.stage==='second'&&x.alt?scInfoCard(x.alt,adm,true):'';
   const aud=x.audio?`<div style="margin:8px 0"><div class="hint" style="margin-bottom:4px">🎧 ฟังเสียงตัวอย่าง</div>${scAudio(x.audio)}</div>`:'';
@@ -3110,7 +3110,7 @@ function renderScript(){
   L.sort((a,b)=>(!!a.product===!!b.product?0:a.product?-1:1));
   let h='';
   if(T.needSetup)h+='<div class="panel"><div class="empty">⚠️ ยังไม่มีชีต Scripts — ให้แอดมินรันฟังก์ชัน <b>setup</b> ใน Apps Script หนึ่งครั้ง แล้วรีเฟรชหน้านี้</div></div>';
-  h+=`<div class="panel sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="scP" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--text);font-size:16px"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${scOpts(SC.prod)}</select><input id="scQ" type="search" placeholder="🔎 ค้นหาสคริปต์…" value="${esc(SC.q)}" style="flex:1;min-width:160px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--text)"><button class="btn" id="scHl" title="เปิด/ปิดการไฮไลต์ตัวเลขและคำสำคัญ">🖍 ไฮไลต์: ${document.body.classList.contains('nohl')?'ปิด':'เปิด'}</button>${adm?'<button class="btn primary" id="scAdd">➕ เพิ่มสคริปต์</button><button class="btn" id="scAddT">🏷 เพิ่มชนิดสินค้า</button>':''}</div></div>`;
+  h+=`<div class="panel sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="scP" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--text);font-size:16px"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${scOpts(SC.prod)}</select><input id="scQ" type="search" placeholder="🔎 ค้นหาสคริปต์…" value="${esc(SC.q)}" style="flex:1;min-width:160px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--text)"><button class="btn" id="scHl" title="เปิด/ปิดการไฮไลต์ตัวเลขและคำสำคัญ">🖍 ไฮไลต์: ${document.body.classList.contains('nohl')?'ปิด':'เปิด'}</button>${adm?'<button class="btn primary" id="scAdd">➕ เพิ่มสคริปต์</button><button class="btn" id="scAddT">🏷 เพิ่มชนิดสินค้า</button><button class="btn" id="scAud" title="ตรวจคำผิด/คำเสี่ยง/ข้อเสนอแนะ แล้วแจ้งแอดมิน">🔍 ตรวจสคริปต์</button>':'<button class="btn" id="scSug" title="แจ้งข้อความที่ควรแก้ หรือเสนอสคริปต์ที่ควรเพิ่ม">💡 แจ้ง/เสนอสคริปต์</button>'}</div></div>`;
   if(SC.prod)h+=scInfoCard(SC.prod,adm,false);
   h+='<div class="mrow" id="scBar" style="justify-content:flex-start;position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;display:flex;gap:6px;flex-wrap:wrap">'+T.stages.map((s,i)=>`<button class="btn sm" data-scgo="${s.id}" style="border:2px solid ${SCCOL[s.id]};background:color-mix(in srgb,${SCCOL[s.id]} 18%,var(--panel2))">${i+1}. ${s.e} ${esc(s.name)}</button>`).join('')+'</div>';
   T.stages.forEach((s,i)=>{
@@ -3123,6 +3123,54 @@ function renderScript(){
   $('#scHl').onclick=()=>{const on=document.body.classList.toggle('nohl');try{localStorage.setItem('sx_sc_hl',on?'0':'1')}catch(e){}renderScript()};
   if($('#scAdd'))$('#scAdd').onclick=()=>scriptModal({product:SC.prod});
   if($('#scAddT'))$('#scAddT').onclick=()=>typeModal();
+  if($('#scAud'))$('#scAud').onclick=()=>{S.adm='scr';goTab('admin')};
+  if($('#scSug'))$('#scSug').onclick=()=>scReportDlg({kind:'suggest'});
+}
+
+/* ---------- 🔍 ตรวจสคริปต์ · แจ้ง/เสนอถึงแอดมิน ---------- */
+function scReportDlg(o){
+  o=o||{};const x=o.id?(SC.d.items.find(i=>i.id===o.id)||null):null,sug=o.kind==='suggest';
+  openModal(`<h2>${sug?'💡 เสนอ/แจ้งเรื่องสคริปต์':'🚩 แจ้งข้อความที่ควรแก้ไข'}</h2>
+   ${x?`<div class="hint" style="margin-bottom:8px">สคริปต์: <b>${esc(x.title)}</b></div>`:''}
+   ${x?'':`<div class="fld"><label>เรื่องที่ต้องการแจ้ง</label><select id="srK"><option value="suggest">💡 เสนอให้เพิ่มสคริปต์/ข้อความใหม่</option><option value="issue">🚩 พบข้อความที่ควรแก้ไข (ระบุว่าสคริปต์ไหนในช่องด้านล่าง)</option></select></div>`}
+   <div class="fld"><label>รายละเอียด (อย่างน้อย 5 ตัวอักษร) — เช่น คำที่พิมพ์ผิด ประโยคที่พูดแล้วลูกค้าไม่เข้าใจ ข้อมูลที่ไม่ตรงกับโปรจริง หรือสถานการณ์ที่ลูกค้าถามบ่อยแต่ยังไม่มีสคริปต์</label><textarea id="srN" rows="5" maxlength="600" placeholder="พิมพ์ที่นี่…"></textarea></div>
+   <div id="srE" class="err"></div><div class="mrow"><button class="btn primary" id="srGo">ส่งให้แอดมิน</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
+  $('#srGo').onclick=async()=>{$('#srGo').disabled=true;try{await api('scriptReport',{scriptId:x?x.id:'',kind:x?'issue':($('#srK')?$('#srK').value:o.kind||'suggest'),note:$('#srN').value});closeModal();toast('✅ ส่งให้แอดมินแล้ว ขอบคุณที่ช่วยกันปรับปรุง')}catch(e){$('#srE').textContent=e.message;$('#srGo').disabled=false}};
+}
+const SCSEV={err:['🔴','ควรแก้','down'],warn:['🟠','ควรตรวจ','flat'],info:['🔵','ข้อเสนอแนะ','']};
+function scIssueRows(L,onItem){
+  return L.map((i,n)=>`<tr data-ai="${n}"><td style="white-space:nowrap" class="${SCSEV[i.sev][2]}">${SCSEV[i.sev][0]} ${SCSEV[i.sev][1]}</td><td>${i.id?`<b>${esc(i.title)}</b><div class="hint">${esc(i.productName||'')} · ${esc((SC.d.stages.find(s=>s.id===i.stage)||{}).name||i.stage)}</div>`:`<span class="hint">${esc(i.productName||'ทั่วไป')} · ${esc((SC.d.stages.find(s=>s.id===i.stage)||{}).name||i.stage||'')}</span>`}</td><td>${esc(i.msg)}${i.hit&&i.id?` <code style="background:var(--panel2);padding:1px 6px;border-radius:6px">${esc(i.hit)}</code>`:''}${i.from&&i.to!==''&&i.from!==i.to?`<div class="hint">แนะนำ: “${esc(i.from)}” → “${esc(i.to)}”</div>`:''}</td><td style="white-space:nowrap">${i.id?`<button class="btn sm" data-aedit="${n}">✏️ แก้</button> `:i.rule==='gap-stage'||i.rule==='gap-object'?`<button class="btn sm" data-aadd="${n}">➕ เพิ่มสคริปต์</button> `:''}${i.id&&i.from&&i.to!==''&&i.from!==i.to&&i.rule!=='space'?`<button class="btn sm primary" data-afix="${n}" title="แทนที่คำนี้ในสคริปต์ให้เลย">⚡ แก้ให้</button> `:''}<button class="btn sm" data-aign="${n}" title="ไม่ต้องเตือนข้อนี้อีก (กรณีที่ถูกต้องอยู่แล้ว)">🙈 ข้าม</button></td></tr>`).join('');
+}
+async function scAuditView(box){
+  box.innerHTML='<div class="hint">กำลังตรวจสคริปต์…</div>';
+  let R;try{R=await api('scriptAudit',{})}catch(e){box.innerHTML='<div class="err">'+esc(e.message)+'</div>';return}
+  SC.aud=R;const c=R.counts||{err:0,warn:0,info:0},show=SC.audInfo?R.issues:R.issues.filter(i=>i.sev!=='info');
+  const rp=R.reports||[],kind={issue:'🚩 แจ้งแก้ไข',suggest:'💡 เสนอเพิ่ม'},st={open:'ยังไม่ได้ดู',done:'แก้แล้ว',dismissed:'ไม่ดำเนินการ'};
+  box.innerHTML=`<div class="panel sec"><h3>🔍 ตรวจสคริปต์ (${R.scripts} ชิ้น)</h3>
+   <p class="hint">ระบบตรวจ: คำสะกดผิด · หางเสียงผิด · คำซ้ำ · วงเล็บ/เครื่องหมายไฮไลต์ไม่ครบ · คำรับประกัน/โอ้อวด/กดดันลูกค้า · คำไม่สุภาพ · ราคาไม่ตรงข้อมูลสินค้า · เนื้อหาซ้ำ · ช่องว่างที่ควรเพิ่ม — ตรวจด้วยกฎที่ตั้งไว้ (ไม่ใช่ AI) อาจมีบางจุดที่ถูกอยู่แล้ว กด 🙈 ข้าม ได้</p>
+   <div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0"><span class="down"><b>🔴 ควรแก้ ${c.err}</b></span><span class="flat"><b>🟠 ควรตรวจ ${c.warn}</b></span><span>🔵 ข้อเสนอแนะ ${c.info}</span><label class="chk"><input type="checkbox" id="auI" ${SC.audInfo?'checked':''}> แสดงข้อเสนอแนะ (🔵)</label><button class="btn sm" id="auR">🔄 ตรวจใหม่</button></div>
+   ${show.length?`<div style="overflow:auto"><table class="atbl"><thead><tr><th>ระดับ</th><th>สคริปต์</th><th>ประเด็น</th><th></th></tr></thead><tbody>${scIssueRows(show)}</tbody></table></div>`:'<div class="empty">✅ ไม่พบจุดที่ต้องแก้ไข</div>'}</div>
+   <div class="panel sec" style="margin-top:12px"><h3>💬 พนักงานแจ้ง/เสนอเกี่ยวกับสคริปต์ ${R.openReports?`<span class="bdg">${R.openReports}</span>`:''}</h3>
+   ${rp.length?`<div style="overflow:auto"><table class="atbl"><thead><tr><th>เมื่อ</th><th>ประเภท</th><th>จาก</th><th>สคริปต์</th><th>รายละเอียด</th><th></th></tr></thead><tbody>${rp.map(r=>`<tr class="${r.status==='open'?'':'done'}"><td style="white-space:nowrap">${tsTxt(r.ts)}</td><td style="white-space:nowrap">${kind[r.kind]||r.kind}</td><td>${esc(r.byName)}</td><td>${r.scriptId?esc(r.scriptTitle||r.scriptId):'<span class="hint">—</span>'}</td><td style="min-width:200px">${esc(r.note)}</td><td style="white-space:nowrap">${r.status==='open'?`${r.scriptId&&SC.d.items.some(i=>i.id===r.scriptId)?`<button class="btn sm" data-redit="${esc(r.scriptId)}">✏️ แก้สคริปต์</button> `:''}<button class="btn sm primary" data-rdone="${esc(r.id)}">✅ แก้แล้ว</button> <button class="btn sm" data-rdis="${esc(r.id)}">ไม่ดำเนินการ</button>`:`<span class="hint">${st[r.status]||r.status}</span> <button class="btn sm" data-rre="${esc(r.id)}">↩️</button>`}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">ยังไม่มีใครแจ้ง/เสนอ</div>'}</div>`;
+  const reload=async()=>{await ensureScripts(true);scAuditView(box)};
+  $('#auR').onclick=()=>scAuditView(box);$('#auI').onchange=e=>{SC.audInfo=e.target.checked;scAuditView(box)};
+  box.querySelectorAll('[data-aedit]').forEach(b=>b.onclick=()=>{const i=show[+b.dataset.aedit],x=SC.d.items.find(t=>t.id===i.id);if(x)scriptModal(x)});
+  box.querySelectorAll('[data-aadd]').forEach(b=>b.onclick=()=>{const i=show[+b.dataset.aadd];scriptModal({stage:i.stage,title:i.rule==='gap-object'?'ลูกค้าพูดว่า '+i.hit:''})});
+  box.querySelectorAll('[data-afix]').forEach(b=>b.onclick=async()=>{const i=show[+b.dataset.afix],x=SC.d.items.find(t=>t.id===i.id);if(!x)return;
+    const nb=x.body.split(i.from).join(i.to),nt=x.title.split(i.from).join(i.to);if(nb===x.body&&nt===x.title){toast('ไม่พบข้อความนี้ในสคริปต์แล้ว');return}
+    if(!confirm('แทนที่ “'+i.from+'” เป็น “'+i.to+'” ในสคริปต์ “'+x.title+'” ทุกจุด?'))return;
+    b.disabled=true;try{await api('scriptSave',{id:x.id,product:x.product,stage:x.stage,title:nt,body:nb,alt:x.alt||'',audio:x.audio||'',order:x.order});toast('✅ แก้ให้แล้ว');await reload()}catch(e){toast('⚠️ '+e.message);b.disabled=false}});
+  box.querySelectorAll('[data-aign]').forEach(b=>b.onclick=async()=>{const i=show[+b.dataset.aign];b.disabled=true;try{await api('scriptReportResolve',{action:'ignore',key:i.key,scriptId:i.id,title:i.title,rule:i.rule});await reload()}catch(e){toast('⚠️ '+e.message);b.disabled=false}});
+  const rs=(sel,act)=>box.querySelectorAll(sel).forEach(b=>b.onclick=async()=>{b.disabled=true;try{await api('scriptReportResolve',{action:act,id:b.dataset[Object.keys(b.dataset)[0]]});await reload()}catch(e){toast('⚠️ '+e.message);b.disabled=false}});
+  rs('[data-rdone]','done');rs('[data-rdis]','dismiss');rs('[data-rre]','reopen');
+  box.querySelectorAll('[data-redit]').forEach(b=>b.onclick=()=>{const x=SC.d.items.find(t=>t.id===b.dataset.redit);if(x)scriptModal(x)});
+}
+async function scDraftCheck(){
+  const out=$('#smChk');if(!out)return;out.innerHTML='<span class="hint">กำลังตรวจ…</span>';
+  try{const r=await api('scriptCheck',{title:$('#smT').value,body:$('#smB').value,stage:$('#smS').value,product:$('#smP').value,alt:$('#smA').value});
+    const L=r.issues||[];out.innerHTML=L.length?`<div class="panel" style="padding:10px;margin:6px 0">${L.map(i=>`<div style="margin:4px 0">${SCSEV[i.sev][0]} ${esc(i.msg)}${i.hit?` <code style="background:var(--panel2);padding:1px 6px;border-radius:6px">${esc(i.hit)}</code>`:''}${i.from&&i.to!==''&&i.from!==i.to?` <button type="button" class="btn sm" data-dfix="${esc(i.from)}|${esc(i.to)}">⚡ แก้ให้</button>`:''}</div>`).join('')}</div>`:'<div class="up" style="margin:6px 0">✅ ไม่พบจุดที่ต้องแก้ไข</div>';
+    out.querySelectorAll('[data-dfix]').forEach(b=>b.onclick=()=>{const q=b.dataset.dfix.split('|'),ta=$('#smB'),ti=$('#smT');ta.value=ta.value.split(q[0]).join(q[1]);ti.value=ti.value.split(q[0]).join(q[1]);scDraftCheck()});
+  }catch(e){out.innerHTML='<div class="err">'+esc(e.message)+'</div>'}
 }
 function scriptModal(x){
   x=x||{};const T=SC.d,edit=!!x.id;
@@ -3135,9 +3183,11 @@ function scriptModal(x){
    <div class="fld"><label>ลิงก์ไฟล์เสียง (ไม่บังคับ) — Google Drive (แชร์แบบ "ทุกคนที่มีลิงก์") หรือลิงก์ไฟล์ .mp3/.m4a ที่ขึ้นต้นด้วย https://</label><input id="smU" maxlength="600" value="${esc(x.audio||'')}" placeholder="https://drive.google.com/file/d/…"></div>
    <div class="row2"><div class="fld"><label>Second Offer: เสนอสินค้านี้แทน (เฉพาะขั้นตอน Second Offer)</label><select id="smA"><option value="">— ไม่ระบุ —</option>${po(x.alt)}</select></div>
    <div class="fld"><label>ลำดับ (เลขน้อยขึ้นก่อน)</label><input id="smO" type="number" min="0" value="${esc(x.order||'')}" placeholder="เว้นว่าง = ต่อท้าย"></div></div>
+   <div class="mrow" style="justify-content:flex-start"><button type="button" class="btn" id="smChkB">🔍 ตรวจคำผิด/คำเสี่ยง</button></div><div id="smChk"></div>
    <div id="smE" class="err"></div><div class="mrow"><button class="btn primary" id="smGo">${edit?'บันทึก':'เพิ่ม'}</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
   $$('#mbox [data-hlm]').forEach(b=>b.onclick=()=>{const ta=$('#smB'),a=ta.selectionStart,z=ta.selectionEnd,m=b.dataset.hlm;let v=ta.value;if(m==='x'){const seg=v.slice(a,z||v.length).replace(/\*\*|!!/g,'');const from=z===a?0:a,to=z===a?v.length:z;ta.value=v.slice(0,from)+seg+v.slice(to);return}if(z<=a){toast('ลากเลือกข้อความก่อน');return}ta.value=v.slice(0,a)+m+v.slice(a,z)+m+v.slice(z);ta.focus();ta.setSelectionRange(a,z+m.length*2)});
-  $('#smGo').onclick=async()=>{$('#smGo').disabled=true;try{await api('scriptSave',{id:x.id||'',product:$('#smP').value,stage:$('#smS').value,title:$('#smT').value,body:$('#smB').value,alt:$('#smA').value,audio:$('#smU').value,order:$('#smO').value});closeModal();toast('✅ บันทึกสคริปต์แล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(e){$('#smE').textContent=e.message;$('#smGo').disabled=false}};
+  $('#smChkB').onclick=scDraftCheck;
+  $('#smGo').onclick=async()=>{$('#smGo').disabled=true;try{const sv=await api('scriptSave',{id:x.id||'',product:$('#smP').value,stage:$('#smS').value,title:$('#smT').value,body:$('#smB').value,alt:$('#smA').value,audio:$('#smU').value,order:$('#smO').value});closeModal();const wn=(sv&&sv.issues)||[];toast(wn.length?'✅ บันทึกแล้ว แต่พบ '+wn.length+' จุดที่ควรตรวจ — กด ✏️ แล้วกด “🔍 ตรวจ” ดูรายละเอียด':'✅ บันทึกสคริปต์แล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(e){$('#smE').textContent=e.message;$('#smGo').disabled=false}};
 }
 function jvModal(id){
   const A=jvAllAdmin(),x=id?A.find(i=>i.id===id):null,T=SC.d,st=T.stages||[];
@@ -3176,6 +3226,7 @@ function admScripts(body){
   const rows=T.items.map(x=>`<tr><td>${esc(x.product?scPName(x.product):'ทั่วไป')}</td><td>${esc((T.stages.find(s=>s.id===x.stage)||{}).name||x.stage)}</td><td>${esc(x.title)}</td><td style="white-space:nowrap"><button class="btn sm" data-scedit="${esc(x.id)}">✏️</button> <button class="btn sm" data-scdel="${esc(x.id)}">🗑</button></td></tr>`).join('');
   body.innerHTML=`<div class="panel sec"><h3>📞 สคริปต์ขาย (${T.items.length})</h3><p class="hint">พนักงานทุกคนเห็นที่เมนู 📞 สคริปต์ขาย · ตัวอย่างที่มากับระบบมี [ ] ให้แก้เป็นของจริง หรือลบทิ้งได้</p><button class="btn primary" id="scAdd2">➕ เพิ่มสคริปต์</button><div style="overflow:auto;margin-top:10px"><table><thead><tr><th>สินค้า</th><th>ขั้นตอน</th><th>หัวข้อ</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="4" class="hint">ยังไม่มีสคริปต์</td></tr>'}</tbody></table></div></div>`;
   $('#scAdd2').onclick=()=>scriptModal({});
+  body.insertAdjacentHTML('afterbegin','<div id="scAuditBox"></div>');scAuditView($('#scAuditBox'));
   const ty=T.products.filter(p=>p.own).map(p=>`<tr><td>${esc(p.name)}</td><td style="white-space:nowrap"><button class="btn sm" data-stedit="${esc(p.id)}">✏️</button> <button class="btn sm" data-stdel="${esc(p.id)}">🗑</button></td></tr>`).join('');
   body.insertAdjacentHTML('beforeend',`<div class="panel sec" style="margin-top:12px"><h3>🏷 ชนิดสินค้า (เฉพาะสคริปต์)</h3>${T.typesReady?'':'<div class="err">ยังไม่มีชีต ScriptTypes — รัน setup ใน Apps Script ก่อน</div>'}<p class="hint">ใช้เฉพาะหน้าสคริปต์ขาย ไม่เกี่ยวกับยอดขาย/ค่าคอม · สินค้าที่อยู่ในระบบยอดขายเพิ่มที่แท็บ "สินค้า" แล้วจะมาอยู่ในรายการนี้เองโดยอัตโนมัติ</p><button class="btn primary" id="stAdd">➕ เพิ่มชนิดสินค้า</button><div style="overflow:auto;margin-top:10px"><table><thead><tr><th>ชนิด</th><th></th></tr></thead><tbody>${ty||'<tr><td colspan="2" class="hint">ยังไม่มีชนิดที่เพิ่มเอง</td></tr>'}</tbody></table></div></div>`);
   $('#stAdd').onclick=()=>typeModal();
@@ -3188,6 +3239,7 @@ document.addEventListener('click',async e=>{
   const pd=t.closest('[data-pdlg]');if(pd){const q=pd.dataset.pdlg.split('|');scInfoDlg(q[0],q[1]);return}
   const g=t.closest('[data-scgo]');if(g){const s=document.getElementById('sc-'+g.dataset.scgo);if(s)s.scrollIntoView({behavior:'smooth',block:'start'});return}
   const a=t.closest('[data-scalt]');if(a){SC.prod=a.dataset.scalt;try{localStorage.setItem('sx_scprod',SC.prod)}catch(er){}renderScript();const s=document.getElementById('sc-pitch');if(s)s.scrollIntoView({behavior:'smooth',block:'start'});toast('🎁 สลับเป็น '+scPName(SC.prod)+' แล้ว');return}
+  const rp=t.closest('[data-screp]');if(rp){scReportDlg({id:rp.dataset.screp,kind:'issue'});return}
   const cp=t.closest('[data-sccp]');if(cp){const x=SC.d.items.find(i=>i.id===cp.dataset.sccp);if(x){try{await navigator.clipboard.writeText(scPlain(x.body));toast('📋 คัดลอกสคริปต์แล้ว')}catch(er){toast('⚠️ คัดลอกไม่ได้ ลองเลือกข้อความแล้วคัดลอกเอง')}}return}
   const th=t.closest('[data-pthumb]');if(th){const c=th.closest('[data-pcard]'),m=c&&c.querySelector('[data-pmain]');if(m){m.dataset.pslot=th.dataset.pthumb;const pid=th.dataset.pimg,k=pid+':'+th.dataset.pthumb+':'+(((SC.d.info||{})[pid]||{}).iv),u=SC.imgs[k];if(u)m.src=u;else{m.removeAttribute('src');loadPImgs(c)}c.querySelectorAll('[data-pthumb]').forEach(x=>x.classList.toggle('on',x===th))}return}
   const zi=t.closest('[data-zoomimg]');if(zi){if(zi.src)openLightbox(zi.src,zi.alt);return}
@@ -3630,7 +3682,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-12.4';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-12.5';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -4179,12 +4231,12 @@ async function spin(){
    แจ้งเตือน (กระดิ่ง) · เมนูล่างมือถือ
    ===================================================================== */
 const inbSeen=()=>+LS.get('sb_inb')||0;
-function inboxUnread(){return (D.inbox||[]).filter(i=>i.k==='pend'||i.k==='sla'||i.ts>inbSeen()).length+(typeof socUnread==='function'?socUnread():0)}
+function inboxUnread(){return (D.inbox||[]).filter(i=>i.k==='pend'||i.k==='sla'||i.k==='scaudit'||i.k==='screp'||i.ts>inbSeen()).length+(typeof socUnread==='function'?socUnread():0)}
 function renderBell(){const n=inboxUnread(),b=$('#bellN');b.hidden=!n;b.textContent=n>99?'99+':n}
 function openInbox(){
   const L=(D.inbox||[]).concat((SOC.noti||[]).map(i=>Object.assign({tone:''},i))).sort((a,b)=>b.ts-a.ts);
-  openModal(`<h2>🔔 แจ้งเตือน</h2><div class="mlist">${L.length?L.map(i=>`<div class="ibi ${i.tone}" data-ib="${esc(i.go)}"><span>${{leave:'🙋',pend:'📝',cmp:'🗂',like:'❤️',cm:'💬',post:'📢'}[i.k]||'⏰'}</span><div>${esc(i.text)}<small>${tsTxt(i.ts)}</small></div></div>`).join(''):'<div class="empty">ไม่มีแจ้งเตือน</div>'}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`);
-  $$('[data-ib]').forEach(x=>x.onclick=()=>{closeModal();if(x.dataset.ib==='feed'){S.feedView='feed';goTab('feed')}else goTab('svc:'+(x.dataset.ib==='leave'?'leave':'cmp'))});
+  openModal(`<h2>🔔 แจ้งเตือน</h2><div class="mlist">${L.length?L.map(i=>`<div class="ibi ${i.tone}" data-ib="${esc(i.go)}"><span>${{leave:'🙋',pend:'📝',cmp:'🗂',like:'❤️',cm:'💬',post:'📢',scaudit:'🔍',screp:'💡'}[i.k]||'⏰'}</span><div>${esc(i.text)}<small>${tsTxt(i.ts)}</small></div></div>`).join(''):'<div class="empty">ไม่มีแจ้งเตือน</div>'}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`);
+  $$('[data-ib]').forEach(x=>x.onclick=()=>{closeModal();if(x.dataset.ib==='scaudit'){S.adm='scr';goTab('admin')}else if(x.dataset.ib==='feed'){S.feedView='feed';goTab('feed')}else goTab('svc:'+(x.dataset.ib==='leave'?'leave':'cmp'))});
   LS.set('sb_inb',String(nowMs()));LS.set('sb_soc',String(nowMs()));renderBell();renderBnav();
 }
 $('#bellBtn').onclick=()=>D&&openInbox();
