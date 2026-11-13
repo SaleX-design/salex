@@ -3087,7 +3087,15 @@ const COK={amount:['💰','ยอดขายต่อวันทำงาน',
   talk:['⏱','Talk Time เฉลี่ยต่อวัน',v=>Math.round(v)+' นาที'],hit:['🎯','อัตราวันที่มียอด',v=>Math.round(v)+'%'],ticket:['🏷️','ยอดเฉลี่ยต่อ SUB',v=>'฿'+fmt(Math.round(v))],custom:['✍️','เป้าอิสระ (กรอกเอง)',v=>fmt(Math.round(v*100)/100)]};
 const COST={proposed:['⏳','รอ Agent ตอบรับ','#f0b90b'],revise:['✏️','Agent ขอแก้ไข','#f0b90b'],active:['▶️','กำลังดำเนินการ','var(--up)'],closed:['🏁','สรุปผลแล้ว','var(--mute)'],cancelled:['🚫','ยกเลิก','var(--mute)']};
 const COOC={met:['✅','บรรลุเป้า','var(--up)'],partial:['🟡','บรรลุบางส่วน','#f0b90b'],missed:['❌','ยังไม่บรรลุ','var(--down)']};
-const COLG={propose:'📤',repropose:'🔁',agree:'✅',revise:'✏️',note:'💬',feedback:'⭐',checkin:'📍',close:'🏁',cancel:'🚫'};
+const COSTG=[['pitch','🎤','นำเสนอขาย','ทักทายและแนะนำตัวให้ชัด → ถามความต้องการลูกค้าก่อนเสนอ → เสนอสินค้าให้กระชับ (ภายใน 30–60 วินาทีแรก) ใช้ข้อมูลตามสคริปต์/ข้อมูลสินค้าฉบับล่าสุด ห้ามพูดเกินจริงหรือรับประกันผล'],
+ ['benefit','💬','โน้มน้าวใจ','สรุปข้อดีไม่เกิน 3 ข้อ พูดเป็นประโยชน์ที่ลูกค้าจะได้รับ (ไม่ใช่คุณสมบัติล้วน) ใช้ภาษาสุภาพ ไม่กดดัน และปิดด้วยคำถามเพื่อยืนยันความสนใจ'],
+ ['object','🛡','ขจัดข้อโต้แย้ง','รับฟังจนจบ → แสดงความเข้าใจก่อนตอบ → ถามหาสาเหตุที่แท้จริง → ตอบด้วยข้อเท็จจริงตามสคริปต์ → ถามกลับเพื่อไปต่อ ห้ามเถียง ตัดบท หรือกดดันลูกค้า'],
+ ['value','⚖️','เปรียบเทียบความคุ้มค่า','เทียบเป็นรายวัน/ต่อครั้ง หรือเทียบกับทางเลือกที่ลูกค้าใช้อยู่ ใช้ตัวเลขที่ถูกต้องตรงกับข้อมูลสินค้า ไม่กล่าวถึงคู่แข่งในทางเสียหาย'],
+ ['second','🎁','Second Offer','เสนอเมื่อลูกค้าปฏิเสธข้อเสนอแรกเท่านั้น เสนอทางเลือกที่เหมาะกว่าเพียง 1 ข้อเสนอ ไม่เสนอซ้ำเกิน 1 ครั้ง แจ้งเงื่อนไขให้ครบถ้วน ไม่ใช้วิธีกดดัน']];
+const COSG={};COSTG.forEach(x=>COSG[x[0]]=x);
+const COGEN='ทุกขั้นตอน: ใช้สคริปต์จากเมนู 📞 สคริปต์ขาย (ฉบับล่าสุด) · แจ้งข้อมูลที่ “ห้ามลืมแจ้งลูกค้า” (แถบ ⚠️) ให้ครบทุกครั้ง · ใช้ภาษาสุภาพ ไม่ให้ข้อมูลเท็จ · ลูกค้าปฏิเสธชัดเจนให้ยุติอย่างสุภาพ';
+const coRulesFrom=ks=>ks.length?COGEN+'\n'+COSTG.filter(x=>ks.includes(x[0])).map(x=>`• ${x[2]}: ${x[3]}`).join('\n'):'';
+const COLG={practice:'📋',propose:'📤',repropose:'🔁',agree:'✅',revise:'✏️',note:'💬',feedback:'⭐',checkin:'📍',close:'🏁',cancel:'🚫'};
 function coKpi(id,kpi,from,to){   // ดึงตัวเลขจริงจากข้อมูลในระบบ (หักวันลา)
   const end=to>today?today:to;if(!id||!from||from>end)return {v:null,n:0};
   if(kpi==='custom')return {v:null,n:0};
@@ -3118,13 +3126,13 @@ function coCard(p){
 }
 async function renderCoach(force){
   const el=$('#coachBody');if(!el)return;
-  if(!CO.d||force){el.innerHTML='<div class="empty">⏳ กำลังโหลด…</div>';try{CO.d=await api('coachList')}catch(e){el.innerHTML=`<div class="empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`;return}}
+  if(!CO.d||force){el.innerHTML='<div class="empty">⏳ กำลังโหลด…</div>';try{CO.d=await api('coachList');CO.d.plans.forEach(p=>{p.stages=p.stages||[];p.rules=p.rules||''})}catch(e){el.innerHTML=`<div class="empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`;return}}
   const P=CO.d.plans,F=CO.f,pick=p=>F==='all'||(F==='wait'&&(p.status==='proposed'||p.status==='revise'))||(F==='act'&&p.status==='active')||(F==='done'&&(p.status==='closed'||p.status==='cancelled'));
   const cnt=f=>P.filter(p=>f==='all'||(f==='wait'&&(p.status==='proposed'||p.status==='revise'))||(f==='act'&&p.status==='active')||(f==='done'&&(p.status==='closed'||p.status==='cancelled'))).length;
   const closed=P.filter(p=>p.status==='closed'),met=closed.filter(p=>p.outcome==='met').length;
   const todo=P.filter(p=>(p.agent===CO.d.me&&p.status==='proposed')||(p.coach===CO.d.me&&(p.status==='revise'||(p.status==='active'&&p.to<today))));
   el.innerHTML=`<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>🤝 COACHING & FEEDBACK</span>${CO.d.canCoach?`<button class="btn primary" id="coNew">➕ สร้างแผนโค้ช</button>`:''}</h3>
-   <div class="hint">ขั้นตอน: ① โค้ชเสนอแผน (เป้า KPI + ระยะเวลาไม่เกิน 7 วัน + สิ่งที่จะทำร่วมกัน) → ② Agent กด <b>ยอมรับ</b> หรือ <b>ขอแก้ไข</b> → ③ เมื่อตกลงร่วมกันแล้วจึงเริ่มวัดผลจากข้อมูลจริงใน SALE X → ④ โค้ชเช็กอิน/ให้ Feedback ระหว่างทาง → ⑤ ครบกำหนดสรุปผล · แผนและบันทึกทั้งหมดเห็นได้เฉพาะโค้ช + Agent เจ้าของแผน + แอดมิน</div>
+   <div class="hint">ขั้นตอน: ① โค้ชเสนอแผน (เป้า KPI + ระยะเวลาปรับได้ไม่เกิน 3 เดือน + สิ่งที่จะทำร่วมกัน) → ② Agent กด <b>ยอมรับ</b> หรือ <b>ขอแก้ไข</b> → ③ เมื่อตกลงร่วมกันแล้วจึงเริ่มวัดผลจากข้อมูลจริงใน SALE X → ④ โค้ชเช็กอิน/ให้ Feedback ระหว่างทาง → ⑤ ครบกำหนดสรุปผล · แผนและบันทึกทั้งหมดเห็นได้เฉพาะโค้ช + Agent เจ้าของแผน + แอดมิน</div>
    ${todo.length?`<div class="panel" style="margin:8px 0;background:var(--panel2)"><b>📌 รอคุณดำเนินการ ${todo.length} รายการ</b><div class="hint">${todo.map(p=>`${p.agent===CO.d.me?'ตอบรับแผน':p.status==='revise'?'แก้ไขตามที่ Agent ขอ':'สรุปผลแผนที่ครบกำหนด'} “${esc(p.title)}”`).join(' · ')}</div></div>`:''}
    <div class="stats"><div class="stat"><small>แผนทั้งหมด</small><b>${P.length}</b></div><div class="stat"><small>กำลังดำเนินการ</small><b>${cnt('act')}</b></div><div class="stat"><small>รอตอบรับ/แก้ไข</small><b>${cnt('wait')}</b></div><div class="stat"><small>บรรลุเป้า (สรุปแล้ว)</small><b>${closed.length?met+'/'+closed.length:'–'}</b></div></div>
    <div class="chips" style="margin:8px 0">${[['all','ทั้งหมด'],['wait','⏳ รอตอบรับ'],['act','▶️ กำลังดำเนินการ'],['done','🏁 จบแล้ว']].map(([k,l])=>`<button class="chip ${F===k?'on':''}" data-cof="${k}">${l} (${cnt(k)})</button>`).join('')}</div>
@@ -3136,17 +3144,21 @@ async function renderCoach(force){
 }
 const coTpl={amount:'• ฟังการโทรของ Agent 2 สายต่อสัปดาห์ แล้วให้ Feedback ทันที\n• ซ้อมสคริปต์ปิดการขายและรับมือข้อโต้แย้ง 3 ครั้ง/สัปดาห์\n• ตั้งเป้ายอดรายวัน และทบทวนผลทุกวันศุกร์',point:'• เน้นนำเสนอสินค้า Factor สูงควบคู่ยอดเงิน\n• ทบทวนสินค้าที่ขายดีของทีม 1 ครั้ง/สัปดาห์\n• ตั้งเป้า POINT รายวัน และทบทวนผลทุกวันศุกร์',sub:'• เพิ่มจำนวนรายชื่อลูกค้าที่โทร/วัน\n• ซ้อมการปิดดีลเล็กหลายราย\n• ทบทวนจำนวน SUB รายสัปดาห์',talk:'• ตั้งเป้า Talk Time/วัน และลดเวลา Not Ready ที่ไม่จำเป็น\n• ฟังเทปสายที่ตัดจบเร็ว 2 สาย/สัปดาห์\n• ทบทวนช่วงเวลาที่โทรได้ผลดี',hit:'• ตั้งเป้า “ปิดอย่างน้อย 1 รายการ/วัน”\n• เช็กความคืบหน้ากับโค้ชตอนบ่ายทุกวัน\n• ทบทวนวันที่ไม่มียอดว่าติดที่จุดไหน',ticket:'• ฝึกเสนอแพ็กเกจสูงขึ้น/ขายพ่วง\n• ซ้อมสคริปต์ Upsell 3 ครั้ง/สัปดาห์\n• ทบทวนขนาดดีลรายสัปดาห์',custom:'• ระบุสิ่งที่จะทำและวิธีวัดผลให้ชัดเจน'};
 function coForm(p){
-  const D0=CO.d,edit=!!p,agents=D0.agents.slice(),k0=p?p.kpi:'point',f0=p?p.from:today,t0=p?p.to:addDays(today,6);
+  const D0=CO.d,edit=!!p,agents=D0.agents.slice(),k0=p?p.kpi:'point',f0=p?p.from:today,t0=p?p.to:addDays(today,29);
   const ag=p?p.agent:(agents[0]&&agents[0].id)||'';
   openModal(`<h3>${edit?'✏️ แก้ไขแผนโค้ช':'➕ สร้างแผนโค้ช'}</h3>
    <div class="hint" style="margin-bottom:8px">แผนจะ “ยังไม่เริ่มวัดผล” จนกว่า Agent จะกดยอมรับ</div>
    <div class="fld"><label>Agent ที่จะโค้ช</label>${edit?`<input disabled value="${esc(p.agentName)}">`:`<select id="cfA">${agents.map(a=>`<option value="${esc(a.id)}" ${a.id===ag?'selected':''}>${esc(a.nick||a.name)} · ${esc(teamOf(a.team).name||a.team)}</option>`).join('')}</select>`}</div>
-   <div class="fld"><label>ชื่อแผน</label><input id="cfT" maxlength="80" value="${esc(p?p.title:'')}" placeholder="เช่น เพิ่ม POINT ต่อวันให้ถึงเป้าภายใน 7 วัน"></div>
+   <div class="fld"><label>ชื่อแผน</label><input id="cfT" maxlength="80" value="${esc(p?p.title:'')}" placeholder="เช่น เพิ่ม POINT ต่อวันให้ถึงเป้าภายใน 30 วัน"></div>
    <div class="fld"><label>ตัวชี้วัด KPI</label><select id="cfK">${Object.keys(COK).map(k=>`<option value="${k}" ${k===k0?'selected':''}>${COK[k][0]} ${COK[k][1]}</option>`).join('')}</select></div>
-   <div style="display:flex;gap:8px;flex-wrap:wrap"><div class="fld" style="flex:1;min-width:130px"><label>เริ่ม</label><input type="date" id="cfF" value="${f0}"></div><div class="fld" style="flex:1;min-width:130px"><label>สิ้นสุด (ไม่เกิน 7 วัน)</label><input type="date" id="cfE" value="${t0}"></div></div>
+   <div style="display:flex;gap:8px;flex-wrap:wrap"><div class="fld" style="flex:1;min-width:130px"><label>เริ่ม</label><input type="date" id="cfF" value="${f0}"></div><div class="fld" style="flex:1;min-width:130px"><label>สิ้นสุด (ไม่เกิน 3 เดือน)</label><input type="date" id="cfE" value="${t0}"></div></div>
    <div style="display:flex;gap:8px;flex-wrap:wrap"><div class="fld" style="flex:1;min-width:130px"><label>ค่าเริ่มต้น (Baseline)</label><input type="number" id="cfB" step="any" value="${p&&p.baseline!=null?p.baseline:''}"></div><div class="fld" style="flex:1;min-width:130px"><label>เป้าหมาย</label><input type="number" id="cfG" step="any" value="${p&&p.target!=null?p.target:''}"></div><div class="fld" id="cfUw" style="flex:1;min-width:100px"><label>หน่วย (เป้าอิสระ)</label><input id="cfU" maxlength="20" value="${esc(p?p.unit:'')}"></div></div>
+   <div class="hint" style="margin-bottom:4px">ปรับระยะเวลาได้อิสระ แต่ไม่เกิน 3 เดือน · เลือกด่วน: <a class="plk" data-cfd="7">7 วัน</a> · <a class="plk" data-cfd="14">14 วัน</a> · <a class="plk" data-cfd="30">30 วัน</a> · <a class="plk" data-cfd="3m">3 เดือน</a> · <b id="cfDn"></b></div>
    <div class="hint" id="cfH" style="margin-bottom:6px"></div>
    <div class="fld"><label>สิ่งที่จะทำร่วมกัน (Agent ทำอะไร / ความถี่) <a class="plk" id="cfTp">💡 เติมตัวอย่าง</a></label><textarea id="cfP" rows="4" maxlength="1500" placeholder="ระบุให้ชัดเจน วัดผลได้">${esc(p?p.plan:'')}</textarea></div>
+   <div class="panel" style="margin:8px 0;background:var(--panel2)"><b>📞 เงื่อนไขการใช้สคริปต์ขาย (แนวทางปฏิบัติที่ตกลงร่วมกัน)</b><div class="hint">เลือกขั้นตอนที่ Agent ต้องปฏิบัติตามแนวทาง โค้ชจะประเมินการใช้สคริปต์แต่ละขั้นตอนระหว่างแผน</div>
+    <div style="display:flex;gap:6px 14px;flex-wrap:wrap;margin:6px 0">${COSTG.map(x=>`<label style="display:flex;gap:4px;align-items:center"><input type="checkbox" data-cfst="${x[0]}" ${p&&p.stages.includes(x[0])?'checked':''}> ${x[1]} ${x[2]}</label>`).join('')}</div>
+    <textarea id="cfR" rows="5" maxlength="2500" style="width:100%" placeholder="เงื่อนไข/แนวทางปฏิบัติ — เลือกขั้นตอนด้านบนแล้วระบบเติมข้อปฏิบัติมาตรฐานให้ แก้ไขได้">${esc(p?p.rules:'')}</textarea></div>
    <div class="fld"><label>สิ่งที่โค้ชจะช่วย/สนับสนุน (ไม่บังคับ)</label><textarea id="cfS" rows="2" maxlength="600">${esc(p?p.support:'')}</textarea></div>
    <div style="text-align:right;display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn primary" id="cfOk">${edit?'บันทึกและเสนออีกครั้ง':'เสนอแผนให้ Agent'}</button></div>`);
   let touched=!!(p&&p.baseline!=null);
@@ -3156,12 +3168,50 @@ function coForm(p){
     $('#cfH').innerHTML=r.v==null?'ยังไม่มีข้อมูลย้อนหลัง 30 วันก่อนเริ่มของ Agent คนนี้ — กรอกค่าเริ่มต้นเอง':`ค่าเฉลี่ย 30 วันก่อนเริ่มของ Agent = <b>${COK[k][2](r.v)}</b> (${r.n} วัน) · แนะนำเป้า: <a class="plk" data-cfs="1.1">+10%</a> · <a class="plk" data-cfs="1.2">+20%</a> · <a class="plk" data-cfs="1.3">+30%</a>`;
     if(!touched&&r.v!=null)$('#cfB').value=Math.round(r.v*100)/100;
     $$('[data-cfs]').forEach(a=>a.onclick=()=>{const b=r.v;if(b!=null)$('#cfG').value=Math.round(b*+a.dataset.cfs*100)/100})};
-  ['#cfK','#cfF'].forEach(s=>$(s).onchange=upd);$('#cfF').addEventListener('change',()=>{const f=$('#cfF').value;if(f){$('#cfE').value=addDays(f,6)}});if($('#cfA'))$('#cfA').onchange=upd;$('#cfB').oninput=()=>{touched=true};
+  ['#cfK','#cfF'].forEach(s=>$(s).onchange=upd);const maxE=f=>{const [y,m,d]=f.split('-').map(Number),tm=m-1+3,yy=y+Math.floor(tm/12),mm=tm%12,dim=new Date(Date.UTC(yy,mm+1,0)).getUTCDate();return addDays(yy+'-'+pad(mm+1)+'-'+pad(Math.min(d,dim)),-1)},
+    fixE=()=>{const f=$('#cfF').value,e=$('#cfE');if(!f)return;e.min=f;e.max=maxE(f);if(e.value&&e.value>e.max)e.value=e.max;if(e.value&&e.value<f)e.value=f;const n=e.value?Math.round((Date.parse(e.value)-Date.parse(f))/864e5)+1:0;$('#cfDn').textContent=n?`ระยะเวลา ${n} วัน`:''};
+  $('#cfF').addEventListener('change',fixE);$('#cfE').addEventListener('change',fixE);
+  $$('[data-cfd]').forEach(a=>a.onclick=()=>{const f=$('#cfF').value||today,v=a.dataset.cfd;$('#cfF').value=f;$('#cfE').value=v==='3m'?maxE(f):addDays(f,+v-1);fixE()});fixE();if($('#cfA'))$('#cfA').onchange=upd;$('#cfB').oninput=()=>{touched=true};
   $('#cfTp').onclick=()=>{if(!$('#cfP').value.trim()||confirm('แทนที่ข้อความเดิมด้วยตัวอย่าง?'))$('#cfP').value=coTpl[$('#cfK').value]||''};
+  let rTouched=!!(p&&p.rules);const stg=()=>$$('[data-cfst]').filter(c=>c.checked).map(c=>c.dataset.cfst);
+  $$('[data-cfst]').forEach(c=>c.onchange=()=>{if(!rTouched||!$('#cfR').value.trim()){$('#cfR').value=coRulesFrom(stg());rTouched=false}else if(confirm('ปรับข้อความเงื่อนไขตามขั้นตอนที่เลือกใหม่? (ข้อความที่แก้ไว้จะถูกแทนที่)'))$('#cfR').value=coRulesFrom(stg())});
+  $('#cfR').oninput=()=>{rTouched=true};
   upd();
-  $('#cfOk').onclick=()=>coDo(async()=>{await api('coachSave',{id:p?p.id:undefined,agent:agent(),title:$('#cfT').value,kpi:$('#cfK').value,from:$('#cfF').value,to:$('#cfE').value,baseline:$('#cfB').value,target:$('#cfG').value,unit:$('#cfU').value,plan:$('#cfP').value,support:$('#cfS').value});closeModal();toast(edit?'บันทึกแล้ว — เสนอให้ Agent อีกครั้ง':'เสนอแผนให้ Agent แล้ว');await renderCoach(true)});
+  $('#cfOk').onclick=()=>coDo(async()=>{await api('coachSave',{id:p?p.id:undefined,agent:agent(),title:$('#cfT').value,kpi:$('#cfK').value,from:$('#cfF').value,to:$('#cfE').value,baseline:$('#cfB').value,target:$('#cfG').value,unit:$('#cfU').value,plan:$('#cfP').value,support:$('#cfS').value,stages:stg(),rules:$('#cfR').value});closeModal();toast(edit?'บันทึกแล้ว — เสนอให้ Agent อีกครั้ง':'เสนอแผนให้ Agent แล้ว');await renderCoach(true)});
 }
 async function coDo(fn){if(CO.busy)return;CO.busy=true;try{await fn()}catch(e){toast(e.message||'ไม่สำเร็จ')}finally{CO.busy=false}}
+function coPdf(p){   // เอกสารข้อตกลงการโค้ช — พิมพ์/บันทึกเป็น PDF ผ่านหน้าต่างพิมพ์ของเบราว์เซอร์
+  const L=CO.d.logs.filter(l=>l.cid===p.id),k=COK[p.kpi],cur=coCur(p),st=COST[p.status]||COST.closed,oc=p.outcome&&COOC[p.outcome];
+  const dt=ts=>{const d=new Date(ts);return `${d.getDate()} ${THMON[d.getMonth()]} ${d.getFullYear()+543} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+  const dl=k=>{const [y,m,d]=k.split('-');return `${+d} ${THMON[+m-1]} ${+y+543}`};
+  const agreed=p.agreeTs>0,r=coProg(p,p.status==='closed'&&p.finalVal!=null?p.finalVal:cur.v);
+  const h=`<!doctype html><html lang="th"><head><meta charset="utf-8"><title>ข้อตกลงการโค้ช ${esc(p.id)}</title><style>
+  @page{size:A4;margin:16mm 14mm}*{box-sizing:border-box}body{font-family:'Sarabun','Noto Sans Thai','Tahoma',sans-serif;font-size:13px;line-height:1.55;color:#111;margin:0}
+  h1{font-size:20px;margin:0 0 2px}h2{font-size:14px;margin:14px 0 4px;padding-bottom:3px;border-bottom:1.5px solid #333}.sub{color:#555;font-size:12px}
+  table{width:100%;border-collapse:collapse;margin:4px 0}td,th{border:1px solid #bbb;padding:4px 7px;text-align:left;vertical-align:top}th{background:#f0f0f0;width:30%}
+  .box{border:1px solid #bbb;border-radius:4px;padding:6px 9px;white-space:pre-wrap}.tag{display:inline-block;border:1px solid #333;border-radius:10px;padding:0 8px;font-size:12px}
+  .sig{display:flex;gap:30px;margin-top:26px;page-break-inside:avoid}.sig>div{flex:1;text-align:center}.sig .ln{border-bottom:1px solid #333;height:46px}.ok{font-size:12px;color:#065f2c}
+  .wm{color:#a60;font-weight:700}.f{margin-top:16px;font-size:11px;color:#666;border-top:1px solid #ccc;padding-top:6px}tr{page-break-inside:avoid}
+  </style></head><body>
+  <h1>ข้อตกลงการโค้ชและติดตามผลงาน (COACHING & FEEDBACK)</h1>
+  <div class="sub">ระบบ SALE X · เลขที่แผน ${esc(p.id)} · สถานะ: <span class="tag">${st[0]} ${st[1]}</span></div>
+  ${agreed?`<p class="ok">✔ ผู้รับการโค้ชกดยอมรับแผนในระบบเมื่อ ${dt(p.agreeTs)}</p>`:`<p class="wm">⚠ เอกสารฉบับนี้ยังไม่มีผลตกลงร่วมกัน — ผู้รับการโค้ชยังไม่ได้กดยอมรับแผนในระบบ</p>`}
+  <h2>1. คู่ตกลง</h2><table><tr><th>โค้ช (ผู้ให้คำแนะนำ)</th><td>${esc(p.coachName)}</td></tr><tr><th>ผู้รับการโค้ช (Agent)</th><td>${esc(p.agentName)} · ${esc(teamOf(p.team).name||p.team)}</td></tr><tr><th>ระยะเวลา</th><td>${dl(p.from)} – ${dl(p.to)}</td></tr></table>
+  <h2>2. เป้าหมาย KPI (อ้างอิงข้อมูลในระบบ SALE X)</h2><table><tr><th>ตัวชี้วัด</th><td>${esc(k[1])}${p.kpi==='custom'&&p.unit?' ('+esc(p.unit)+')':''}</td></tr><tr><th>ค่าเริ่มต้น (Baseline)</th><td>${coFmt(p,p.baseline)}</td></tr><tr><th>เป้าหมาย</th><td><b>${coFmt(p,p.target)}</b></td></tr>
+  <tr><th>ค่าปัจจุบัน ณ ${dt(Date.now())}</th><td>${coFmt(p,cur.v)}${cur.n?` (${cur.n} ${p.kpi==='custom'?'เช็กอิน':'วันทำการ'})`:''}${r!=null?` · ความคืบหน้า ${r>9.99?'999%+':Math.round(r*100)+'%'}`:''}</td></tr></table>
+  <h2>3. สิ่งที่ตกลงจะทำร่วมกัน</h2><div class="box">${esc(p.plan)}</div>
+  ${p.support?`<h2>4. สิ่งที่โค้ชจะสนับสนุน</h2><div class="box">${esc(p.support)}</div>`:''}
+  ${p.stages.length?`<h2>เงื่อนไขการใช้สคริปต์ขาย (แนวทางปฏิบัติที่ตกลงร่วมกัน)</h2><div class="sub">ขั้นตอนที่ครอบคลุม: ${p.stages.map(k=>COSG[k]?COSG[k][2]:k).join(' · ')}</div><div class="box">${esc(p.rules)}</div>${(()=>{const R=p.stages.map(k=>{const sc=L.filter(l=>l.kind==='practice'&&l.stage===k&&l.rating>0).map(l=>l.rating);return `<tr><td>${COSG[k]?COSG[k][2]:k}</td><td>${sc.length?(sc.reduce((a,b)=>a+b,0)/sc.length).toFixed(1)+' / 5':'–'}</td><td>${sc.length} ครั้ง</td></tr>`}).join('');return `<table><tr><th>ขั้นตอน</th><th>คะแนนประเมินเฉลี่ยโดยโค้ช</th><th>จำนวนครั้งที่ประเมิน</th></tr>${R}</table>`})()}`:''}
+  ${p.agentNote?`<h2>ข้อความจาก Agent</h2><div class="box">${esc(p.agentNote)}</div>`:''}
+  <h2>${p.support?'5':'4'}. บันทึกและ Feedback ระหว่างแผน</h2>${L.length?`<table><tr><th style="width:21%">เวลา</th><th style="width:16%">โดย</th><th>รายละเอียด</th></tr>${L.map(l=>`<tr><td>${dt(l.ts)}</td><td>${esc(l.byName)}</td><td>${{propose:'[เสนอแผน] ',repropose:'[ปรับแผน] ',agree:'[ยอมรับ] ',revise:'[ขอแก้ไข] ',note:'[บันทึก] ',feedback:'[Feedback] ',checkin:'[เช็กอิน] ',practice:'[ประเมินสคริปต์] ',close:'[สรุปผล] ',cancel:'[ยกเลิก] '}[l.kind]||''}${esc(l.text)}${l.stage&&COSG[l.stage]?' ['+COSG[l.stage][2]+']':''}${l.rating?' (⭐'+l.rating+'/5)':''}${l.kind==='checkin'&&l.val!=null?' · ค่า '+coFmt(p,l.val):''}</td></tr>`).join('')}</table>`:'<div class="sub">ยังไม่มีบันทึก</div>'}
+  ${p.status==='closed'?`<h2>สรุปผล</h2><table><tr><th>ผลลัพธ์</th><td><b>${oc?oc[0]+' '+oc[1]:'–'}</b> · ค่าสุดท้าย ${coFmt(p,p.finalVal)} · สรุปเมื่อ ${dt(p.closedTs)}</td></tr><tr><th>บันทึกของโค้ช</th><td style="white-space:pre-wrap">${esc(p.closeNote)}</td></tr></table>`:p.status==='cancelled'?`<h2>การยกเลิก</h2><div class="box">${esc(p.closeNote)}</div>`:''}
+  <div class="sig"><div><div class="ln"></div>ลงชื่อ โค้ช<br>(${esc(p.coachName)})<br>วันที่ ........................</div><div><div class="ln"></div>ลงชื่อ ผู้รับการโค้ช<br>(${esc(p.agentName)})<br>วันที่ ........................</div></div>
+  <div class="f">เอกสารนี้สร้างจากระบบ SALE X เมื่อ ${dt(Date.now())} · ตัวเลข KPI คำนวณจากข้อมูลในระบบ ณ เวลาที่สร้างเอกสาร · ใช้เพื่อการพัฒนาร่วมกัน เป็นข้อมูลเฉพาะโค้ช ผู้รับการโค้ช และแอดมิน</div></body></html>`;
+  const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';document.body.appendChild(f);
+  const w=f.contentWindow;w.document.open();w.document.write(h);w.document.close();
+  setTimeout(()=>{try{w.focus();w.print()}catch(e){toast('เปิดหน้าต่างพิมพ์ไม่ได้ ลองใช้เบราว์เซอร์บนคอมพิวเตอร์')}setTimeout(()=>f.remove(),60000)},400);
+  toast('เปิดหน้าต่างพิมพ์แล้ว — เลือก “บันทึกเป็น PDF” (Save as PDF)');
+}
 function coDetail(id,keep){
   const p=CO.d.plans.find(x=>x.id===id);if(!p)return;
   const me=CO.d.me,isC=p.coach===me||CO.d.isAdmin,isA=p.agent===me,st=COST[p.status]||COST.closed,k=COK[p.kpi],cur=coCur(p),oc=p.outcome&&COOC[p.outcome],open=['proposed','revise','active'].includes(p.status);
@@ -3175,26 +3225,33 @@ function coDetail(id,keep){
     ${p.status==='proposed'||p.status==='revise'?'<div class="hint">ยังไม่เริ่มวัดผลอย่างเป็นทางการ จนกว่า Agent จะยอมรับแผน (ตัวเลข “ตอนนี้” เป็นเพียงข้อมูลอ้างอิง)</div>':''}</div>
    <b>📋 สิ่งที่จะทำร่วมกัน</b><div style="white-space:pre-wrap;margin:4px 0 8px">${esc(p.plan)}</div>
    ${p.support?`<b>🤲 สิ่งที่โค้ชจะสนับสนุน</b><div style="white-space:pre-wrap;margin:4px 0 8px">${esc(p.support)}</div>`:''}
+   ${p.stages.length?`<div class="panel" style="margin:6px 0;background:var(--panel2)"><b>📞 เงื่อนไขการใช้สคริปต์ขาย</b> <a class="plk" id="coGoSc">เปิดสคริปต์ →</a>
+     <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0">${p.stages.map(k=>{const sc=L.filter(l=>l.kind==='practice'&&l.stage===k&&l.rating>0).map(l=>l.rating),av=sc.length?(sc.reduce((a,b)=>a+b,0)/sc.length).toFixed(1):null;return `<span class="role" title="${esc(COSG[k]?COSG[k][3]:'')}">${COSG[k]?COSG[k][1]+' '+COSG[k][2]:esc(k)}${av?' · ⭐'+av+' ('+sc.length+')':' · ยังไม่ประเมิน'}</span>`}).join('')}</div>
+     <div style="white-space:pre-wrap">${esc(p.rules)}</div></div>`:''}
    ${p.agentNote&&p.status!=='active'?`<div class="panel" style="background:var(--panel2)"><b>💬 Agent แจ้งว่า</b><div style="white-space:pre-wrap">${esc(p.agentNote)}</div></div>`:''}
    ${p.status==='closed'?`<div class="panel" style="background:var(--panel2);margin:6px 0"><b>🏁 สรุปผลโดยโค้ช</b><div style="white-space:pre-wrap">${esc(p.closeNote)}</div></div>`:p.status==='cancelled'?`<div class="hint">🚫 ยกเลิก: ${esc(p.closeNote)}</div>`:''}
    <b>🕒 ไทม์ไลน์${fbAvg?` · คะแนน Feedback เฉลี่ย ⭐${fbAvg}`:''}</b>
-   <div style="max-height:200px;overflow:auto;margin:4px 0 8px">${L.length?L.map(l=>`<div class="chr" style="align-items:flex-start;gap:8px"><span>${COLG[l.kind]||'•'}</span><div style="flex:1"><div class="hint">${esc(l.byName)} · ${new Date(l.ts).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}${l.rating?' · ⭐'.concat(l.rating):''}${l.kind==='checkin'&&l.val!=null?' · ค่า '+coFmt(p,l.val):''}</div><div style="white-space:pre-wrap">${esc(l.text)}</div></div></div>`).join(''):'<div class="hint">ยังไม่มีบันทึก</div>'}</div>
+   <div style="max-height:200px;overflow:auto;margin:4px 0 8px">${L.length?L.map(l=>`<div class="chr" style="align-items:flex-start;gap:8px"><span>${COLG[l.kind]||'•'}</span><div style="flex:1"><div class="hint">${esc(l.byName)}${l.stage&&COSG[l.stage]?' · '+COSG[l.stage][2]:''} · ${new Date(l.ts).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}${l.rating?' · ⭐'.concat(l.rating):''}${l.kind==='checkin'&&l.val!=null?' · ค่า '+coFmt(p,l.val):''}</div><div style="white-space:pre-wrap">${esc(l.text)}</div></div></div>`).join(''):'<div class="hint">ยังไม่มีบันทึก</div>'}</div>
    <div id="coAct"></div>
-   <div style="text-align:right;margin-top:8px"><button class="btn" onclick="closeModal()">ปิด</button></div>`);
+   <div style="display:flex;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn" id="coPdf">📄 ดาวน์โหลดข้อตกลง (PDF)</button><button class="btn" onclick="closeModal()">ปิด</button></div>`);
+  $('#coPdf').onclick=()=>coPdf(p);
   const act=$('#coAct'),refresh=async()=>{closeModal();await renderCoach(true);setTimeout(()=>coDetail(id),50)};
   let h='';
   if(isA&&p.status==='proposed')h+=`<div class="panel" style="margin:6px 0"><b>🤝 ตอบรับแผนนี้</b><div class="hint">การกดยอมรับ = คุณตกลงร่วมกับโค้ชตามเป้าและสิ่งที่จะทำข้างต้น และเริ่มวัดผลตั้งแต่ ${dShort(p.from)}</div><textarea id="coN" rows="2" maxlength="600" placeholder="ข้อความถึงโค้ช (ถ้ามี) — จำเป็นเมื่อขอแก้ไข" style="width:100%"></textarea><div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap"><button class="btn primary" id="coAg">✅ ยอมรับแผน</button><button class="btn warn" id="coRv">✏️ ขอแก้ไข</button></div></div>`;
   if(isC&&(p.status==='proposed'||p.status==='revise'))h+=`<div style="margin:6px 0"><button class="btn" id="coEd">✏️ แก้ไขแผน</button></div>`;
   if(open&&(isC||isA))h+=`<div class="panel" style="margin:6px 0"><b>💬 เพิ่มบันทึก / Feedback</b><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0"><select id="coLk"><option value="note">💬 บันทึกทั่วไป</option><option value="feedback">⭐ Feedback (ให้คะแนน)</option>${isC&&p.status==='active'?'<option value="checkin">📍 เช็กอินผล (บันทึกค่า KPI ปัจจุบัน)</option>':''}</select><select id="coLr" style="display:none">${[5,4,3,2,1].map(n=>`<option value="${n}">⭐ ${n}</option>`).join('')}</select></div><textarea id="coLt" rows="2" maxlength="800" style="width:100%" placeholder="${isC?'ให้คำแนะนำ/ชมเชย/ข้อสังเกต':'แจ้งความคืบหน้า/อุปสรรค/Feedback ต่อการโค้ช'}"></textarea><button class="btn primary" id="coLg" style="margin-top:6px">บันทึก</button></div>`;
+  if(isC&&p.status==='active'&&p.stages.length)h+=`<div class="panel" style="margin:6px 0"><b>📋 ประเมินการใช้สคริปต์ (จากการฟังสาย/สังเกต)</b><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0"><select id="coPs">${p.stages.map(k=>`<option value="${k}">${COSG[k]?COSG[k][1]+' '+COSG[k][2]:k}</option>`).join('')}</select><select id="coPr">${[5,4,3,2,1].map(n=>`<option value="${n}">⭐ ${n} ${({5:'ดีเยี่ยม',4:'ดี',3:'พอใช้',2:'ควรปรับ',1:'ต้องแก้ไข'})[n]}</option>`).join('')}</select></div><textarea id="coPt" rows="2" maxlength="800" style="width:100%" placeholder="สิ่งที่ทำได้ดี / จุดที่ควรปรับ ตามเงื่อนไขของขั้นตอนนี้"></textarea><button class="btn primary" id="coPg" style="margin-top:6px">บันทึกการประเมิน</button></div>`;
   if(isC&&p.status==='active'){const r=coProg(p,cur.v),sug=r==null?'partial':r>=1?'met':r>=.5?'partial':'missed';
     h+=`<div class="panel" style="margin:6px 0"><b>🏁 สรุปผลแผน</b><div class="hint">ค่าสุดท้ายที่ระบบคำนวณ: <b>${coFmt(p,cur.v)}</b>${p.kpi==='custom'?' (จากเช็กอินล่าสุด)':''}</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0"><select id="coOc">${Object.keys(COOC).map(o=>`<option value="${o}" ${o===sug?'selected':''}>${COOC[o][0]} ${COOC[o][1]}</option>`).join('')}</select></div><textarea id="coCt" rows="2" maxlength="800" style="width:100%" placeholder="สรุปสิ่งที่ได้เรียนรู้ และข้อเสนอแนะต่อไป"></textarea><button class="btn primary" id="coFn" style="margin-top:6px">สรุปผล</button></div>`}
   if(isC&&open)h+=`<div style="margin:6px 0"><a class="plk" id="coCx" style="color:var(--down)">🚫 ยกเลิกแผนนี้</a></div>`;
   act.innerHTML=h;
+  const gs=$('#coGoSc');if(gs)gs.onclick=()=>{closeModal();goTab('script')};
   const lk=$('#coLk');if(lk)lk.onchange=()=>{$('#coLr').style.display=lk.value==='feedback'?'':'none'};
   const on=(s,f)=>{const e=$(s);if(e)e.onclick=f};
   on('#coAg',()=>coDo(async()=>{await api('coachRespond',{id,action:'agree',note:$('#coN').value});toast('ยอมรับแผนแล้ว — เริ่มติดตามผล');await refresh()}));
   on('#coRv',()=>coDo(async()=>{await api('coachRespond',{id,action:'revise',note:$('#coN').value});toast('ส่งคำขอแก้ไขให้โค้ชแล้ว');await refresh()}));
   on('#coEd',()=>coForm(p));
+  on('#coPg',()=>coDo(async()=>{await api('coachLog',{id,kind:'practice',stage:$('#coPs').value,rating:$('#coPr').value,text:$('#coPt').value});toast('บันทึกการประเมินแล้ว');await refresh()}));
   on('#coLg',()=>coDo(async()=>{const kind=$('#coLk').value;await api('coachLog',{id,kind,text:$('#coLt').value,rating:kind==='feedback'?$('#coLr').value:'',val:kind==='checkin'&&cur.v!=null?Math.round(cur.v*100)/100:''});toast('บันทึกแล้ว');await refresh()}));
   on('#coFn',()=>coDo(async()=>{if(!confirm('ยืนยันสรุปผลแผนนี้? สรุปแล้วแก้ไขไม่ได้'))return;await api('coachClose',{id,action:'finish',outcome:$('#coOc').value,finalVal:cur.v==null?'':Math.round(cur.v*100)/100,note:$('#coCt').value});toast('สรุปผลแล้ว');await refresh()}));
   on('#coCx',()=>{const n=prompt('เหตุผลที่ยกเลิกแผน (อย่างน้อย 5 ตัวอักษร)');if(n==null)return;coDo(async()=>{await api('coachClose',{id,action:'cancel',note:n});toast('ยกเลิกแผนแล้ว');await refresh()})});
@@ -3979,7 +4036,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-13.4';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-13.7';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
