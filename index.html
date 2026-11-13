@@ -538,6 +538,7 @@ body.nohl .hlw::before{content:""}
     <button class="tabbtn" data-tab="eng" id="engTab" hidden>📈 Engagement</button>
     <button class="tabbtn" data-tab="tips">💡 เทคนิคขาย</button>
     <button class="tabbtn" data-tab="script">📞 สคริปต์ขาย</button>
+    <button class="tabbtn" data-tab="coach">🤝 โค้ช</button>
     <button class="tabbtn" data-tab="svc">🗂 ลา/ร้องเรียน</button>
     <button class="tabbtn" data-tab="game">🎮 เกม</button>
     <button class="tabbtn" data-tab="admin" id="adminTab" hidden>🛠 แอดมิน</button>
@@ -658,6 +659,7 @@ body.nohl .hlw::before{content:""}
 <section id="tab-feed" hidden><div class="rkctl"><div class="seg" id="feedSeg"><button data-v="feed">💬 หัวข้อสนทนา</button><button data-v="fb">💬 Feedback ถึงแอดมิน</button></div></div><div id="feedBody"></div><div id="fbBody" hidden></div></section>
 <section id="tab-tips" hidden><div id="tipsBody"></div></section>
 <section id="tab-script" hidden><div id="scriptBody"></div></section>
+<section id="tab-coach" hidden><div id="coachBody"></div></section>
 <section id="tab-prof" hidden><div id="profBody"></div></section>
 <section id="tab-ins" hidden><div id="insBody"></div></section>
 <section id="tab-eng" hidden><div id="engBody"></div></section>
@@ -3077,6 +3079,127 @@ function nnBind(){
   b.querySelectorAll('[data-nna]').forEach(a=>a.onclick=ev=>{ev.preventDefault();nnAgentModal(a.dataset.nna)});
 }
 
+/* =====================================================================
+   🤝 COACHING & FEEDBACK
+   ===================================================================== */
+const CO={d:null,f:'all',busy:false};
+const COK={amount:['💰','ยอดขายต่อวันทำงาน',v=>'฿'+fmt(Math.round(v))],point:['⭐','POINT ต่อวันทำงาน',v=>fmt(Math.round(v*10)/10)],sub:['👥','SUB ต่อวันทำงาน',v=>fmt(Math.round(v*100)/100)],
+  talk:['⏱','Talk Time เฉลี่ยต่อวัน',v=>Math.round(v)+' นาที'],hit:['🎯','อัตราวันที่มียอด',v=>Math.round(v)+'%'],ticket:['🏷️','ยอดเฉลี่ยต่อ SUB',v=>'฿'+fmt(Math.round(v))],custom:['✍️','เป้าอิสระ (กรอกเอง)',v=>fmt(Math.round(v*100)/100)]};
+const COST={proposed:['⏳','รอ Agent ตอบรับ','#f0b90b'],revise:['✏️','Agent ขอแก้ไข','#f0b90b'],active:['▶️','กำลังดำเนินการ','var(--up)'],closed:['🏁','สรุปผลแล้ว','var(--mute)'],cancelled:['🚫','ยกเลิก','var(--mute)']};
+const COOC={met:['✅','บรรลุเป้า','var(--up)'],partial:['🟡','บรรลุบางส่วน','#f0b90b'],missed:['❌','ยังไม่บรรลุ','var(--down)']};
+const COLG={propose:'📤',repropose:'🔁',agree:'✅',revise:'✏️',note:'💬',feedback:'⭐',checkin:'📍',close:'🏁',cancel:'🚫'};
+function coKpi(id,kpi,from,to){   // ดึงตัวเลขจริงจากข้อมูลในระบบ (หักวันลา)
+  const end=to>today?today:to;if(!id||!from||from>end)return {v:null,n:0};
+  if(kpi==='custom')return {v:null,n:0};
+  if(!DB[id]&&kpi!=='talk')return {v:null,n:0};
+  if(kpi==='talk'){let s=0,n=0;for(let k=from;k<=end;k=addDays(k,1)){const c=talkCell(id,k);if(c.s==='PASS'||c.s==='FAIL'){s+=c.m;n++}}return {v:n?s/n:null,n}}
+  const days=salesDays().filter(k=>k>=from&&k<=end&&!onLeaveOn(id,k)),n=days.length;if(!n)return {v:null,n:0};
+  const A=days.map(k=>dAmt(id,k)),SB=days.map(k=>dSub(id,k)),ta=nnSm(A),ts=nnSm(SB);
+  if(kpi==='amount')return {v:ta/n,n};if(kpi==='sub')return {v:ts/n,n};if(kpi==='point')return {v:nnSm(days.map(k=>dayPt(id,k)))/n,n};
+  if(kpi==='hit')return {v:A.filter(x=>x>0).length/n*100,n};if(kpi==='ticket')return {v:ts>0?ta/ts:null,n};return {v:null,n:0};
+}
+function coCur(p){   // ค่าปัจจุบันของแผน (อ้างอิงข้อมูลระบบ; เป้าอิสระใช้ค่าเช็กอินล่าสุด)
+  if(p.kpi==='custom'){const L=(CO.d.logs||[]).filter(l=>l.cid===p.id&&l.kind==='checkin'&&l.val!=null);return {v:L.length?L[L.length-1].val:null,n:L.length}}
+  return coKpi(p.agent,p.kpi,p.from,p.to);
+}
+function coFmt(p,v){return v==null?'–':(p.kpi==='custom'?fmt(Math.round(v*100)/100)+(p.unit?' '+esc(p.unit):''):COK[p.kpi][2](v))}
+function coProg(p,cur){if(cur==null||p.target==null||!(p.target>0))return null;const b=p.baseline;return b!=null&&p.target>b?(cur-b)/(p.target-b):cur/p.target}
+function coBar(p,cur){const r=coProg(p,cur),w=r==null?0:Math.max(0,Math.min(1,r))*100,col=r==null?'var(--mute)':r>=1?'var(--up)':r>=.5?'#f0b90b':'var(--down)';
+  return `<div style="display:flex;align-items:center;gap:8px"><div class="chbar"><i style="width:${w}%;background:${col}"></i></div><b class="num" style="min-width:44px;text-align:right">${r==null?'–':r>9.99?'999%+':Math.round(r*100)+'%'}</b></div>`}
+const coName=(id)=>{const m=memOf(id);return m?(m.nick||m.name):id};
+function coCard(p){
+  const st=COST[p.status]||COST.closed,cur=coCur(p),mineC=p.coach===CO.d.me,mineA=p.agent===CO.d.me,k=COK[p.kpi];
+  const oc=p.outcome&&COOC[p.outcome];
+  return `<div class="panel" data-coid="${esc(p.id)}" style="cursor:pointer;margin:6px 0;padding:10px 12px;border-left:4px solid ${st[2]}">
+   <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>${esc(p.title)}</b><span class="role" style="background:${st[2]}22;color:${st[2]}">${st[0]} ${st[1]}</span></div>
+   <div class="hint">${k[0]} ${esc(k[1])} · 🧑‍🏫 ${esc(p.coachName)} → 👤 ${esc(p.agentName)} · ${dShort(p.from)} – ${dShort(p.to)}${mineC?' · <b>คุณเป็นโค้ช</b>':mineA?' · <b>คุณเป็นผู้รับโค้ช</b>':''}</div>
+   <div class="hint" style="margin:6px 0 2px">เริ่มต้น <b>${coFmt(p,p.baseline)}</b> → ตอนนี้ <b>${coFmt(p,cur.v)}</b> → เป้า <b>${coFmt(p,p.target)}</b>${oc?` · <b style="color:${oc[2]}">${oc[0]} ${oc[1]}</b>`:''}</div>
+   ${p.target!=null?coBar(p,p.status==='closed'&&p.finalVal!=null?p.finalVal:cur.v):''}</div>`;
+}
+async function renderCoach(force){
+  const el=$('#coachBody');if(!el)return;
+  if(!CO.d||force){el.innerHTML='<div class="empty">⏳ กำลังโหลด…</div>';try{CO.d=await api('coachList')}catch(e){el.innerHTML=`<div class="empty">โหลดไม่สำเร็จ: ${esc(e.message)}</div>`;return}}
+  const P=CO.d.plans,F=CO.f,pick=p=>F==='all'||(F==='wait'&&(p.status==='proposed'||p.status==='revise'))||(F==='act'&&p.status==='active')||(F==='done'&&(p.status==='closed'||p.status==='cancelled'));
+  const cnt=f=>P.filter(p=>f==='all'||(f==='wait'&&(p.status==='proposed'||p.status==='revise'))||(f==='act'&&p.status==='active')||(f==='done'&&(p.status==='closed'||p.status==='cancelled'))).length;
+  const closed=P.filter(p=>p.status==='closed'),met=closed.filter(p=>p.outcome==='met').length;
+  const todo=P.filter(p=>(p.agent===CO.d.me&&p.status==='proposed')||(p.coach===CO.d.me&&(p.status==='revise'||(p.status==='active'&&p.to<today))));
+  el.innerHTML=`<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>🤝 COACHING & FEEDBACK</span>${CO.d.canCoach?`<button class="btn primary" id="coNew">➕ สร้างแผนโค้ช</button>`:''}</h3>
+   <div class="hint">ขั้นตอน: ① โค้ชเสนอแผน (เป้า KPI + ระยะเวลาไม่เกิน 7 วัน + สิ่งที่จะทำร่วมกัน) → ② Agent กด <b>ยอมรับ</b> หรือ <b>ขอแก้ไข</b> → ③ เมื่อตกลงร่วมกันแล้วจึงเริ่มวัดผลจากข้อมูลจริงใน SALE X → ④ โค้ชเช็กอิน/ให้ Feedback ระหว่างทาง → ⑤ ครบกำหนดสรุปผล · แผนและบันทึกทั้งหมดเห็นได้เฉพาะโค้ช + Agent เจ้าของแผน + แอดมิน</div>
+   ${todo.length?`<div class="panel" style="margin:8px 0;background:var(--panel2)"><b>📌 รอคุณดำเนินการ ${todo.length} รายการ</b><div class="hint">${todo.map(p=>`${p.agent===CO.d.me?'ตอบรับแผน':p.status==='revise'?'แก้ไขตามที่ Agent ขอ':'สรุปผลแผนที่ครบกำหนด'} “${esc(p.title)}”`).join(' · ')}</div></div>`:''}
+   <div class="stats"><div class="stat"><small>แผนทั้งหมด</small><b>${P.length}</b></div><div class="stat"><small>กำลังดำเนินการ</small><b>${cnt('act')}</b></div><div class="stat"><small>รอตอบรับ/แก้ไข</small><b>${cnt('wait')}</b></div><div class="stat"><small>บรรลุเป้า (สรุปแล้ว)</small><b>${closed.length?met+'/'+closed.length:'–'}</b></div></div>
+   <div class="chips" style="margin:8px 0">${[['all','ทั้งหมด'],['wait','⏳ รอตอบรับ'],['act','▶️ กำลังดำเนินการ'],['done','🏁 จบแล้ว']].map(([k,l])=>`<button class="chip ${F===k?'on':''}" data-cof="${k}">${l} (${cnt(k)})</button>`).join('')}</div>
+   ${P.filter(pick).map(coCard).join('')||`<div class="empty">${P.length?'ไม่มีแผนในหมวดนี้':CO.d.canCoach?'ยังไม่มีแผนโค้ช — กด “➕ สร้างแผนโค้ช” เพื่อเริ่มกับ Agent ในทีมของคุณ':'ยังไม่มีแผนโค้ชที่เกี่ยวข้องกับคุณ'}`}</div>
+   <div class="hint">ตัวเลข “ตอนนี้” คำนวณสดจากข้อมูลยอดขาย/POINT/SUB/Talk Time ในระบบ (หักวันลา) ในช่วงของแผน · ใช้เพื่อพัฒนาร่วมกัน ไม่ใช่ตัดสินตัวบุคคลเพียงอย่างเดียว</div>`;
+  if($('#coNew'))$('#coNew').onclick=()=>coForm();
+  $$('[data-cof]').forEach(b=>b.onclick=()=>{CO.f=b.dataset.cof;renderCoach()});
+  $$('[data-coid]').forEach(c=>c.onclick=()=>coDetail(c.dataset.coid));
+}
+const coTpl={amount:'• ฟังการโทรของ Agent 2 สายต่อสัปดาห์ แล้วให้ Feedback ทันที\n• ซ้อมสคริปต์ปิดการขายและรับมือข้อโต้แย้ง 3 ครั้ง/สัปดาห์\n• ตั้งเป้ายอดรายวัน และทบทวนผลทุกวันศุกร์',point:'• เน้นนำเสนอสินค้า Factor สูงควบคู่ยอดเงิน\n• ทบทวนสินค้าที่ขายดีของทีม 1 ครั้ง/สัปดาห์\n• ตั้งเป้า POINT รายวัน และทบทวนผลทุกวันศุกร์',sub:'• เพิ่มจำนวนรายชื่อลูกค้าที่โทร/วัน\n• ซ้อมการปิดดีลเล็กหลายราย\n• ทบทวนจำนวน SUB รายสัปดาห์',talk:'• ตั้งเป้า Talk Time/วัน และลดเวลา Not Ready ที่ไม่จำเป็น\n• ฟังเทปสายที่ตัดจบเร็ว 2 สาย/สัปดาห์\n• ทบทวนช่วงเวลาที่โทรได้ผลดี',hit:'• ตั้งเป้า “ปิดอย่างน้อย 1 รายการ/วัน”\n• เช็กความคืบหน้ากับโค้ชตอนบ่ายทุกวัน\n• ทบทวนวันที่ไม่มียอดว่าติดที่จุดไหน',ticket:'• ฝึกเสนอแพ็กเกจสูงขึ้น/ขายพ่วง\n• ซ้อมสคริปต์ Upsell 3 ครั้ง/สัปดาห์\n• ทบทวนขนาดดีลรายสัปดาห์',custom:'• ระบุสิ่งที่จะทำและวิธีวัดผลให้ชัดเจน'};
+function coForm(p){
+  const D0=CO.d,edit=!!p,agents=D0.agents.slice(),k0=p?p.kpi:'point',f0=p?p.from:today,t0=p?p.to:addDays(today,6);
+  const ag=p?p.agent:(agents[0]&&agents[0].id)||'';
+  openModal(`<h3>${edit?'✏️ แก้ไขแผนโค้ช':'➕ สร้างแผนโค้ช'}</h3>
+   <div class="hint" style="margin-bottom:8px">แผนจะ “ยังไม่เริ่มวัดผล” จนกว่า Agent จะกดยอมรับ</div>
+   <div class="fld"><label>Agent ที่จะโค้ช</label>${edit?`<input disabled value="${esc(p.agentName)}">`:`<select id="cfA">${agents.map(a=>`<option value="${esc(a.id)}" ${a.id===ag?'selected':''}>${esc(a.nick||a.name)} · ${esc(teamOf(a.team).name||a.team)}</option>`).join('')}</select>`}</div>
+   <div class="fld"><label>ชื่อแผน</label><input id="cfT" maxlength="80" value="${esc(p?p.title:'')}" placeholder="เช่น เพิ่ม POINT ต่อวันให้ถึงเป้าภายใน 7 วัน"></div>
+   <div class="fld"><label>ตัวชี้วัด KPI</label><select id="cfK">${Object.keys(COK).map(k=>`<option value="${k}" ${k===k0?'selected':''}>${COK[k][0]} ${COK[k][1]}</option>`).join('')}</select></div>
+   <div style="display:flex;gap:8px;flex-wrap:wrap"><div class="fld" style="flex:1;min-width:130px"><label>เริ่ม</label><input type="date" id="cfF" value="${f0}"></div><div class="fld" style="flex:1;min-width:130px"><label>สิ้นสุด (ไม่เกิน 7 วัน)</label><input type="date" id="cfE" value="${t0}"></div></div>
+   <div style="display:flex;gap:8px;flex-wrap:wrap"><div class="fld" style="flex:1;min-width:130px"><label>ค่าเริ่มต้น (Baseline)</label><input type="number" id="cfB" step="any" value="${p&&p.baseline!=null?p.baseline:''}"></div><div class="fld" style="flex:1;min-width:130px"><label>เป้าหมาย</label><input type="number" id="cfG" step="any" value="${p&&p.target!=null?p.target:''}"></div><div class="fld" id="cfUw" style="flex:1;min-width:100px"><label>หน่วย (เป้าอิสระ)</label><input id="cfU" maxlength="20" value="${esc(p?p.unit:'')}"></div></div>
+   <div class="hint" id="cfH" style="margin-bottom:6px"></div>
+   <div class="fld"><label>สิ่งที่จะทำร่วมกัน (Agent ทำอะไร / ความถี่) <a class="plk" id="cfTp">💡 เติมตัวอย่าง</a></label><textarea id="cfP" rows="4" maxlength="1500" placeholder="ระบุให้ชัดเจน วัดผลได้">${esc(p?p.plan:'')}</textarea></div>
+   <div class="fld"><label>สิ่งที่โค้ชจะช่วย/สนับสนุน (ไม่บังคับ)</label><textarea id="cfS" rows="2" maxlength="600">${esc(p?p.support:'')}</textarea></div>
+   <div style="text-align:right;display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn primary" id="cfOk">${edit?'บันทึกและเสนออีกครั้ง':'เสนอแผนให้ Agent'}</button></div>`);
+  let touched=!!(p&&p.baseline!=null);
+  const agent=()=>edit?p.agent:$('#cfA').value,upd=()=>{const k=$('#cfK').value;$('#cfUw').style.display=k==='custom'?'':'none';
+    const f=$('#cfF').value;if(!f||k==='custom'){$('#cfH').textContent=k==='custom'?'เป้าอิสระ: โค้ชบันทึกค่าด้วยการ “เช็กอิน” ระหว่างแผน':'';return}
+    const r=coKpi(agent(),k,addDays(f,-30),addDays(f,-1));
+    $('#cfH').innerHTML=r.v==null?'ยังไม่มีข้อมูลย้อนหลัง 30 วันก่อนเริ่มของ Agent คนนี้ — กรอกค่าเริ่มต้นเอง':`ค่าเฉลี่ย 30 วันก่อนเริ่มของ Agent = <b>${COK[k][2](r.v)}</b> (${r.n} วัน) · แนะนำเป้า: <a class="plk" data-cfs="1.1">+10%</a> · <a class="plk" data-cfs="1.2">+20%</a> · <a class="plk" data-cfs="1.3">+30%</a>`;
+    if(!touched&&r.v!=null)$('#cfB').value=Math.round(r.v*100)/100;
+    $$('[data-cfs]').forEach(a=>a.onclick=()=>{const b=r.v;if(b!=null)$('#cfG').value=Math.round(b*+a.dataset.cfs*100)/100})};
+  ['#cfK','#cfF'].forEach(s=>$(s).onchange=upd);$('#cfF').addEventListener('change',()=>{const f=$('#cfF').value;if(f){$('#cfE').value=addDays(f,6)}});if($('#cfA'))$('#cfA').onchange=upd;$('#cfB').oninput=()=>{touched=true};
+  $('#cfTp').onclick=()=>{if(!$('#cfP').value.trim()||confirm('แทนที่ข้อความเดิมด้วยตัวอย่าง?'))$('#cfP').value=coTpl[$('#cfK').value]||''};
+  upd();
+  $('#cfOk').onclick=()=>coDo(async()=>{await api('coachSave',{id:p?p.id:undefined,agent:agent(),title:$('#cfT').value,kpi:$('#cfK').value,from:$('#cfF').value,to:$('#cfE').value,baseline:$('#cfB').value,target:$('#cfG').value,unit:$('#cfU').value,plan:$('#cfP').value,support:$('#cfS').value});closeModal();toast(edit?'บันทึกแล้ว — เสนอให้ Agent อีกครั้ง':'เสนอแผนให้ Agent แล้ว');await renderCoach(true)});
+}
+async function coDo(fn){if(CO.busy)return;CO.busy=true;try{await fn()}catch(e){toast(e.message||'ไม่สำเร็จ')}finally{CO.busy=false}}
+function coDetail(id,keep){
+  const p=CO.d.plans.find(x=>x.id===id);if(!p)return;
+  const me=CO.d.me,isC=p.coach===me||CO.d.isAdmin,isA=p.agent===me,st=COST[p.status]||COST.closed,k=COK[p.kpi],cur=coCur(p),oc=p.outcome&&COOC[p.outcome],open=['proposed','revise','active'].includes(p.status);
+  const L=CO.d.logs.filter(l=>l.cid===p.id),dr=(v)=>v;
+  const fbAvg=(()=>{const r=L.filter(l=>l.rating>0).map(l=>l.rating);return r.length?(r.reduce((a,b)=>a+b,0)/r.length).toFixed(1):null})();
+  openModal(`<h3>${esc(p.title)} <span class="role" style="background:${st[2]}22;color:${st[2]}">${st[0]} ${st[1]}</span></h3>
+   <div class="hint">🧑‍🏫 โค้ช ${esc(p.coachName)} → 👤 ${esc(p.agentName)} · ${esc(teamOf(p.team).name||p.team)} · ${dShort(p.from)} – ${dShort(p.to)}</div>
+   <div class="panel" style="margin:8px 0;background:var(--panel2)"><b>${k[0]} ${esc(k[1])}${p.kpi==='custom'&&p.unit?' ('+esc(p.unit)+')':''}</b>
+    <div class="stats" style="margin:6px 0"><div class="stat"><small>เริ่มต้น</small><b>${coFmt(p,p.baseline)}</b></div><div class="stat"><small>ตอนนี้${cur.n?` (${cur.n} ${p.kpi==='custom'?'เช็กอิน':'วัน'})`:''}</small><b>${coFmt(p,cur.v)}</b></div><div class="stat"><small>เป้า</small><b>${coFmt(p,p.target)}</b></div>${p.status==='closed'?`<div class="stat"><small>ผลสรุป</small><b style="color:${oc?oc[2]:''}">${oc?oc[0]+' '+oc[1]:'–'}</b></div>`:''}</div>
+    ${p.target!=null?coBar(p,p.status==='closed'&&p.finalVal!=null?p.finalVal:cur.v):''}
+    ${p.status==='proposed'||p.status==='revise'?'<div class="hint">ยังไม่เริ่มวัดผลอย่างเป็นทางการ จนกว่า Agent จะยอมรับแผน (ตัวเลข “ตอนนี้” เป็นเพียงข้อมูลอ้างอิง)</div>':''}</div>
+   <b>📋 สิ่งที่จะทำร่วมกัน</b><div style="white-space:pre-wrap;margin:4px 0 8px">${esc(p.plan)}</div>
+   ${p.support?`<b>🤲 สิ่งที่โค้ชจะสนับสนุน</b><div style="white-space:pre-wrap;margin:4px 0 8px">${esc(p.support)}</div>`:''}
+   ${p.agentNote&&p.status!=='active'?`<div class="panel" style="background:var(--panel2)"><b>💬 Agent แจ้งว่า</b><div style="white-space:pre-wrap">${esc(p.agentNote)}</div></div>`:''}
+   ${p.status==='closed'?`<div class="panel" style="background:var(--panel2);margin:6px 0"><b>🏁 สรุปผลโดยโค้ช</b><div style="white-space:pre-wrap">${esc(p.closeNote)}</div></div>`:p.status==='cancelled'?`<div class="hint">🚫 ยกเลิก: ${esc(p.closeNote)}</div>`:''}
+   <b>🕒 ไทม์ไลน์${fbAvg?` · คะแนน Feedback เฉลี่ย ⭐${fbAvg}`:''}</b>
+   <div style="max-height:200px;overflow:auto;margin:4px 0 8px">${L.length?L.map(l=>`<div class="chr" style="align-items:flex-start;gap:8px"><span>${COLG[l.kind]||'•'}</span><div style="flex:1"><div class="hint">${esc(l.byName)} · ${new Date(l.ts).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}${l.rating?' · ⭐'.concat(l.rating):''}${l.kind==='checkin'&&l.val!=null?' · ค่า '+coFmt(p,l.val):''}</div><div style="white-space:pre-wrap">${esc(l.text)}</div></div></div>`).join(''):'<div class="hint">ยังไม่มีบันทึก</div>'}</div>
+   <div id="coAct"></div>
+   <div style="text-align:right;margin-top:8px"><button class="btn" onclick="closeModal()">ปิด</button></div>`);
+  const act=$('#coAct'),refresh=async()=>{closeModal();await renderCoach(true);setTimeout(()=>coDetail(id),50)};
+  let h='';
+  if(isA&&p.status==='proposed')h+=`<div class="panel" style="margin:6px 0"><b>🤝 ตอบรับแผนนี้</b><div class="hint">การกดยอมรับ = คุณตกลงร่วมกับโค้ชตามเป้าและสิ่งที่จะทำข้างต้น และเริ่มวัดผลตั้งแต่ ${dShort(p.from)}</div><textarea id="coN" rows="2" maxlength="600" placeholder="ข้อความถึงโค้ช (ถ้ามี) — จำเป็นเมื่อขอแก้ไข" style="width:100%"></textarea><div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap"><button class="btn primary" id="coAg">✅ ยอมรับแผน</button><button class="btn warn" id="coRv">✏️ ขอแก้ไข</button></div></div>`;
+  if(isC&&(p.status==='proposed'||p.status==='revise'))h+=`<div style="margin:6px 0"><button class="btn" id="coEd">✏️ แก้ไขแผน</button></div>`;
+  if(open&&(isC||isA))h+=`<div class="panel" style="margin:6px 0"><b>💬 เพิ่มบันทึก / Feedback</b><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0"><select id="coLk"><option value="note">💬 บันทึกทั่วไป</option><option value="feedback">⭐ Feedback (ให้คะแนน)</option>${isC&&p.status==='active'?'<option value="checkin">📍 เช็กอินผล (บันทึกค่า KPI ปัจจุบัน)</option>':''}</select><select id="coLr" style="display:none">${[5,4,3,2,1].map(n=>`<option value="${n}">⭐ ${n}</option>`).join('')}</select></div><textarea id="coLt" rows="2" maxlength="800" style="width:100%" placeholder="${isC?'ให้คำแนะนำ/ชมเชย/ข้อสังเกต':'แจ้งความคืบหน้า/อุปสรรค/Feedback ต่อการโค้ช'}"></textarea><button class="btn primary" id="coLg" style="margin-top:6px">บันทึก</button></div>`;
+  if(isC&&p.status==='active'){const r=coProg(p,cur.v),sug=r==null?'partial':r>=1?'met':r>=.5?'partial':'missed';
+    h+=`<div class="panel" style="margin:6px 0"><b>🏁 สรุปผลแผน</b><div class="hint">ค่าสุดท้ายที่ระบบคำนวณ: <b>${coFmt(p,cur.v)}</b>${p.kpi==='custom'?' (จากเช็กอินล่าสุด)':''}</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0"><select id="coOc">${Object.keys(COOC).map(o=>`<option value="${o}" ${o===sug?'selected':''}>${COOC[o][0]} ${COOC[o][1]}</option>`).join('')}</select></div><textarea id="coCt" rows="2" maxlength="800" style="width:100%" placeholder="สรุปสิ่งที่ได้เรียนรู้ และข้อเสนอแนะต่อไป"></textarea><button class="btn primary" id="coFn" style="margin-top:6px">สรุปผล</button></div>`}
+  if(isC&&open)h+=`<div style="margin:6px 0"><a class="plk" id="coCx" style="color:var(--down)">🚫 ยกเลิกแผนนี้</a></div>`;
+  act.innerHTML=h;
+  const lk=$('#coLk');if(lk)lk.onchange=()=>{$('#coLr').style.display=lk.value==='feedback'?'':'none'};
+  const on=(s,f)=>{const e=$(s);if(e)e.onclick=f};
+  on('#coAg',()=>coDo(async()=>{await api('coachRespond',{id,action:'agree',note:$('#coN').value});toast('ยอมรับแผนแล้ว — เริ่มติดตามผล');await refresh()}));
+  on('#coRv',()=>coDo(async()=>{await api('coachRespond',{id,action:'revise',note:$('#coN').value});toast('ส่งคำขอแก้ไขให้โค้ชแล้ว');await refresh()}));
+  on('#coEd',()=>coForm(p));
+  on('#coLg',()=>coDo(async()=>{const kind=$('#coLk').value;await api('coachLog',{id,kind,text:$('#coLt').value,rating:kind==='feedback'?$('#coLr').value:'',val:kind==='checkin'&&cur.v!=null?Math.round(cur.v*100)/100:''});toast('บันทึกแล้ว');await refresh()}));
+  on('#coFn',()=>coDo(async()=>{if(!confirm('ยืนยันสรุปผลแผนนี้? สรุปแล้วแก้ไขไม่ได้'))return;await api('coachClose',{id,action:'finish',outcome:$('#coOc').value,finalVal:cur.v==null?'':Math.round(cur.v*100)/100,note:$('#coCt').value});toast('สรุปผลแล้ว');await refresh()}));
+  on('#coCx',()=>{const n=prompt('เหตุผลที่ยกเลิกแผน (อย่างน้อย 5 ตัวอักษร)');if(n==null)return;coDo(async()=>{await api('coachClose',{id,action:'cancel',note:n});toast('ยกเลิกแผนแล้ว');await refresh()})});
+}
+
 /* ---- 🔔 แจ้งเตือนสังคม ---- */
 const socSeen=()=>+LS.get('sb_soc')||0;
 const socUnread=()=>((SOC.noti||[]).filter(i=>i.ts>socSeen()).length);
@@ -3856,7 +3979,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-13.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-13.4';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -3872,7 +3995,7 @@ function render(){
   if(S.tab==='spot')S.tab='rank';if(S.tab==='fb'){S.tab='feed';S.feedView='fb'}
   if((S.tab==='admin'||S.tab==='eng')&&!D.isAdmin)S.tab='dash';
   if(S.tab==='run'&&!D.canSeeAll)S.tab='dash';
-  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins','eng','tips','prof','script'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
+  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins','eng','tips','prof','script','coach'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
   $$('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab));
   if(S.tab==='dash'){rebuildProd();syncControls();renderTop();renderComStrip();renderSvcStrip();renderQuote();renderChart();ensureSpot();ensureTips();ensurePostPop()}
   else if(S.tab==='rank'){renderRank();renderSpotTab();renderTokBoard()}
@@ -3887,6 +4010,7 @@ function render(){
   else if(S.tab==='eng')renderEng();
   else if(S.tab==='tips')renderTips();
   else if(S.tab==='script')renderScript();
+  else if(S.tab==='coach')renderCoach();
   else if(S.tab==='prof')renderProfPage();
   else if(S.tab==='svc')renderSvc();
   else if(S.tab==='game'){if(S.tab!==LASTTAB)GM=null;renderGame()}
@@ -4405,17 +4529,17 @@ async function spin(){
    แจ้งเตือน (กระดิ่ง) · เมนูล่างมือถือ
    ===================================================================== */
 const inbSeen=()=>+LS.get('sb_inb')||0;
-function inboxUnread(){return (D.inbox||[]).filter(i=>i.k==='pend'||i.k==='sla'||i.k==='scaudit'||i.k==='screp'||i.ts>inbSeen()).length+(typeof socUnread==='function'?socUnread():0)}
+function inboxUnread(){return (D.inbox||[]).filter(i=>i.k==='pend'||i.k==='sla'||i.k==='scaudit'||i.k==='screp'||(i.k==='coach'&&i.act)||i.ts>inbSeen()).length+(typeof socUnread==='function'?socUnread():0)}
 function renderBell(){const n=inboxUnread(),b=$('#bellN');b.hidden=!n;b.textContent=n>99?'99+':n}
 function openInbox(){
   const L=(D.inbox||[]).concat((SOC.noti||[]).map(i=>Object.assign({tone:''},i))).sort((a,b)=>b.ts-a.ts);
-  openModal(`<h2>🔔 แจ้งเตือน</h2><div class="mlist">${L.length?L.map(i=>`<div class="ibi ${i.tone}" data-ib="${esc(i.go)}"><span>${{leave:'🙋',pend:'📝',cmp:'🗂',like:'❤️',cm:'💬',post:'📢',scaudit:'🔍',screp:'💡'}[i.k]||'⏰'}</span><div>${esc(i.text)}<small>${tsTxt(i.ts)}</small></div></div>`).join(''):'<div class="empty">ไม่มีแจ้งเตือน</div>'}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`);
-  $$('[data-ib]').forEach(x=>x.onclick=()=>{closeModal();if(x.dataset.ib==='scaudit'){S.adm='scr';goTab('admin')}else if(x.dataset.ib==='feed'){S.feedView='feed';goTab('feed')}else goTab('svc:'+(x.dataset.ib==='leave'?'leave':'cmp'))});
+  openModal(`<h2>🔔 แจ้งเตือน</h2><div class="mlist">${L.length?L.map(i=>`<div class="ibi ${i.tone}" data-ib="${esc(i.go)}"><span>${{leave:'🙋',pend:'📝',cmp:'🗂',like:'❤️',cm:'💬',post:'📢',scaudit:'🔍',screp:'💡',coach:'🤝'}[i.k]||'⏰'}</span><div>${esc(i.k==='coach'?i.text.replace(/^\S+\s/,''):i.text)}<small>${tsTxt(i.ts)}</small></div></div>`).join(''):'<div class="empty">ไม่มีแจ้งเตือน</div>'}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`);
+  $$('[data-ib]').forEach(x=>x.onclick=()=>{closeModal();if(x.dataset.ib==='scaudit'){S.adm='scr';goTab('admin')}else if(x.dataset.ib==='coach'){CO.d=null;goTab('coach')}else if(x.dataset.ib==='feed'){S.feedView='feed';goTab('feed')}else goTab('svc:'+(x.dataset.ib==='leave'?'leave':'cmp'))});
   LS.set('sb_inb',String(nowMs()));LS.set('sb_soc',String(nowMs()));renderBell();renderBnav();
 }
 $('#bellBtn').onclick=()=>D&&openInbox();
 /* ---------- เมนู: ลำดับ/ซ่อน ตั้งโดยแอดมิน (config menuOrder) ---------- */
-const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['prof','👤','PROFILE','👤 PROFILE'],['feed','💬','หัวข้อ','💬 หัวข้อ & Feedback'],['ins','📊','Insight','📊 Insight'],['eng','📈','Engagement','📈 Engagement (แอดมิน)'],['tips','💡','เทคนิค','💡 เทคนิคขาย'],['script','📞','สคริปต์ขาย','📞 สคริปต์ขาย'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
+const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['prof','👤','PROFILE','👤 PROFILE'],['feed','💬','หัวข้อ','💬 หัวข้อ & Feedback'],['ins','📊','Insight','📊 Insight'],['eng','📈','Engagement','📈 Engagement (แอดมิน)'],['tips','💡','เทคนิค','💡 เทคนิคขาย'],['script','📞','สคริปต์ขาย','📞 สคริปต์ขาย'],['coach','🤝','โค้ช','🤝 COACHING & Feedback'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
 function menuList(raw){   // คืน [{id,show}] ตามลำดับที่ตั้ง (ที่ไม่ได้ระบุต่อท้ายตามค่าเริ่มต้น)
   const L=[],seen={};String(raw==null?((D.v5&&D.v5.cfg&&D.v5.cfg.menu)||''):raw).split(/[,;\s]+/).filter(Boolean).forEach(x=>{const h=x[0]==='-',id=h?x.slice(1):x;if(seen[id]||!TABDEF.some(t=>t[0]===id))return;seen[id]=1;L.push({id,show:!(h&&id!=='dash'&&id!=='admin')})});
   TABDEF.forEach(t=>{if(!seen[t[0]])L.push({id:t[0],show:true})});return L}
