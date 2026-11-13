@@ -3254,15 +3254,15 @@ function coDetail(id,keep){
   const gs=$('#coGoSc');if(gs)gs.onclick=()=>{closeModal();goTab('script')};
   const lk=$('#coLk');if(lk)lk.onchange=()=>{$('#coLr').style.display=lk.value==='feedback'?'':'none'};
   const on=(s,f)=>{const e=$(s);if(e)e.onclick=f};
-  on('#coAg',()=>coDo(async()=>{await api('coachRespond',{id,action:'agree',note:$('#coN').value});toast('ยอมรับแผนแล้ว — เริ่มติดตามผล');await refresh()}));
-  on('#coRv',()=>coDo(async()=>{await api('coachRespond',{id,action:'revise',note:$('#coN').value});toast('ส่งคำขอแก้ไขให้โค้ชแล้ว');await refresh()}));
+  on('#coAg',()=>coDo(async()=>{await api('coachRespond',{id,act:'agree',note:$('#coN').value});toast('ยอมรับแผนแล้ว — เริ่มติดตามผล');await refresh()}));
+  on('#coRv',()=>coDo(async()=>{await api('coachRespond',{id,act:'revise',note:$('#coN').value});toast('ส่งคำขอแก้ไขให้โค้ชแล้ว');await refresh()}));
   on('#coEd',()=>coForm(p));
   on('#coPg',()=>coDo(async()=>{await api('coachLog',{id,kind:'practice',stage:$('#coPs').value,rating:$('#coPr').value,text:$('#coPt').value});toast('บันทึกการประเมินแล้ว');await refresh()}));
   on('#coLg',()=>coDo(async()=>{const kind=$('#coLk').value;await api('coachLog',{id,kind,text:$('#coLt').value,rating:kind==='feedback'?$('#coLr').value:'',val:kind==='checkin'&&cur.v!=null?Math.round(cur.v*100)/100:''});toast('บันทึกแล้ว');await refresh()}));
-  on('#coFn',()=>coDo(async()=>{if($('#coCt').value.trim().length<5){toast('กรุณาเขียนสรุปอย่างน้อย 5 ตัวอักษร');return}await api('coachClose',{id,action:'finish',outcome:$('#coOc').value,finalVal:cur.v==null?'':Math.round(cur.v*100)/100,note:$('#coCt').value});toast('สรุปผลแล้ว');await refresh()}));
+  on('#coFn',()=>coDo(async()=>{if($('#coCt').value.trim().length<5){toast('กรุณาเขียนสรุปอย่างน้อย 5 ตัวอักษร');return}await api('coachClose',{id,act:'finish',outcome:$('#coOc').value,finalVal:cur.v==null?'':Math.round(cur.v*100)/100,note:$('#coCt').value});toast('สรุปผลแล้ว');await refresh()}));
   on('#coCx',()=>{const c=$('#coCxBox');c.hidden=false;c.innerHTML=`<div class="panel" style="margin:6px 0;border-left:4px solid var(--down)"><b>🚫 ยืนยันจะยกเลิกแผนนี้หรือไม่?</b><div class="hint">แผนที่ยกเลิกแล้วจะย้ายไปหมวด “จบแล้ว” และยังเก็บประวัติไว้</div><div style="display:flex;gap:8px;margin-top:6px"><button class="btn danger" id="coCxGo">ยืนยันยกเลิก</button><button class="btn" id="coCxNo">ไม่ยกเลิก</button></div></div>`;
     $('#coCxNo').onclick=()=>{c.hidden=true;c.innerHTML=''};
-    $('#coCxGo').onclick=()=>coDo(async()=>{await api('coachClose',{id,action:'cancel'});toast('ยกเลิกแผนแล้ว');await refresh()})});
+    $('#coCxGo').onclick=()=>coDo(async()=>{await api('coachClose',{id,act:'cancel'});toast('ยกเลิกแผนแล้ว');await refresh()})});
 }
 
 /* ---- 🔔 แจ้งเตือนสังคม ---- */
@@ -3522,8 +3522,8 @@ async function scAuditView(box){
     const nb=x.body.split(i.from).join(i.to),nt=x.title.split(i.from).join(i.to);if(nb===x.body&&nt===x.title){toast('ไม่พบข้อความนี้ในสคริปต์แล้ว');return}
     if(!confirm('แทนที่ “'+i.from+'” เป็น “'+i.to+'” ในสคริปต์ “'+x.title+'” ทุกจุด?'))return;
     b.disabled=true;try{await api('scriptSave',{id:x.id,product:x.product,stage:x.stage,title:nt,body:nb,alt:x.alt||'',audio:x.audio||'',order:x.order});toast('✅ แก้ให้แล้ว');await reload()}catch(e){toast('⚠️ '+e.message);b.disabled=false}});
-  box.querySelectorAll('[data-aign]').forEach(b=>b.onclick=async()=>{const i=show[+b.dataset.aign];b.disabled=true;try{await api('scriptReportResolve',{action:'ignore',key:i.key,scriptId:i.id,title:i.title,rule:i.rule});await reload()}catch(e){toast('⚠️ '+e.message);b.disabled=false}});
-  const rs=(sel,act)=>box.querySelectorAll(sel).forEach(b=>b.onclick=async()=>{b.disabled=true;try{await api('scriptReportResolve',{action:act,id:b.dataset[Object.keys(b.dataset)[0]]});await reload()}catch(e){toast('⚠️ '+e.message);b.disabled=false}});
+  box.querySelectorAll('[data-aign]').forEach(b=>b.onclick=async()=>{const i=show[+b.dataset.aign];b.disabled=true;try{await api('scriptReportResolve',{act:'ignore',key:i.key,scriptId:i.id,title:i.title,rule:i.rule});await reload()}catch(e){toast('⚠️ '+e.message);b.disabled=false}});
+  const rs=(sel,act)=>box.querySelectorAll(sel).forEach(b=>b.onclick=async()=>{b.disabled=true;try{await api('scriptReportResolve',{act:act,id:b.dataset[Object.keys(b.dataset)[0]]});await reload()}catch(e){toast('⚠️ '+e.message);b.disabled=false}});
   rs('[data-rdone]','done');rs('[data-rdis]','dismiss');rs('[data-rre]','reopen');
   box.querySelectorAll('[data-redit]').forEach(b=>b.onclick=()=>{const x=SC.d.items.find(t=>t.id===b.dataset.redit);if(x)scriptModal(x)});
 }
@@ -4044,7 +4044,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-14.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-14.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
