@@ -2135,9 +2135,14 @@ function perfCalc(){
   items.sort((a,b)=>(b.low?1:0)-(a.low?1:0));
   return {ym,g,pg,gradeDrop,items,low:items.filter(x=>x.low)};
 }
+/* POP UP หน้าหลักทุกชนิด แสดงได้ไม่เกิน 1 ครั้งต่อวัน (ต่อคน ต่อเครื่อง/เบราว์เซอร์) */
+const popDay=k=>{try{return localStorage.getItem('sx_pd_'+k+'_'+((D&&D.me&&D.me.id)||''))===today}catch(e){return false}};
+const popMark=k=>{try{localStorage.setItem('sx_pd_'+k+'_'+((D&&D.me&&D.me.id)||''),today)}catch(e){}};
 function perfPopupOnce(){
   if(S.perfPop||!D||!TOKEN||S.tab!=='dash'||!$('#modal').hidden||FORCEPW)return false;
+  if(popDay('perf')){S.perfPop=1;return false}
   const P=perfCalc();S.perfPop=1;if(!P||(!P.low.length&&!P.gradeDrop))return false;
+  popMark('perf');
   const g=P.g,gr=g?g[0]:null,mon=THMON[+P.ym.slice(5)-1]+' '+(+P.ym.slice(0,4)+543),nm=esc(String(D.me.nick||D.me.name||''));
   const gh=gr?`<div style="display:flex;gap:14px;align-items:center;margin:8px 0 12px;padding:12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)"><div style="font-size:54px;line-height:1">${gradeBadge(gr).replace('gb ','gb xl ')}</div><div><div style="font-size:20px;font-weight:800">เกรดของคุณตอนนี้: ${gr}</div><div class="hint">${GLBL[gr]} ของค่าเฉลี่ย · ${mon}</div>${P.pg?`<div style="margin-top:2px;font-weight:700;color:${P.gradeDrop?'var(--down)':'var(--mute)'}">${P.gradeDrop?'▼ ลดลงจากเกรด '+P.pg[0]+' ของเดือนก่อน':'เดือนก่อน เกรด '+P.pg[0]}</div>`:''}</div></div>`:'';
   const tag=(txt,col)=>`<div style="font-size:14px;font-weight:800;color:${col};white-space:nowrap">${txt}</div>`;
@@ -2167,8 +2172,8 @@ async function popNext(){
 function ppClose(){closeModal()}
 function postPopupOnce(){
   const F=SOC.feed;if(!F||!F.items||S.tab!=='dash'||!$('#modal').hidden)return;
-  if(!S.popQ)S.popQ=F.items.filter(p=>p.pinned).sort((a,b)=>b.ts-a.ts).slice(0,5);   // เฉพาะโพสต์ที่ปักหมุด · โพสต์ปกติไม่เด้ง
-  const c=S.popQ[S.popI||0];if(!c)return;S.popI=(S.popI||0)+1;
+  if(!S.popQ){if(popDay('post'))S.popQ=[];else S.popQ=F.items.filter(p=>p.pinned).sort((a,b)=>b.ts-a.ts).slice(0,5)}   // เฉพาะโพสต์ที่ปักหมุด · โพสต์ปกติไม่เด้ง
+  const c=S.popQ[S.popI||0];if(!c)return;S.popI=(S.popI||0)+1;popMark('post');
   const n=S.popQ.length,body=String(c.body||''),cut=body.length>500?body.slice(0,500)+'…':body;
   openModal(`<div style="display:flex;gap:14px;align-items:center">${sAv(c.by,c.name,64)}<div style="flex:1"><b>📢 ประกาศจาก ${esc(c.name)}</b> <span class="role">📌 ปักหมุด</span><div class="hint">${sAgo(c.ts)}${n>1?` · ประกาศ ${S.popI}/${n}`:''}</div></div></div>
     <h2 style="margin:12px 0 6px">${esc(c.title)}</h2>${cut?`<div style="white-space:pre-wrap;word-break:break-word">${esc(cut)}</div>`:''}
@@ -2179,7 +2184,8 @@ function postPopupOnce(){
 function spPopupOnce(){
   if(!S.spot||S.spotPop||S.tab==='rank'||!$('#modal').hidden)return;
   const m=spTop('m'),i=spTop('i');if(!m&&!i)return;
-  S.spotPop=1;   // เด้งทุกครั้งที่ Log in / รีเฟรช (ครั้งเดียวต่อการโหลดหน้า)
+  if(popDay('spot')){S.spotPop=1;return}
+  S.spotPop=1;popMark('spot');   // เด้งทุกครั้งที่ Log in / รีเฟรช (ครั้งเดียวต่อการโหลดหน้า)
   const card=(p,t)=>p?`<div class="spcard big" style="align-items:center;text-align:center">${spAvatar(p.m,p.name,250)}<div class="st" style="color:#f0b90b;font-weight:700;font-size:20px">🏆 ${t}</div><div style="font-size:28px;font-weight:800">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)} · ${spLabel(p)}</div><div class="num up" style="font-size:22px;font-weight:800">${spVal(p)}</div>${p.kind==='i'?`<div class="hint">${esc(spSub(p))}</div>`:''}<div>${spLikes(p)}</div></div>`:'';
   openModal(`<h2 style="text-align:center">🎉 ขอแสดงความยินดี! 🎉</h2><div class="spgrid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">${card(m,'TOP SALE ประจำเดือน')}${card(i,'TOP SALE Improvement')}</div><div class="hint" style="text-align:center;margin:8px 0">กดหัวใจ ❤️ หรือไลก์ 👍 ให้กำลังใจเพื่อนร่วมงานได้เลย</div><div class="mrow"><button class="btn primary" id="spGo">ดูอันดับ 1-5</button><button class="btn" onclick="closeModal()">ปิด</button></div>`,'pp');
   $('#spGo').onclick=()=>{closeModal();goTab('rank')};
@@ -3242,8 +3248,8 @@ function coDetail(id,keep){
   if(open&&(isC||isA))h+=`<div class="panel" style="margin:6px 0"><b>💬 เพิ่มบันทึก / Feedback</b><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0"><select id="coLk"><option value="note">💬 บันทึกทั่วไป</option><option value="feedback">⭐ Feedback (ให้คะแนน)</option>${isC&&p.status==='active'?'<option value="checkin">📍 เช็กอินผล (บันทึกค่า KPI ปัจจุบัน)</option>':''}</select><select id="coLr" style="display:none">${[5,4,3,2,1].map(n=>`<option value="${n}">⭐ ${n}</option>`).join('')}</select></div><textarea id="coLt" rows="2" maxlength="800" style="width:100%" placeholder="${isC?'ให้คำแนะนำ/ชมเชย/ข้อสังเกต':'แจ้งความคืบหน้า/อุปสรรค/Feedback ต่อการโค้ช'}"></textarea><button class="btn primary" id="coLg" style="margin-top:6px">บันทึก</button></div>`;
   if(isC&&p.status==='active'&&p.stages.length)h+=`<div class="panel" style="margin:6px 0"><b>📋 ประเมินการใช้สคริปต์ (จากการฟังสาย/สังเกต)</b><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0"><select id="coPs">${p.stages.map(k=>`<option value="${k}">${COSG[k]?COSG[k][1]+' '+COSG[k][2]:k}</option>`).join('')}</select><select id="coPr">${[5,4,3,2,1].map(n=>`<option value="${n}">⭐ ${n} ${({5:'ดีเยี่ยม',4:'ดี',3:'พอใช้',2:'ควรปรับ',1:'ต้องแก้ไข'})[n]}</option>`).join('')}</select></div><textarea id="coPt" rows="2" maxlength="800" style="width:100%" placeholder="สิ่งที่ทำได้ดี / จุดที่ควรปรับ ตามเงื่อนไขของขั้นตอนนี้"></textarea><button class="btn primary" id="coPg" style="margin-top:6px">บันทึกการประเมิน</button></div>`;
   if(isC&&p.status==='active'){const r=coProg(p,cur.v),sug=r==null?'partial':r>=1?'met':r>=.5?'partial':'missed';
-    h+=`<div class="panel" style="margin:6px 0"><b>🏁 สรุปผลแผน</b><div class="hint">ค่าสุดท้ายที่ระบบคำนวณ: <b>${coFmt(p,cur.v)}</b>${p.kpi==='custom'?' (จากเช็กอินล่าสุด)':''}</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0"><select id="coOc">${Object.keys(COOC).map(o=>`<option value="${o}" ${o===sug?'selected':''}>${COOC[o][0]} ${COOC[o][1]}</option>`).join('')}</select></div><textarea id="coCt" rows="2" maxlength="800" style="width:100%" placeholder="สรุปสิ่งที่ได้เรียนรู้ และข้อเสนอแนะต่อไป"></textarea><button class="btn primary" id="coFn" style="margin-top:6px">สรุปผล</button></div>`}
-  if(isC&&open)h+=`<div style="margin:6px 0"><a class="plk" id="coCx" style="color:var(--down)">🚫 ยกเลิกแผนนี้</a></div>`;
+    h+=`<div class="panel" style="margin:6px 0"><b>🏁 สรุปผลแผน</b><div class="hint">ค่าสุดท้ายที่ระบบคำนวณ: <b>${coFmt(p,cur.v)}</b>${p.kpi==='custom'?' (จากเช็กอินล่าสุด)':''}</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0"><select id="coOc">${Object.keys(COOC).map(o=>`<option value="${o}" ${o===sug?'selected':''}>${COOC[o][0]} ${COOC[o][1]}</option>`).join('')}</select></div><textarea id="coCt" rows="2" maxlength="800" style="width:100%" placeholder="สรุปสิ่งที่ได้เรียนรู้ และข้อเสนอแนะต่อไป"></textarea><div class="hint" style="margin-top:4px">สรุปผลแล้วแก้ไขไม่ได้</div><button class="btn primary" id="coFn" style="margin-top:6px">สรุปผล</button></div>`}
+  if(isC&&open)h+=`<div style="margin:6px 0"><a class="plk" id="coCx" style="color:var(--down)">🚫 ยกเลิกแผนนี้</a></div><div id="coCxBox" hidden></div>`;
   act.innerHTML=h;
   const gs=$('#coGoSc');if(gs)gs.onclick=()=>{closeModal();goTab('script')};
   const lk=$('#coLk');if(lk)lk.onchange=()=>{$('#coLr').style.display=lk.value==='feedback'?'':'none'};
@@ -3253,8 +3259,10 @@ function coDetail(id,keep){
   on('#coEd',()=>coForm(p));
   on('#coPg',()=>coDo(async()=>{await api('coachLog',{id,kind:'practice',stage:$('#coPs').value,rating:$('#coPr').value,text:$('#coPt').value});toast('บันทึกการประเมินแล้ว');await refresh()}));
   on('#coLg',()=>coDo(async()=>{const kind=$('#coLk').value;await api('coachLog',{id,kind,text:$('#coLt').value,rating:kind==='feedback'?$('#coLr').value:'',val:kind==='checkin'&&cur.v!=null?Math.round(cur.v*100)/100:''});toast('บันทึกแล้ว');await refresh()}));
-  on('#coFn',()=>coDo(async()=>{if(!confirm('ยืนยันสรุปผลแผนนี้? สรุปแล้วแก้ไขไม่ได้'))return;await api('coachClose',{id,action:'finish',outcome:$('#coOc').value,finalVal:cur.v==null?'':Math.round(cur.v*100)/100,note:$('#coCt').value});toast('สรุปผลแล้ว');await refresh()}));
-  on('#coCx',()=>{const n=prompt('เหตุผลที่ยกเลิกแผน (อย่างน้อย 5 ตัวอักษร)');if(n==null)return;coDo(async()=>{await api('coachClose',{id,action:'cancel',note:n});toast('ยกเลิกแผนแล้ว');await refresh()})});
+  on('#coFn',()=>coDo(async()=>{if($('#coCt').value.trim().length<5){toast('กรุณาเขียนสรุปอย่างน้อย 5 ตัวอักษร');return}await api('coachClose',{id,action:'finish',outcome:$('#coOc').value,finalVal:cur.v==null?'':Math.round(cur.v*100)/100,note:$('#coCt').value});toast('สรุปผลแล้ว');await refresh()}));
+  on('#coCx',()=>{const c=$('#coCxBox');c.hidden=false;c.innerHTML=`<div class="panel" style="margin:6px 0;border-left:4px solid var(--down)"><b>🚫 ยืนยันจะยกเลิกแผนนี้หรือไม่?</b><div class="hint">แผนที่ยกเลิกแล้วจะย้ายไปหมวด “จบแล้ว” และยังเก็บประวัติไว้</div><div style="display:flex;gap:8px;margin-top:6px"><button class="btn danger" id="coCxGo">ยืนยันยกเลิก</button><button class="btn" id="coCxNo">ไม่ยกเลิก</button></div></div>`;
+    $('#coCxNo').onclick=()=>{c.hidden=true;c.innerHTML=''};
+    $('#coCxGo').onclick=()=>coDo(async()=>{await api('coachClose',{id,action:'cancel'});toast('ยกเลิกแผนแล้ว');await refresh()})});
 }
 
 /* ---- 🔔 แจ้งเตือนสังคม ---- */
@@ -4036,7 +4044,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-13.7';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-14.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
