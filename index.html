@@ -1410,7 +1410,7 @@ async function renderAdmin(){
 }
 
 /* ---- 📥 นำเข้ายอดขายอัตโนมัติ: Daily TOL_UPSELL + V_LOOK_UP_AGENT (ประมวลผลในเครื่อง ไม่ต้องใช้ไลบรารีภายนอก) ---- */
-const IMP={dailyName:'',lookName:'',sheets:null,buf:null,lk:null,rows:null,info:null,prev:null,busy:false,msg:''};
+const IMP={dailyName:'',lookName:'',sheets:null,buf:null,lk:null,rows:null,info:null,prev:null,busy:false,msg:'',ym:''};
 async function zipIdx(buf){const dv=new DataView(buf),u8=new Uint8Array(buf);let e=u8.length-22;while(e>=0&&dv.getUint32(e,true)!==0x06054b50)e--;if(e<0)throw new Error('ไม่ใช่ไฟล์ .xlsx (ลองเปิดแล้วบันทึกเป็น Excel Workbook .xlsx ใหม่)');
   const n=dv.getUint16(e+10,true);let p=dv.getUint32(e+16,true);const out={};
   for(let i=0;i<n;i++){if(dv.getUint32(p,true)!==0x02014b50)break;const meth=dv.getUint16(p+10,true),cs=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),el=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lo=dv.getUint32(p+42,true);
@@ -1468,7 +1468,7 @@ function impCmpHTML(c){
   const dq=c.nw.q-c.old.q,da=Math.round((c.nw.a-c.old.a)*100)/100;
   const lst=(L,sign)=>L.length?L.map(x=>`<tr class="row"><td>${esc(x.name)}</td><td class="num">${fmt(x.oq)} → ${fmt(x.nq)}</td><td class="num ${cl(x.da)}"><b>${sg(x.da)}</b></td></tr>`).join(''):`<tr><td colspan="3" class="hint">—</td></tr>`;
   const tb=(title,L)=>`<div style="flex:1;min-width:260px"><div class="hint" style="margin:6px 0 2px"><b>${title}</b></div><div class="tblwrap"><table class="tbl"><thead><tr><th>ชื่อ</th><th>ชิ้น (เดิม → ใหม่)</th><th>ยอดเปลี่ยน ฿</th></tr></thead><tbody>${lst(L)}</tbody></table></div></div>`;
-  return `<div class="panel" style="margin-top:10px;padding:10px"><b>📊 เทียบกับข้อมูลเดิมในระบบ (เดือนนี้)</b>
+  return `<div class="panel" style="margin-top:10px;padding:10px"><b>📊 เทียบกับข้อมูลเดิมในระบบ </b>
     <div class="stats" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"><div class="stat"><small>ยอดเดิม</small><b class="flat">฿${fmt(c.old.a)}</b><small>${fmt(c.old.q)} ชิ้น</small></div><div class="stat"><small>ยอดใหม่ (ไฟล์)</small><b class="flat">฿${fmt(c.nw.a)}</b><small>${fmt(c.nw.q)} ชิ้น</small></div><div class="stat"><small>เพิ่ม/ลด</small><b class="${cl(da)}">${sg(da)}</b><small>${sg(dq)} ชิ้น</small></div></div>
     ${c.newDays.length?`<div class="hint">วันที่เพิ่มใหม่: ${c.newDays.map(d=>esc(dShort(d))).join(', ')}</div>`:''}
     <div class="tblwrap" style="margin-top:6px"><table class="tbl"><thead><tr><th>วัน</th><th>ชิ้น (เดิม → ใหม่)</th><th>ยอด ฿ (เดิม → ใหม่)</th><th>เปลี่ยน</th></tr></thead><tbody>${c.days.map(x=>`<tr class="row"><td>${esc(dShort(x.k))}${x.oq===0?' <span class="role">ใหม่</span>':''}</td><td class="num">${fmt(x.oq)} → ${fmt(x.nq)}</td><td class="num">${fmt(x.oa)} → ${fmt(x.na)}</td><td class="num ${cl(x.da)}"><b>${sg(x.da)}</b></td></tr>`).join('')||'<tr><td colspan="4" class="hint">ไม่มีวันไหนเปลี่ยน — เหมือนเดิมทุกวัน</td></tr>'}</tbody></table></div>
@@ -1479,7 +1479,7 @@ async function admImport(body){
   const sheetSel=IMP.sheets?`<select id="impSheet">${IMP.sheets.filter(s=>true).map(s=>`<option value="${esc(s.name)}" ${IMP.sheet===s.name?'selected':''}>${esc(s.name)}${s.hidden?' (ซ่อน)':''}</option>`).join('')}</select>`:'';
   body.innerHTML=`<div class="panel sec"><h3>📥 นำเข้ายอดขายอัตโนมัติ (Daily TOL_UPSELL + V_LOOK_UP_AGENT)</h3>
     <div class="hint" style="margin-bottom:10px">ระบบทำ V_LOOK_UP แทนคุณ: รหัส Agent (SL_PARTNER_CODE) → รหัสพนักงาน (EMP.ID) · รวมยอดเป็น <b>วัน × พนักงาน × แคมเปญ</b> · ยอดเงิน = Diff RC ของ VAS / NET_RC ของสินค้าอื่น · วันที่ = INTRACN_DT_CMPLET แล้วบันทึกลงทั้ง <b>ProductSales</b> และ <b>SalesDaily</b> ให้ในครั้งเดียว<br>ไฟล์ถูกอ่านในเครื่องคุณ — ส่งขึ้นระบบเฉพาะตัวเลขที่รวมแล้ว</div>
-    <div class="rule" style="gap:10px;flex-wrap:wrap;align-items:center"><label class="btn" style="cursor:pointer">① เลือกไฟล์ Daily TOL_UPSELL (.xlsx)<input type="file" id="impF1" accept=".xlsx" hidden></label><span class="hint">${esc(IMP.dailyName||'ยังไม่ได้เลือก')}</span>${sheetSel?'<span class="hint">ชีต:</span>'+sheetSel:''}</div>
+    <div class="rule" style="gap:10px;flex-wrap:wrap;align-items:center"><label class="btn" style="cursor:pointer">① เลือกไฟล์ Daily TOL_UPSELL (.xlsx)<input type="file" id="impF1" accept=".xlsx" hidden></label><span class="hint">${esc(IMP.dailyName||'ยังไม่ได้เลือก')}</span>${sheetSel?'<span class="hint">ชีต:</span>'+sheetSel:''}<span class="hint">นำเข้าเข้าเดือน:</span><select id="impYm">${Array.from({length:12},(_,i)=>addMonths(today.slice(0,7),-i)).map(m=>`<option value="${m}" ${(IMP.ym||today.slice(0,7))===m?'selected':''}>${ymLabel(m)}</option>`).join('')}</select></div>
     <div class="rule" style="gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px"><label class="btn" style="cursor:pointer">② เลือกไฟล์ V_LOOK_UP_AGENT (.xlsx)<input type="file" id="impF2" accept=".xlsx" hidden></label><span class="hint">${esc(IMP.lookName||'ยังไม่ได้เลือก')}</span></div>
     <div style="margin-top:10px"><button class="btn primary" id="impGo" ${IMP.buf&&IMP.lk&&!IMP.busy?'':'disabled'}>🔍 ตรวจสอบและดูตัวอย่าง</button> <span class="hint" id="impMsg">${esc(IMP.msg)}</span></div></div>
     <div id="impOut"></div>`;
@@ -1490,7 +1490,7 @@ async function admImport(body){
         <div class="stat"><small>ช่วงวันที่</small><b class="flat">${esc(dShort(s.from))} – ${esc(dShort(s.to))}</b></div><div class="stat"><small>จำนวนวัน</small><b class="flat">${s.days}</b></div>
         <div class="stat"><small>พนักงาน</small><b class="flat">${s.members}</b></div><div class="stat"><small>จำนวนชิ้น (SUB)</small><b class="flat">${fmt(s.q)}</b></div><div class="stat"><small>ยอดรวม</small><b class="flat">฿${fmt(s.a)}</b></div></div>
       <div class="tblwrap"><table class="tbl"><thead><tr><th>วันที่</th><th>แถวที่จะบันทึก</th><th>ชิ้น</th><th>ยอด</th><th>ข้อมูลเดิมที่จะถูกแทนที่</th></tr></thead><tbody>${pv.perDay.map(r=>`<tr class="row"><td>${esc(dShort(r.d))}</td><td class="num">${fmt(r.rows)}</td><td class="num">${fmt(r.q)}</td><td class="num">฿${fmt(r.a)}</td><td class="num">${r.old?fmt(r.old)+' แถว':'—'}${!r.rows&&r.old?' <span class="err">· วันนี้ไม่มีในไฟล์ใหม่ จะถูกลบ</span>':''}</td></tr>`).join('')}</tbody></table></div>
-      <div class="hint" style="margin-top:8px">ในไฟล์ ${fmt(inf.total)} แถว · จับคู่ V_LOOK_UP ได้ ${fmt(inf.mapped)} แถว · ไม่ใช่พนักงานในรายชื่อ ${fmt(inf.total-inf.mapped-inf.noDate)} แถว (ข้ามตามปกติ)${inf.noDate?` · ไม่มีวันที่ ${fmt(inf.noDate)} แถว (ข้าม)`:''}<br>ข้อมูลรายวันของ <b>เดือนปัจจุบัน (${esc(s.ym)})</b> จะถูกแทนที่ด้วยไฟล์นี้ทั้งเดือน (ProductSales ${fmt(s.replacePS)} แถว · SalesDaily ${fmt(s.replaceSD)} แถวเดิม) — <b>เดือนก่อน ๆ ไม่ถูกแตะ</b> · นำเข้าซ้ำได้ ไม่ซ้อนทับ${s.skippedOld?`<br>ข้ามข้อมูลของเดือนก่อน ๆ ในไฟล์ ${fmt(s.skippedOld)} แถว (ไม่นำเข้า)`:''}</div>
+      <div class="hint" style="margin-top:8px">ในไฟล์ ${fmt(inf.total)} แถว · จับคู่ V_LOOK_UP ได้ ${fmt(inf.mapped)} แถว · ไม่ใช่พนักงานในรายชื่อ ${fmt(inf.total-inf.mapped-inf.noDate)} แถว (ข้ามตามปกติ)${inf.noDate?` · ไม่มีวันที่ ${fmt(inf.noDate)} แถว (ข้าม)`:''}<br>ข้อมูลรายวันของ <b>เดือน ${esc(s.ym)}</b> จะถูกแทนที่ด้วยไฟล์นี้ทั้งเดือน (ไฟล์ต้องมีครบทุกวันของเดือนนั้น) (ProductSales ${fmt(s.replacePS)} แถว · SalesDaily ${fmt(s.replaceSD)} แถวเดิม) — <b>เดือนอื่นไม่ถูกแตะ</b> · นำเข้าซ้ำได้ ไม่ซ้อนทับ${s.skippedOld?`<br>ข้ามข้อมูลของเดือนอื่นในไฟล์ ${fmt(s.skippedOld)} แถว (ไม่นำเข้า)`:''}</div>
 
       ${impCmpHTML(pv.cmp)}
       ${inf.vasN>=50&&inf.vasEq/inf.vasN>0.9?`<div class="err" style="margin-top:8px;font-weight:700">⛔ ตรวจพบความผิดปกติ: VAS ${fmt(inf.vasEq)} จาก ${fmt(inf.vasN)} แถว (${Math.round(inf.vasEq/inf.vasN*100)}%) มี Diff RC <u>เท่ากับ NET_RC</u> พอดี — ปกติควรเป็นส่วนต่างจริง (มีทั้งน้อยกว่าและติดลบ) แปลว่าคอลัมน์ Diff RC ในไฟล์นี้น่าจะยังไม่ได้คำนวณ ยอด VAS จะสูงเกินจริง <b>ห้ามกดยืนยันจนกว่าจะตรวจไฟล์</b></div>`:''}
@@ -1500,10 +1500,11 @@ async function admImport(body){
       ${pv.committed?'':`<div style="margin-top:12px"><button class="btn primary" id="impCommit" ${IMP.busy?'disabled':''}>✅ ยืนยันนำเข้า ${s.psRows} แถว</button> <span class="hint">ตรวจดูตัวเลขข้างบนก่อนกดยืนยัน</span></div>`}</div>`}
   const run=async(fn)=>{IMP.busy=true;IMP.msg='กำลังประมวลผล…';admImport(body);try{await fn();IMP.msg=''}catch(e){IMP.msg='⚠️ '+e.message}IMP.busy=false;admImport(body)};
   $('#impF1').onchange=async e=>{const f=e.target.files[0];if(!f)return;IMP.dailyName=f.name;IMP.prev=null;await run(async()=>{const x=await xlsxOpen(f);IMP.xl=x;IMP.sheets=x.sheets;IMP.sheet=(x.sheets.find(s=>/^upsell$/i.test(s.name))||x.sheets.find(s=>!s.hidden)||x.sheets[0]).name;IMP.buf=true})};
+  if($('#impYm'))$('#impYm').onchange=e=>{IMP.ym=e.target.value===today.slice(0,7)?'':e.target.value;IMP.prev=null;admImport(body)};
   if($('#impSheet'))$('#impSheet').onchange=e=>{IMP.sheet=e.target.value;IMP.prev=null;admImport(body)};
   $('#impF2').onchange=async e=>{const f=e.target.files[0];if(!f)return;IMP.lookName=f.name;IMP.prev=null;await run(async()=>{const x=await xlsxOpen(f);IMP.lk=await x.load(x.sheets[0].name);if(!IMP.lk.length)throw new Error('ไฟล์ V_LOOK_UP ว่าง')})};
-  $('#impGo').onclick=()=>run(async()=>{const d=await IMP.xl.load(IMP.sheet),R=impBuild(d,IMP.lk);if(!R.rows.length)throw new Error('ไม่พบแถวที่จับคู่พนักงานได้ — ตรวจว่าเลือกชีตถูก และ CODE ในไฟล์ V_LOOK_UP ตรงกับ SL_PARTNER_CODE');IMP.rows=R.rows;IMP.info=R.info;IMP.prev=await api('importPreview',{rows:R.rows})});
-  if($('#impCommit'))$('#impCommit').onclick=()=>{if(IMP.info&&IMP.info.vasN>=50&&IMP.info.vasEq/IMP.info.vasN>0.9&&!confirm('⚠️ Diff RC ของ VAS ดูเหมือนยังไม่ได้คำนวณ (เท่ากับ NET_RC เกือบทั้งหมด)\nยอดจะสูงเกินจริง — ยังต้องการนำเข้าต่อหรือไม่?'))return;if(!confirm('ยืนยันนำเข้า? ข้อมูลรายวันของเดือนปัจจุบันจะถูกแทนที่ด้วยไฟล์นี้ (เดือนก่อน ๆ ไม่ถูกแตะ)'))return;run(async()=>{IMP.prev=await api('importCommit',{rows:IMP.rows});ADM.psales=null;await load();toast('✅ นำเข้าสำเร็จ')})};
+  $('#impGo').onclick=()=>run(async()=>{const d=await IMP.xl.load(IMP.sheet),R=impBuild(d,IMP.lk);if(!R.rows.length)throw new Error('ไม่พบแถวที่จับคู่พนักงานได้ — ตรวจว่าเลือกชีตถูก และ CODE ในไฟล์ V_LOOK_UP ตรงกับ SL_PARTNER_CODE');IMP.rows=R.rows;IMP.info=R.info;IMP.prev=await api('importPreview',{rows:R.rows,ym:IMP.ym})});
+  if($('#impCommit'))$('#impCommit').onclick=()=>{if(IMP.info&&IMP.info.vasN>=50&&IMP.info.vasEq/IMP.info.vasN>0.9&&!confirm('⚠️ Diff RC ของ VAS ดูเหมือนยังไม่ได้คำนวณ (เท่ากับ NET_RC เกือบทั้งหมด)\nยอดจะสูงเกินจริง — ยังต้องการนำเข้าต่อหรือไม่?'))return;if(!confirm('ยืนยันนำเข้า? ข้อมูลรายวันของเดือน '+((IMP.prev&&IMP.prev.sum&&IMP.prev.sum.ym)||IMP.ym||today.slice(0,7))+' จะถูกแทนที่ด้วยไฟล์นี้ (เดือนอื่นไม่ถูกแตะ)'))return;run(async()=>{IMP.prev=await api('importCommit',{rows:IMP.rows,ym:IMP.ym});ADM.psales=null;await load();toast('✅ นำเข้าสำเร็จ')})};
 }
 /* ---- 🗓 ประวัติเข้าใช้งานย้อนหลัง 30 วัน (เฉพาะแอดมิน) ---- */
 const PL={d:null,view:'day',q:'',open:{}};
@@ -2074,9 +2075,18 @@ function spAvatar(id,name,sz){const ph=(S.spot&&S.spot.photos||{})[id],m=memOf(i
 function spLikes(p){return `<span data-lkw="${esc(p.key)}"><button class="lkb ${p.mHeart?'on':''}" data-lk="${esc(p.key)}|heart">❤️ <b>${p.heart}</b></button><button class="lkb ${p.mLike?'on':''}" data-lk="${esc(p.key)}|like">👍 <b>${p.like}</b></button></span>`}
 const spYm=ym=>THMON[+ym.slice(5)-1]+' '+(+ym.slice(0,4)+543);
 const spLabel=p=>(p.kind==='i'?'Improvement ':'ประจำเดือน ')+spYm(p.period);
-const spVal=p=>p.kind==='i'?`+฿${fmt(p.v)}`:`฿${fmt(p.v)}`;
+const SPML={amount:'ยอดขาย',point:'POINT',sub:'SUB'};
+const spVal=p=>p.met&&p.met!=='amount'?(p.kind==='i'?'+':'')+fmt(p.v)+' '+SPML[p.met]:p.kind==='i'?`+฿${fmt(p.v)}`:`฿${fmt(p.v)}`;
 const spMed=r=>['🥇','🥈','🥉','4️⃣','5️⃣'][r-1]||r;
-const spSub=p=>p.kind==='i'?`${p.pct>=0?'+':''}${p.pct}% · ฿${fmt(p.prev)} → ฿${fmt(p.cur)}${p.est?' (≈ประมาณ)':''}`:'';
+const spSub=p=>p.kind!=='i'?'':p.met&&p.met!=='amount'?`${p.pct==null?'ไม่มีข้อมูลเดือนก่อน':(p.pct>=0?'+':'')+p.pct+'%'} · ${fmt(p.prev)} → ${fmt(p.cur)}`:`${p.pct>=0?'+':''}${p.pct}% · ฿${fmt(p.prev)} → ฿${fmt(p.cur)}${p.est?' (≈ประมาณ)':''}`;
+function spMetList(kind,met){
+  const ym=S.spot.ym,pym=S.spot.pym,n=S.spot.n,out=[];
+  MEM.filter(AG).forEach(m=>{const b=DB[m.id]&&DB[m.id][met];if(!b)return;let c=0,p=0;
+    for(let d=1;d<=n;d++){c+=b.D[ym+'-'+pad(d)]||0;p+=b.D[pym+'-'+pad(d)]||0}
+    let v,x={};if(kind==='m'){v=met==='point'?monthPoint(m.id,ym):c}else{v=c-p;x={cur:c,prev:p,pct:p>0?Math.round((c/p-1)*100):null}}
+    if(v>0)out.push(Object.assign({m:m.id,name:m.name,team:m.team,v,kind,met},x))});
+  out.sort((a,b)=>b.v-a.v);return out.slice(0,5).map((p,i)=>Object.assign(p,{rank:i+1}));
+}
 async function ensureSpot(force){
   if(!D)return;
   if(force||!S.spot||Date.now()-S.spot.ts>120000){try{const r=await api('spotlight',{});S.spot=Object.assign(r,{ts:Date.now()})}catch(e){if(!S.spot)return}}
@@ -2199,21 +2209,24 @@ function renderSpotTab(fromEnsure){
   if(!fromEnsure&&Date.now()-S.spot.ts>120000){ensureSpot();}
   if(!S.spot.pym){el.innerHTML='<div class="panel"><div class="empty">⚠️ ระบบหลังบ้านยังเป็นเวอร์ชันเก่า — ให้แอดมินอัปเดต Code.gs ใน Apps Script (วางไฟล์ Code.gs.txt แล้วทำเวอร์ชันใหม่) เพื่อแสดง TOP SALE รายเดือนและ Improvement</div></div>';return}
   const SP=S.spot,P=SP.posts,adm=!!SP.canPhoto,ph=p=>adm?`<label class="btn sm" style="cursor:pointer">📷 ใส่/เปลี่ยนรูป<input type="file" accept="image/*" hidden data-ph="${esc(p.m)}"></label>`:'';
-  const card=(p,big)=>`<div class="spcard ${big?'big':''}" style="${big?'align-items:center;text-align:center':''}"><div style="font-size:${big?26:20}px">${spMed(p.rank)}</div>${spAvatar(p.m,p.name,big?190:120)}<div style="font-weight:800;font-size:${big?20:15}px">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)}</div><div class="num up" style="font-weight:800;font-size:${big?22:17}px">${spVal(p)}</div>${p.kind==='i'?`<div class="hint">${esc(spSub(p))}</div>`:(p.q?`<div class="hint">${fmt(p.q)} ชิ้น</div>`:'')}<div>${spLikes(p)}</div>${ph(p)}</div>`;
+  const card=(p,big)=>`<div class="spcard ${big?'big':''}" style="${big?'align-items:center;text-align:center':''}"><div style="font-size:${big?26:20}px">${spMed(p.rank)}</div>${spAvatar(p.m,p.name,big?190:120)}<div style="font-weight:800;font-size:${big?20:15}px">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)}</div><div class="num up" style="font-weight:800;font-size:${big?22:17}px">${spVal(p)}</div>${p.kind==='i'?`<div class="hint">${esc(spSub(p))}</div>`:(p.q?`<div class="hint">${fmt(p.q)} ชิ้น</div>`:'')}${p.key?`<div>${spLikes(p)}</div>`:''}${ph(p)}</div>`;
   const list=(kind,title,sub)=>{
-    const L=P.filter(p=>p.kind===kind&&p.cat==='all').sort((a,b)=>a.rank-b.rank);
+    const met=S.spm||'amount',L=met==='amount'?P.filter(p=>p.kind===kind&&p.cat==='all').sort((a,b)=>a.rank-b.rank):spMetList(kind,met);
     return `<div class="panel sec"><h3>${title}</h3><div class="hint" style="margin-bottom:8px">${sub}</div>${L.length?`<div class="spbig">${card(L[0],true)}</div>${L.length>1?`<div class="sprank">${L.slice(1).map(p=>card(p,false)).join('')}</div>`:''}`:`<div class="empty">${kind==='i'?'ยังไม่มีคนที่ยอดเพิ่มขึ้นจากช่วงเดียวกันของเดือนก่อน (ต้องมียอดเดือนก่อนเพื่อเทียบ)':'ยังไม่มีข้อมูลยอดขายของเดือนนี้'}</div>`}</div>`};
   const talkCard=(x,i,big)=>`<div class="spcard ${big?'big':''}" style="${big?'align-items:center;text-align:center':''}"><div style="font-size:${big?26:20}px">${spMed(i+1)}</div>${spAvatar(x.m,x.name,big?190:120)}<div style="font-weight:800;font-size:${big?20:15}px">${esc(x.name)}</div><div class="hint">${esc(teamOf(x.team).name)}</div><div class="num up" style="font-weight:800;font-size:${big?22:17}px">⏱ ${hms(x.avg)}</div><div class="hint">เฉลี่ย/วัน · ${x.n} วันทำงาน · ผ่านเกณฑ์ ${x.pass} วัน</div>${x.key?`<div>${spLikes(x)}</div>`:''}${ph({m:x.m})}</div>`;
   const talkPanel=()=>{const T=SP.talk||[];return `<div class="panel sec"><h3>🎧 TOP TALK TIME เฉลี่ยสูงสุด · ${spYm(SP.ym)}</h3><div class="hint" style="margin-bottom:8px">เฉลี่ย Talk Time ต่อวันทำงาน ตั้งแต่วันที่ 1 ถึง ${dEnd} · อันดับ 1–5 (นับเฉพาะ Agent · วันที่ต่ำกว่าเกณฑ์วันหยุดและวันลาไม่นับ · ต้องมีข้อมูลอย่างน้อย 3 วัน)</div>${T.length?`<div class="spbig">${talkCard(T[0],0,true)}</div>${T.length>1?`<div class="sprank">${T.slice(1).map((x,i)=>talkCard(x,i+1,false)).join('')}</div>`:''}`:`<div class="empty">ยังไม่มีข้อมูล Talk Time ของเดือนนี้ (ต้องมีอย่างน้อย 3 วันต่อคน) — ถ้าเพิ่งอัปเดตระบบ ให้แอดมินอัปเดต Code.gs ล่าสุดด้วย</div>`}</div>`};
   const dEnd=dShort(SP.day),mini=(p,t)=>p?`<div class="spcard" style="flex:1;min-width:200px"><div class="st" style="color:#f0b90b;font-weight:700;font-size:12px">${t}</div><div style="display:flex;gap:8px;align-items:center">${spAvatar(p.m,p.name,84)}<div><div style="font-weight:800">${esc(p.name)}</div><div class="hint">${esc(teamOf(p.team).name)}</div></div></div><div class="num up" style="font-weight:800;font-size:17px">${spVal(p)}</div>${p.kind==='i'?`<div class="hint">${esc(spSub(p))}</div>`:(p.q?`<div class="hint">${fmt(p.q)} ชิ้น</div>`:'')}<div>${spLikes(p)}</div>${ph(p)}</div>`:`<div class="spcard" style="flex:1;min-width:200px"><div class="st" style="color:var(--mute);font-weight:700;font-size:12px">${t}</div><div class="hint">ยังไม่มีข้อมูล</div></div>`;
   const cats=[...new Set(P.filter(p=>p.cat!=='all').map(p=>p.cat))].sort((a,b)=>String(P.find(p=>p.cat===a).catName).localeCompare(String(P.find(p=>p.cat===b).catName)));
-  let h=list('m',`🏆 TOP SALE ประจำเดือน · ${spYm(SP.ym)}`,`ยอดขายสะสมตั้งแต่วันที่ 1 ถึง ${dEnd} · อันดับ 1–5 (นับเฉพาะ Agent)`)+
-    list('i',`📈 TOP SALE Improvement · ${spYm(SP.ym)}`,`เทียบยอดสะสมวันที่ 1–${SP.n} ของเดือนนี้ กับช่วงเดียวกันของ ${spYm(SP.pym)} · เรียงตามยอดที่เพิ่มขึ้น (฿) · อันดับ 1–5`)+
+  const SM=S.spm||'amount',ML=SPML[SM];
+  let h=`<div class="panel sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><b>จัดอันดับตาม:</b><div class="chips">${['amount','point','sub'].map(k=>`<button class="chip ${SM===k?'on':''}" data-spm="${k}">${({amount:'💰 ยอดขาย',point:'⭐ POINT',sub:'👥 SUB'})[k]}</button>`).join('')}</div></div>${SM!=='amount'?'<div class="hint" style="margin-top:6px">ℹ️ อันดับ POINT/SUB คำนวณจากข้อมูลรายวันในระบบ (ยังไม่มีปุ่มไลก์/โหวตสำหรับอันดับนี้ และส่วน "แยกตามสินค้า" ด้านล่างเป็นยอดขายเสมอ)</div>':''}</div>`+
+    list('m',`🏆 TOP SALE ประจำเดือน · ${ML} · ${spYm(SP.ym)}`,`${ML}สะสมตั้งแต่วันที่ 1 ถึง ${dEnd} · อันดับ 1–5 (นับเฉพาะ Agent)`)+
+    list('i',`📈 TOP SALE Improvement · ${ML} · ${spYm(SP.ym)}`,`เทียบ${ML}สะสมวันที่ 1–${SP.n} ของเดือนนี้ กับช่วงเดียวกันของ ${spYm(SP.pym)} · เรียงตามที่เพิ่มขึ้น · อันดับ 1–5`)+
     talkPanel()+
     `<div class="panel sec"><h3>🛍 TOP SALE และ Improvement แยกตามสินค้า (อย่างละ 1 อันดับ)</h3>${cats.length?cats.map(c=>{const nm=P.find(p=>p.cat===c).catName;return `<div style="margin:10px 0"><div style="font-weight:800;margin-bottom:4px">🛍 ${esc(nm)}</div><div style="display:flex;gap:10px;flex-wrap:wrap">${mini(P.find(p=>p.cat===c&&p.kind==='m'),'🏆 TOP SALE')}${mini(P.find(p=>p.cat===c&&p.kind==='i'),'📈 Improvement')}</div></div>`}).join(''):'<div class="empty">ยังไม่มียอดขายรายสินค้าของเดือนนี้ (บันทึกที่ชีต ProductSales)</div>'}</div>`;
   if(adm)h+=`<div class="panel sec"><h3>📷 รูปประจำตัว Agent (แอดมิน)</h3><div class="hint" style="margin-bottom:8px">ใส่รูปให้ Agent คนใดก็ได้ ระบบย่อรูปให้อัตโนมัติ (ตัดเป็นสี่เหลี่ยมจัตุรัสจากกลางภาพ) · รูปจะแสดงที่แบนเนอร์ ป๊อปอัป และหน้านี้ เมื่อคนนั้นติดอันดับ</div>
     <div class="mrow" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><select id="phWho">${MEM.filter(AG).map(m=>`<option value="${esc(m.id)}">${esc(m.name)}${m.nick?' ('+esc(m.nick)+')':''}</option>`).join('')}</select><label class="btn primary" style="cursor:pointer">📷 เลือกรูป<input type="file" accept="image/*" hidden id="phFile"></label><button class="btn danger" id="phDel">🗑 ลบรูปคนนี้</button></div><div id="phErr" class="err"></div></div>`;
   el.innerHTML=h;
+  $$('[data-spm]').forEach(b=>b.onclick=()=>{S.spm=b.dataset.spm;renderSpotTab(true)});
   const send=async(id,file)=>{try{const img=file?await spResize(file):'';await api('photoSet',{m:id,img});toast(img?'✅ บันทึกรูปแล้ว':'🗑 ลบรูปแล้ว');await ensureSpot(true)}catch(e){const x=$('#phErr');if(x)x.textContent=e.message;toast('⚠️ '+esc(e.message))}};
   $$('[data-ph]').forEach(i=>i.onchange=()=>{if(i.files[0])send(i.dataset.ph,i.files[0])});
   if($('#phFile')){$('#phFile').onchange=e=>{if(e.target.files[0])send($('#phWho').value,e.target.files[0])};$('#phDel').onclick=()=>{if(confirm('ลบรูปของคนนี้?'))send($('#phWho').value,null)}}
@@ -2885,6 +2898,7 @@ function renderIns(){
     <ul class="insl">${I.lines.map(l=>`<li>${esc(l)}</li>`).join('')}</ul></div>`;
   h+=insPeriodHTML();
   h+=insMeHTML();
+  try{h+=nnHTML()}catch(e){console.error(e);h+='<div class="panel"><div class="hint">Deep Insight แสดงผลไม่ได้: '+esc(e.message)+'</div></div>'}
   h+=`<div class="panel sec"><h3>🔮 พยากรณ์สิ้นเดือน ${ymLabel(ym)} (Run Rate)</h3><div style="margin-bottom:8px">${teamSelHTML('inTeam')}<span class="hint"> นับถึงวันที่ ${elC}/${dim} · หักวันลา/วันหยุดแล้ว · ${ag.length} Agent</span></div>
     <div class="fcg">${fc('ยอดขาย',A0,A1,'฿')}${fc('POINT',P0,P1,'')}${fc('SUB',S0,S1,'')}</div><div class="hint" style="margin-top:6px">เป็นการประมาณจากความเร็วที่ขายได้ตอนนี้ ไม่ใช่ตัวเลขรับประกัน</div></div>`;
   h+=`<div class="panel sec"><h3>🗓 Heatmap ยอดขายรายวัน</h3>${Object.keys(I.heat||{}).length?heatHTML(I.heat,I.day):'<div class="empty">ยังไม่มียอดขายรายวัน (บันทึกที่ชีต SalesDaily)</div>'}</div>`;
@@ -2901,8 +2915,168 @@ function renderIns(){
   const iT=$('#inwTeam');if(iT)iT.onchange=e=>{S.tf=e.target.value;if(INW.who&&!AGM().some(m=>m.id===INW.who)){INW.who='';SOC.who='team'}renderIns()};
   const iW=$('#inwWho');if(iW)iW.onchange=e=>{INW.who=e.target.value;SOC.who=INW.who||'team';renderIns()};
   $$('[data-inwcp]').forEach(b=>b.onclick=()=>{const t=(INW.pitch||[])[+b.dataset.inwcp];if(!t)return;const v=t.replace(/^"|"$/g,'');try{navigator.clipboard.writeText(v).then(()=>toast('📋 คัดลอกแล้ว'))}catch(e){toast('คัดลอกไม่ได้ — เลือกข้อความเอง')}});
+  nnBind();
   if($('#imWho'))$('#imWho').onchange=e=>{SOC.who=e.target.value;INW.who=e.target.value==='team'?'':e.target.value;renderIns()};
 }
+/* =====================================================================
+   🔬 Deep Insight (Nanocluster) — วิเคราะห์ 20 หัวข้อ ระดับทีม / Agent
+   ===================================================================== */
+const NN={win:'cur',team:'',tsort:'score',open:{},q:''};
+const nnSm=a=>a.reduce((x,y)=>x+y,0);
+function nnRange(){
+  const end=(D.asOf&&D.asOf<today?D.asOf:today),ym=end.slice(0,7);
+  if(NN.win==='cur')return {from:ym+'-01',to:end,label:'เดือนนี้ ('+ymLabel(ym)+')'};
+  if(NN.win==='prev'){const p=addMonths(ym,-1);return {from:p+'-01',to:monthEnd(p),label:'เดือนก่อน ('+ymLabel(p)+')'}}
+  const n=+NN.win;return {from:addDays(end,-(n-1)),to:end,label:n+' วันล่าสุด'};
+}
+function nnAgent(m,R,days){
+  const id=m.id,wd=days.filter(k=>!onLeaveOn(id,k)),n=wd.length;
+  const A=wd.map(k=>dAmt(id,k)),P=wd.map(k=>dayPt(id,k)),SB=wd.map(k=>dSub(id,k));
+  const tot=nnSm(A),pt=nnSm(P),sub=nnSm(SB),act=A.filter(v=>v>0).length,avg=n?tot/n:0;
+  let dry=0,run=0;A.forEach(v=>{if(v>0)run=0;else{run++;dry=Math.max(dry,run)}});
+  let tail=0;for(let i=A.length-1;i>=0&&A[i]<=0;i--)tail++;
+  const L=A.slice(-7),Pv=A.slice(-14,-7),sL=nnSm(L),sP=nnSm(Pv);
+  const W=[0,0,0,0,0,0,0],Wn=[0,0,0,0,0,0,0];wd.forEach((k,i)=>{const w=U(k).getUTCDay();W[w]+=A[i];Wn[w]++});
+  const Wa=W.map((s,i)=>Wn[i]?s/Wn[i]:null),Wv=Wa.filter(v=>v!=null),bi=Wa.indexOf(Math.max(...Wv)),wi=Wa.indexOf(Math.min(...Wv));
+  let e1=0;wd.forEach((k,i)=>{if(+k.slice(8)<=10)e1+=A[i]});
+  // สินค้า
+  const inR=per=>per.length>=10?(per>=R.from&&per<=R.to):(per>=R.from.slice(0,7)&&per<=R.to.slice(0,7));
+  const bp={};(PSBY[id]||[]).forEach(r=>{if(inR(r.per))bp[r.p]=(bp[r.p]||0)+r.a});
+  const pk=Object.keys(bp).filter(p=>bp[p]>0).sort((x,y)=>bp[y]-bp[x]),ta=nnSm(pk.map(p=>bp[p]));
+  // ค่าคอม (เดือนปลายช่วง)
+  let tier=null;
+  if(D.tiers&&D.tiers.length){const ym=R.to.slice(0,7),el=autoElapsed(ym),ef=effDays(id,ym,el),pn=monthPoint(id,ym),cur=comCalc(pn,ef.elapsed,ef.total,null),T=D.tiers[cur.tier.i+1];
+    tier={rate:cur.tier.rate,i:cur.tier.i,run:cur.run,next:T?T.rate:null,gap:T?Math.max(0,D.tiers[cur.tier.i].upTo+1-cur.run):0}}
+  return {m,wd,n,A,tot,pt,sub,act,avg,
+    v:{amt:tot,avg:avg,hit:n?act/n:null,perAct:act?tot/act:null,cv:avg>0&&n>2?sd(A)/avg:null,dry:n?dry:null,
+      topday:tot>0?Math.max(...A)/tot:null,mom:sP>0?sL/sP-1:null,slope:avg>0&&n>=5?slope(A)/avg:null,
+      wdr:Wv.length>=3&&Math.max(...Wv)>0?Math.min(...Wv)/Math.max(...Wv):null,front:tot>0?e1/tot:null,
+      pt:pt,ptr:tot>0?pt/tot*1000:null,sub:sub,subr:tot>0?sub/tot*1e5:null,tkt:sub>0?tot/sub:null,
+      pn:ta>0?pk.length:(n?0:null),ptop:ta>0?bp[pk[0]]/ta:null,tier:tier?tier.rate:null,risk:n?tail:null},
+    bi:bi,wi:wi,Wa:Wa,tier:tier,topProd:pk[0]||null,prods:pk.length,hhi:ta>0?nnSm(pk.map(p=>Math.pow(bp[p]/ta,2))):null};
+}
+const NNP=v=>v==null?'–':(v*100).toFixed(0)+'%',NNB=v=>v==null?'–':'฿'+fmt(v),NNN=v=>v==null?'–':fmt(v),NNX=v=>v==null?'–':(v>=0?'+':'')+(v*100).toFixed(0)+'%';
+const NNT=[
+ {k:'amt',ic:'💰',t:'ยอดขายรวม',f:NNB,hi:1,sum:1,d:'ผลงานรวมตลอดช่วงที่เลือก (ไม่นับวันลา)',w:'ยอดรวมต่ำกว่ากลุ่ม — ดูว่าติดที่จำนวนวันที่ขายได้ หรือยอดต่อวันที่ขายได้ แล้วแก้ที่จุดนั้นก่อน',s:'ยอดรวมอยู่ระดับบนของกลุ่ม เป็นตัวอย่างให้ทีมได้'},
+ {k:'avg',ic:'📅',t:'ยอดเฉลี่ยต่อวันทำการ',f:NNB,hi:1,d:'ยอดรวม ÷ วันทำการ (ตัดวันลา) ใช้เทียบคนที่ลามากน้อยต่างกันได้ยุติธรรม',w:'ยอดต่อวันต่ำ — ตั้งเป้าโทร/ปิดรายวันให้ชัด และโค้ชช่วงเวลาที่โทรได้ผล',s:'ยอดต่อวันสูง รักษาจังหวะนี้ไว้'},
+ {k:'hit',ic:'🎯',t:'อัตราวันที่มียอดขาย',f:NNP,hi:1,d:'สัดส่วนวันทำการที่ปิดได้อย่างน้อย 1 รายการ',w:'หลายวันไม่มียอดเลย — ตั้งเป้า "ปิดให้ได้อย่างน้อย 1 รายการ/วัน" และให้ Leader ติดตามตอนบ่าย',s:'ปิดได้เกือบทุกวัน แสดงถึงวินัยการทำงานที่ดี'},
+ {k:'perAct',ic:'💎',t:'ยอดต่อวันที่ขายได้',f:NNB,hi:1,d:'เมื่อขายได้ ได้ยอดเฉลี่ยเท่าไร (ขนาดงานต่อครั้ง)',w:'ขายได้แต่ยอดต่อวันเล็ก — ฝึกเสนอแพ็กเกจสูงขึ้น/ขายเพิ่ม (Upsell)',s:'ยอดต่อครั้งสูง เก่งเรื่องเสนอแพ็กเกจที่คุ้มค่า'},
+ {k:'cv',ic:'📉',t:'ความสม่ำเสมอของยอด (ผันผวน)',f:v=>v==null?'–':v.toFixed(2),hi:0,d:'ค่าสัมประสิทธิ์ความผันผวน (SD÷เฉลี่ย) ยิ่งต่ำยิ่งสม่ำเสมอ',w:'ยอดขึ้นลงแรง — วางแผนสัปดาห์ล่วงหน้า กระจายเวลาโทรสม่ำเสมอ ไม่ทิ้งงานช่วงต้นสัปดาห์',s:'ยอดสม่ำเสมอ คาดการณ์ได้ง่าย เหมาะเป็นแบบอย่าง'},
+ {k:'dry',ic:'🕳️',t:'วันขาดยอดติดต่อกันนานสุด',f:v=>v==null?'–':v+' วัน',hi:0,d:'ช่วงที่ไม่มียอดต่อเนื่องยาวที่สุด (บ่งชี้ช่วงตก/หมดไฟ)',w:'มีช่วงเงียบยาว — ให้ Leader เข้าไปคุยทันทีเมื่อเงียบ 2 วัน ทบทวนรายชื่อลูกค้าและสคริปต์',s:'ไม่มีช่วงเงียบยาว ฟื้นตัวเร็ว'},
+ {k:'topday',ic:'⛰️',t:'พึ่งพาวันเด่นวันเดียว',f:NNP,hi:0,d:'% ของยอดรวมที่มาจากวันที่ดีที่สุดวันเดียว ยิ่งสูงยิ่งเสี่ยง',w:'ยอดกระจุกในวันเดียว — พยายามกระจายการปิดให้ทุกวัน อย่าสะสมงานไปปิดทีเดียว',s:'ยอดกระจายดี ไม่พึ่งวันเดียว'},
+ {k:'mom',ic:'🚀',t:'โมเมนตัม 7 วันล่าสุด vs 7 วันก่อน',f:NNX,hi:1,d:'ยอด 7 วันทำการล่าสุดเทียบ 7 วันก่อนหน้า',w:'ยอดกำลังตก — หาสาเหตุ (ลูกค้า/สินค้า/แรงจูงใจ) และตั้งเป้าสั้น 3 วัน',s:'ยอดกำลังพุ่ง ใช้จังหวะนี้ดัน Tier ขึ้น'},
+ {k:'slope',ic:'📈',t:'แนวโน้มทั้งช่วง',f:v=>v==null?'–':(v>=0?'+':'')+(v*100).toFixed(1)+'%/วัน',hi:1,d:'ความชันของเส้นแนวโน้มรายวัน เทียบกับยอดเฉลี่ย',w:'แนวโน้มลดลงต่อเนื่อง — ควรโค้ชเชิงลึก 1:1',s:'แนวโน้มดีขึ้นต่อเนื่อง'},
+ {k:'wdr',ic:'🗓️',t:'ความสมดุลรายวันในสัปดาห์',f:NNP,hi:1,d:'ยอดเฉลี่ยของวันที่อ่อนสุด ÷ วันที่เก่งสุด (100% = ทุกวันเท่ากัน)',w:'มีวันอ่อนชัดเจน — เพิ่มกิจกรรมในวันนั้น เช่น โทรติดตามลูกค้าค้างจากวันเก่ง',s:'ทำยอดได้เท่า ๆ กันทุกวัน'},
+ {k:'front',ic:'🏁',t:'เริ่มต้นเดือนแรง (วันที่ 1–10)',f:NNP,hi:1,d:'% ของยอดที่ได้ในช่วงวันที่ 1–10 ของเดือน',w:'ต้นเดือนช้า ทำให้ต้องเร่งปลายเดือน — ตั้งเป้าสะสมให้ถึง 1/3 ภายในวันที่ 10',s:'เริ่มเดือนได้เร็ว สร้างความได้เปรียบเรื่อง Tier'},
+ {k:'pt',ic:'⭐',t:'POINT รวม',f:NNN,hi:1,sum:1,d:'POINT สะสม (ใช้คิดค่าคอม)',w:'POINT ต่ำ — เน้นสินค้าที่ Factor สูงควบคู่กับยอดเงิน',s:'POINT สูง ใกล้ขั้นค่าคอมที่ดี'},
+ {k:'ptr',ic:'⚖️',t:'POINT ต่อยอดขาย ฿1,000',f:v=>v==null?'–':v.toFixed(1),hi:1,d:'ประสิทธิภาพการแปลงยอดเงินเป็น POINT (ขึ้นกับสินค้าที่ขาย)',w:'ขายสินค้า Factor ต่ำเยอะ — ย้ายน้ำหนักไปสินค้าที่ให้ POINT ต่อบาทสูงกว่า',s:'เลือกขายสินค้าที่ให้ POINT คุ้มค่า'},
+ {k:'sub',ic:'👥',t:'SUB รวม',f:NNN,hi:1,sum:1,d:'จำนวน SUB (ลูกค้า/รายการ) ที่ทำได้',w:'จำนวน SUB น้อย — เพิ่มปริมาณการเสนอขาย/ติดตามลูกค้าใหม่',s:'ปริมาณ SUB ดี ฐานลูกค้าเติบโต'},
+ {k:'subr',ic:'🔁',t:'SUB ต่อยอดขาย ฿100K',f:v=>v==null?'–':v.toFixed(1),hi:1,d:'ยอดขาย ฿100,000 ได้กี่ SUB',w:'ยอดมาจากรายการใหญ่น้อยราย — ขยายฐานลูกค้าเพิ่ม',s:'ฐานลูกค้ากว้าง ความเสี่ยงต่ำ'},
+ {k:'tkt',ic:'🏷️',t:'ยอดเฉลี่ยต่อ SUB (ขนาดดีล)',f:NNB,hi:1,d:'ยอดขาย ÷ SUB',w:'ขนาดดีลเล็ก — ฝึกสคริปต์ขายพ่วง/อัปเกรดแพ็กเกจ',s:'ขนาดดีลใหญ่ เก่งปิดมูลค่าสูง'},
+ {k:'pn',ic:'🛍️',t:'ความหลากหลายสินค้า (จำนวนชนิด)',f:v=>v==null?'–':v+' ชนิด',hi:1,d:'จำนวนสินค้าที่ขายได้ในช่วงนี้ (ต้องมีข้อมูลสินค้า)',w:'ขายสินค้าน้อยชนิด — ศึกษาสินค้าอื่นที่ทีมขายดี เพื่อเพิ่มโอกาสปิด',s:'ขายได้หลายชนิด ปรับตัวตามลูกค้าเก่ง'},
+ {k:'ptop',ic:'🧲',t:'พึ่งพาสินค้าอันดับ 1',f:NNP,hi:0,d:'% ยอดที่มาจากสินค้าอันดับ 1 ยิ่งสูงยิ่งเสี่ยง',w:'พึ่งสินค้าเดียวมาก — ถ้าสินค้านั้นขายยากจะกระทบทันที ลองกระจายสินค้า',s:'พอร์ตสินค้ากระจายตัวดี'},
+ {k:'tier',ic:'🏆',t:'ขั้นค่าคอมปัจจุบัน',f:v=>v==null?'–':v+'%',hi:1,d:'% ค่าคอมตาม Runrate ณ เดือนสุดท้ายของช่วง',w:'ขั้นต่ำกว่ากลุ่ม — ดู "ต้องเพิ่มอีกกี่ POINT/วัน" แล้วตั้งเป้าสั้นรายวัน',s:'อยู่ขั้นสูง รักษาไว้และช่วยโค้ชคนอื่น'},
+ {k:'risk',ic:'🚨',t:'วันล่าสุดที่ไม่มียอดติดกัน (ความเสี่ยง)',f:v=>v==null?'–':v+' วัน',hi:0,d:'นับย้อนจากวันล่าสุดว่าเงียบมากี่วันทำการแล้ว',w:'เงียบต่อเนื่องจนถึงตอนนี้ — ควรติดต่อทันที',s:'ยังมียอดต่อเนื่องถึงปัจจุบัน'}
+];
+function nnPct(vals,i,hi){ // 0..1 (1 = ดีที่สุด)
+  const v=vals[i];if(v==null)return null;const o=vals.filter(x=>x!=null);if(o.length<2)return .5;
+  let w=0,e=0;o.forEach(x=>{if(x===v)e++;else if(hi?x<v:x>v)w++});return (w+.5*(e-1))/(o.length-1);
+}
+function nnCalc(){
+  const R=nnRange(),days=salesDays().filter(k=>k>=R.from&&k<=R.to),ags=MEM.filter(AG).filter(m=>!NN.team||m.team===NN.team);
+  const rows=ags.map(m=>nnAgent(m,R,days));
+  rows.forEach(r=>{r.p={};r.n_=0;let s=0;NNT.forEach((t,ti)=>{const p=nnPct(rows.map(x=>x.v[t.k]),rows.indexOf(r),t.hi);r.p[t.k]=p;if(p!=null){s+=p;r.n_++}});r.score=r.n_?s/r.n_*100:null});
+  const tm={};rows.forEach(r=>{(tm[r.m.team]||(tm[r.m.team]=[])).push(r)});
+  const teams=Object.keys(tm).map(id=>{const L=tm[id],v={};
+    NNT.forEach(t=>{const xs=L.map(r=>r.v[t.k]).filter(x=>x!=null);v[t.k]=xs.length?(t.sum?nnSm(xs):mean(xs)):null});
+    return {id,L,v,n:L.length}});
+  teams.forEach(T=>{T.p={};let s=0,c=0;NNT.forEach(t=>{const p=nnPct(teams.map(x=>x.v[t.k]),teams.indexOf(T),t.hi);T.p[t.k]=p;if(p!=null){s+=p;c++}});T.score=c?s/c*100:null});
+  const avgs={};NNT.forEach(t=>{const xs=rows.map(r=>r.v[t.k]).filter(x=>x!=null);avgs[t.k]=xs.length?mean(xs):null});
+  return {R,days,rows,teams,avgs};
+}
+const nnTag=(t,p)=>`<span class="role" style="${p>=.75?'background:#0ecb8133;color:var(--up)':'background:#f6465d33;color:var(--down)'}" title="${esc(t.d)}">${t.ic} ${esc(t.t.replace(/\s*\(.*\)/,''))}</span>`;
+function nnPickTags(P){const a=NNT.filter(t=>P[t.k]!=null).sort((x,y)=>P[y.k]-P[x.k]);return {s:a.filter(t=>P[t.k]>=.75).slice(0,3),w:a.slice().reverse().filter(t=>P[t.k]<=.25).slice(0,3)}}
+const nnScoreCol=s=>s==null?'var(--mute)':s>=65?'var(--up)':s>=40?'#f0b90b':'var(--down)';
+function nnHTML(){
+  const C=nnCalc(),R=C.R,rows=C.rows,tn=id=>teamOf(id).name||id;
+  const teamsAll=TEAMS.filter(t=>MEM.some(m=>AG(m)&&m.team===t.id));
+  let h=`<div class="panel sec" id="nnBox"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>🔬 Deep Insight · วิเคราะห์เชิงลึก 20 หัวข้อ (Nanocluster)</span>
+   <span style="display:flex;gap:6px;flex-wrap:wrap"><select id="nnWin">${[['cur','เดือนนี้'],['prev','เดือนก่อน'],['30','30 วันล่าสุด'],['60','60 วันล่าสุด'],['90','90 วันล่าสุด']].map(o=>`<option value="${o[0]}" ${NN.win===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>
+   ${teamsAll.length>1?`<select id="nnTeam"><option value="">👥 ทุกทีม</option>${teamsAll.map(t=>`<option value="${esc(t.id)}" ${NN.team===t.id?'selected':''}>${esc(t.name)}</option>`).join('')}</select>`:''}</span></h3>
+   <div class="hint" style="margin-bottom:8px">ช่วง ${esc(R.label)} (${dShort(R.from)} – ${dShort(R.to)}) · ${C.days.length} วันทำการที่มียอดขาย · ${rows.length} Agent · วิเคราะห์จากยอดรายวัน/POINT/SUB/สินค้า/ค่าคอม และหักวันลาแล้ว · คะแนน = อันดับเปอร์เซ็นไทล์เทียบกับคนอื่นในกลุ่มที่เลือก (ยิ่งสูงยิ่งดี)</div>`;
+  if(C.days.length<3||!rows.length)return h+'<div class="empty">ยังมีข้อมูลรายวันไม่พอสำหรับช่วงนี้ (ต้องมีอย่างน้อย 3 วันที่มียอดขาย) ลองเลือกช่วงที่ยาวขึ้น</div></div>';
+  if(C.days.length<10)h+=`<div class="hint" style="color:#f0b90b;margin-bottom:8px">⚠️ มีข้อมูลเพียง ${C.days.length} วัน — ตัวเลขบางหัวข้อ (ความผันผวน/แนวโน้ม) ยังไม่นิ่ง ใช้ดูเป็นแนวทางเท่านั้น</div>`;
+  // ภาพรวมทีม
+  const tot=nnSm(rows.map(r=>r.tot)),act=rows.filter(r=>r.tot>0);
+  h+=`<div class="stats"><div class="stat"><small>ยอดรวม</small><b>${NNB(tot)}</b></div><div class="stat"><small>Agent ที่มียอด</small><b>${act.length}/${rows.length}</b></div><div class="stat"><small>เฉลี่ย/คน</small><b>${NNB(rows.length?tot/rows.length:0)}</b></div><div class="stat"><small>อัตราวันมียอด (เฉลี่ย)</small><b>${NNP(C.avgs.hit)}</b></div></div>`;
+  // ทีม
+  if(C.teams.length>1){
+    h+=`<h4 style="margin:12px 0 6px">👥 ระดับทีม — จุดแข็ง / จุดอ่อน (เทียบระหว่างทีม)</h4><div class="spgrid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));align-items:start">`+
+    C.teams.slice().sort((a,b)=>(b.score||0)-(a.score||0)).map((T,i)=>{const pk=nnPickTags(T.p);
+      return `<div class="fcb" style="border-left:4px solid ${esc(tcol(T.id))}"><div style="display:flex;justify-content:space-between;gap:6px"><b>${medal(i)} ${esc(tn(T.id))}</b><b class="num" style="color:${nnScoreCol(T.score)}">${T.score==null?'–':T.score.toFixed(0)} คะแนน</b></div>
+       <div class="hint">${T.n} คน · ยอดรวม ${NNB(T.v.amt)} · เฉลี่ย/คน ${NNB(T.n?T.v.amt/T.n:0)}</div>
+       <div style="margin-top:6px"><span class="hint">💪 จุดแข็ง</span><br>${pk.s.length?pk.s.map(t=>nnTag(t,1)).join(' '):'<span class="hint">ยังไม่เด่นชัด</span>'}</div>
+       <div style="margin-top:6px"><span class="hint">⚠️ ควรปรับปรุง</span><br>${pk.w.length?pk.w.map(t=>nnTag(t,0)).join(' '):'<span class="hint">ไม่มีจุดอ่อนชัดเจน</span>'}</div></div>`}).join('')+`</div>`;
+  }
+  // สรุปรายคน
+  const q=NN.q.trim().toLowerCase();
+  const srt={score:(a,b)=>(b.score||-1)-(a.score||-1),amt:(a,b)=>b.tot-a.tot,name:(a,b)=>(a.m.name||'').localeCompare(b.m.name||'','th')}[NN.tsort]||0;
+  const L=rows.filter(r=>!q||((r.m.name||'')+' '+(r.m.nick||'')+' '+r.m.id).toLowerCase().includes(q)).sort(srt);
+  h+=`<h4 style="margin:14px 0 6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span>🧑‍💼 ระดับ Agent — คะแนนรวม จุดแข็ง จุดอ่อน (กดที่ชื่อเพื่อดูครบ 20 หัวข้อ)</span><span style="display:flex;gap:6px"><input id="nnQ" type="search" placeholder="🔎 ค้นหาชื่อ" value="${esc(NN.q)}" style="padding:6px;width:130px"><select id="nnSort">${[['score','เรียงตามคะแนน'],['amt','เรียงตามยอด'],['name','เรียงตามชื่อ']].map(o=>`<option value="${o[0]}" ${NN.tsort===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></span></h4>
+   <div style="overflow:auto"><table class="tbl" style="min-width:760px"><thead><tr><th>#</th><th>Agent</th><th>ทีม</th><th>คะแนน</th><th>ยอดรวม</th><th style="text-align:left">💪 จุดแข็ง</th><th style="text-align:left">⚠️ ควรปรับปรุง</th></tr></thead><tbody>`+
+   L.map((r,i)=>{const pk=nnPickTags(r.p);return `<tr><td>${i+1}</td><td><a class="plk" data-nna="${esc(r.m.id)}"><b>${esc(r.m.nick||r.m.name)}</b></a><div class="hint">${esc(r.m.name||'')}</div></td><td>${esc(tn(r.m.team))}</td><td class="num" style="color:${nnScoreCol(r.score)};font-weight:800">${r.score==null?'–':r.score.toFixed(0)}</td><td class="num">${NNB(r.tot)}</td><td style="text-align:left">${r.tot<=0?'<span class="hint">ไม่มียอดในช่วงนี้</span>':pk.s.map(t=>nnTag(t,1)).join(' ')||'<span class="hint">–</span>'}</td><td style="text-align:left">${pk.w.map(t=>nnTag(t,0)).join(' ')||'<span class="hint">–</span>'}</td></tr>`}).join('')+`</tbody></table></div>`;
+  // 20 หัวข้อ
+  h+=`<h4 style="margin:16px 0 6px">📚 20 หัวข้อวิเคราะห์ (กดเพื่อเปิดดูอันดับ แบบอย่าง และคำแนะนำ)</h4>`;
+  NNT.forEach((t,ti)=>{
+    const vals=rows.filter(r=>r.v[t.k]!=null),srt2=vals.slice().sort((a,b)=>t.hi?b.v[t.k]-a.v[t.k]:a.v[t.k]-b.v[t.k]),open=NN.open[t.k];
+    const best=srt2.slice(0,3),worst=srt2.slice(-3).reverse();
+    h+=`<div class="panel" style="margin:6px 0;padding:0;overflow:hidden"><div data-nnt="${t.k}" style="cursor:pointer;display:flex;gap:10px;align-items:center;padding:10px 12px;flex-wrap:wrap"><b style="min-width:26px">${ti+1}.</b><span style="font-size:18px">${t.ic}</span><b style="flex:1;min-width:160px">${esc(t.t)}</b><span class="hint">ค่าเฉลี่ยกลุ่ม</span><b class="num">${t.f(C.avgs[t.k])}</b><span class="hint">${open?'▲':'▼'}</span></div>`;
+    if(open){
+      h+=`<div style="padding:0 12px 12px"><div class="hint" style="margin-bottom:6px">${esc(t.d)} · ${t.hi?'ยิ่งสูงยิ่งดี':'ยิ่งต่ำยิ่งดี'}</div>`;
+      if(!vals.length)h+='<div class="hint">ยังไม่มีข้อมูลสำหรับหัวข้อนี้ในช่วงที่เลือก</div>';
+      else{
+        const rowH=(r,tag)=>`<div class="chr"><span class="chnm" style="flex:0 0 min(210px,48%);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a class="plk" data-nna="${esc(r.m.id)}">${esc(r.m.nick||r.m.name)}</a> <span class="hint">${esc(tn(r.m.team))}</span></span><b class="num ${tag}">${t.f(r.v[t.k])}</b></div>`;
+        h+=`<div class="spgrid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr));align-items:start"><div class="fcb"><b>🌟 เอาเป็นแบบอย่าง</b>${best.map(r=>rowH(r,'up')).join('')}</div>${vals.length>3?`<div class="fcb"><b>🛠 ควรโค้ช/ช่วยพัฒนา</b>${worst.map(r=>rowH(r,'dn')).join('')}</div>`:''}</div>`;
+        if(C.teams.length>1){const tv=C.teams.filter(T=>T.v[t.k]!=null).sort((a,b)=>t.hi?b.v[t.k]-a.v[t.k]:a.v[t.k]-b.v[t.k]);h+=`<div class="hint" style="margin-top:8px">อันดับทีม${t.sum?' (ยอดรวม)':' (ค่าเฉลี่ยของสมาชิก)'}: ${tv.map((T,i)=>`${medal(i)} ${esc(tn(T.id))} <b class="num">${t.f(T.v[t.k])}</b>`).join(' · ')}</div>`}
+        h+=`<div class="panel" style="margin-top:8px;background:var(--panel2)"><b>🧭 ข้อเสนอแนะ</b><ul class="insl" style="margin-top:4px"><li>${esc(t.w)} ${vals.length>3?`(กลุ่มที่ควรช่วย: ${worst.map(r=>esc(r.m.nick||r.m.name)).join(', ')})`:''}</li><li>${esc(t.s)}${best[0]?` — ตัวอย่าง: ${esc(best[0].m.nick||best[0].m.name)} (${t.f(best[0].v[t.k])})`:''}</li></ul></div>`;
+      }
+      h+='</div>';
+    }
+    h+='</div>';
+  });
+  h+=`<div class="hint" style="margin-top:8px">⚠️ เป็นการวิเคราะห์เชิงสถิติจากข้อมูลในระบบ ใช้ประกอบการโค้ช ไม่ควรใช้ตัดสินตัวบุคคลเพียงอย่างเดียว · คะแนนเป็นการเทียบกันเองในกลุ่ม ไม่ใช่เกณฑ์เป้าหมายของบริษัท · หัวข้อสินค้า/SUB ต้องมีข้อมูลบันทึกไว้ในชีต</div></div>`;
+  return h;
+}
+function nnAgentModal(id){
+  const C=nnCalc(),r=C.rows.find(x=>x.m.id===id);if(!r)return;
+  const tn=teamOf(r.m.team).name||r.m.team,pk=nnPickTags(r.p);
+  const rowsH=NNT.map(t=>{const v=r.v[t.k],p=r.p[t.k],lab=p==null?'':p>=.75?'💪':p<=.25?'⚠️':'';
+    return `<tr><td>${t.ic} ${esc(t.t)}</td><td class="num">${t.f(v)}</td><td class="num hint">${t.f(C.avgs[t.k])}</td><td style="min-width:90px"><div class="chbar"><i style="width:${p==null?0:Math.round(p*100)}%;background:${p==null?'transparent':p>=.75?'var(--up)':p<=.25?'var(--down)':'#f0b90b'}"></i></div></td><td>${lab}</td></tr>`}).join('');
+  const adv=NNT.filter(t=>r.p[t.k]!=null&&r.p[t.k]<=.25).sort((a,b)=>r.p[a.k]-r.p[b.k]).slice(0,5).map(t=>{const b=C.rows.filter(x=>x.v[t.k]!=null).sort((x,y)=>t.hi?y.v[t.k]-x.v[t.k]:x.v[t.k]-y.v[t.k])[0];return `<li><b>${t.ic} ${esc(t.t)}</b> (${t.f(r.v[t.k])}) — ${esc(t.w)}${b&&b.m.id!==id?` · เรียนรู้จาก ${esc(b.m.nick||b.m.name)} (${t.f(b.v[t.k])})`:''}</li>`}).join('');
+  const WD=['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+  const extra=[];
+  if(r.bi>=0&&r.Wa[r.bi]>0)extra.push(`วันที่ทำยอดดีสุดคือวัน${WD[r.bi]} (เฉลี่ย ${NNB(r.Wa[r.bi])}) ส่วนวัน${WD[r.wi]} อ่อนสุด (${NNB(r.Wa[r.wi])})`);
+  if(r.topProd)extra.push(`สินค้าหลักคือ ${prodName(r.topProd)} (ขายได้ ${r.prods} ชนิด)`);
+  if(r.tier&&r.tier.next!=null&&r.tier.gap>0)extra.push(`ขั้นค่าคอม ${r.tier.rate}% — ต้องเพิ่ม Runrate อีก ${fmt(r.tier.gap)} POINT เพื่อขึ้นขั้น ${r.tier.next}%`);
+  openModal(`<h3>🔬 ${esc(r.m.nick||r.m.name)} <span class="hint">${esc(tn)} · ${esc(C.R.label)}</span></h3>
+   <div class="stats"><div class="stat"><small>คะแนนรวม</small><b style="color:${nnScoreCol(r.score)}">${r.score==null?'–':r.score.toFixed(0)}</b></div><div class="stat"><small>ยอดรวม</small><b>${NNB(r.tot)}</b></div><div class="stat"><small>วันที่มียอด</small><b>${r.act}/${r.n}</b></div></div>
+   <div style="margin:8px 0"><span class="hint">💪 จุดแข็ง</span> ${pk.s.map(t=>nnTag(t,1)).join(' ')||'<span class="hint">–</span>'}<br><span class="hint">⚠️ ควรปรับปรุง</span> ${pk.w.map(t=>nnTag(t,0)).join(' ')||'<span class="hint">–</span>'}</div>
+   <div style="max-height:46vh;overflow:auto"><table class="tbl" style="width:100%"><thead><tr><th>หัวข้อ</th><th>ค่า</th><th>เฉลี่ยกลุ่ม</th><th>ตำแหน่งในกลุ่ม</th><th></th></tr></thead><tbody>${rowsH}</tbody></table></div>
+   ${adv?`<div class="panel" style="margin-top:8px;background:var(--panel2)"><b>🧭 แนวทางพัฒนา</b><ul class="insl" style="margin-top:4px">${adv}</ul></div>`:'<div class="up" style="margin-top:8px">ไม่พบจุดอ่อนชัดเจนเมื่อเทียบกับกลุ่ม 👍</div>'}
+   ${extra.length?`<ul class="insl hint" style="margin-top:8px">${extra.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
+   <div style="text-align:right;margin-top:10px"><button class="btn" onclick="closeModal()">ปิด</button></div>`);
+}
+function nnBind(){
+  const b=$('#nnBox');if(!b)return;
+  const rr=()=>{renderIns();const e=$('#nnBox');if(e)e.scrollIntoView({block:'start'})};
+  if($('#nnWin'))$('#nnWin').onchange=e=>{NN.win=e.target.value;renderIns()};
+  if($('#nnTeam'))$('#nnTeam').onchange=e=>{NN.team=e.target.value;renderIns()};
+  if($('#nnSort'))$('#nnSort').onchange=e=>{NN.tsort=e.target.value;renderIns()};
+  const q=$('#nnQ');if(q)q.oninput=e=>{NN.q=e.target.value;clearTimeout(NN.tm);NN.tm=setTimeout(()=>{renderIns();const n=$('#nnQ');if(n){n.focus();n.setSelectionRange(n.value.length,n.value.length)}},300)};
+  b.querySelectorAll('[data-nnt]').forEach(d=>d.onclick=()=>{NN.open[d.dataset.nnt]=!NN.open[d.dataset.nnt];renderIns();const e=document.querySelector('[data-nnt="'+d.dataset.nnt+'"]');if(e)e.scrollIntoView({block:'nearest'})});
+  b.querySelectorAll('[data-nna]').forEach(a=>a.onclick=ev=>{ev.preventDefault();nnAgentModal(a.dataset.nna)});
+}
+
 /* ---- 🔔 แจ้งเตือนสังคม ---- */
 const socSeen=()=>+LS.get('sb_soc')||0;
 const socUnread=()=>((SOC.noti||[]).filter(i=>i.ts>socSeen()).length);
@@ -3682,7 +3856,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-12.5';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-13.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
