@@ -1095,10 +1095,23 @@ function colorDlg(which){
 /* ---- 💾 บันทึกชุด "เทียบกับ" (จำในเบราว์เซอร์นี้) ---- */
 const cmpLS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||'null')||d}catch(e){return d}};
 const cmpSave=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+/* ชุดที่บันทึกเก็บบนเซิร์ฟเวอร์ด้วย (ตามบัญชี) — กันหายเมื่อเปลี่ยนเครื่อง/ล้างเบราว์เซอร์/อัปเดตระบบ */
+let CMP_SYNC=0;
+const cmpPush=()=>{try{api('prefSet',{k:'cmpsets',val:JSON.stringify(cmpLS('sx_cmpsets',{}))}).catch(()=>{})}catch(e){}};
+async function cmpPull(){
+  if(CMP_SYNC||!TOKEN)return false;CMP_SYNC=1;
+  try{const r=await api('prefGet',{k:'cmpsets'}),loc=cmpLS('sx_cmpsets',{});
+    if(r&&r.val){const sv=JSON.parse(r.val)||{};if(JSON.stringify(sv)!==JSON.stringify(loc)){cmpSave('sx_cmpsets',sv);return true}}
+    else if(Object.keys(loc).some(w=>Object.keys(loc[w]||{}).length))cmpPush();
+  }catch(e){CMP_SYNC=0}
+  return false;
+}
 const cmpLastGet=w=>{const o=cmpLS('sx_cmplast',{});return o.auto===false?[]:(o[w]||[]).slice()};
 const cmpLastPut=(w,l)=>{const o=cmpLS('sx_cmplast',{});if(o.auto===false)return;if(JSON.stringify(o[w]||[])!==JSON.stringify(l)){o[w]=l.slice();cmpSave('sx_cmplast',o)}};
 function cmpDlg(w,getL,setL,nameOf){
-  const draw=()=>{const sets=cmpLS('sx_cmpsets',{})[w]||{},names=Object.keys(sets),cur=getL(),auto=cmpLS('sx_cmplast',{}).auto!==false;
+  let pulled=false;
+  const draw=()=>{if(!pulled){pulled=true;cmpPull().then(ch=>{if(ch&&!$('#modal').hidden&&$('#cmpName'))draw()})}
+    const sets=cmpLS('sx_cmpsets',{})[w]||{},names=Object.keys(sets),cur=getL(),auto=cmpLS('sx_cmplast',{}).auto!==false;
     openModal(`<h2>💾 ชุด "เทียบกับ" ที่บันทึกไว้</h2><div class="hint" style="margin-bottom:8px">บันทึกรายชื่อ Agent / TEAM${w==='prod'?' / สินค้า':''} ที่เทียบไว้ แล้วเรียกกลับมาใช้ได้ในคลิกเดียว · เก็บในเบราว์เซอร์/เครื่องนี้</div>
     <div class="panel" style="padding:10px;margin-bottom:10px"><b>ชุดที่เทียบอยู่ตอนนี้ (${cur.length} รายการ)</b>
       <div class="hint" style="margin:4px 0">${cur.length?cur.slice(0,12).map(k=>esc(nameOf(k))).join(' · ')+(cur.length>12?' …':''):'ยังไม่ได้เลือกรายการเทียบ'}</div>
@@ -1108,10 +1121,10 @@ function cmpDlg(w,getL,setL,nameOf){
     <div class="mrow"><button class="btn" id="cmpClose">ปิด</button></div>`);
     $('#cmpClose').onclick=closeModal;
     $('#cmpAuto').onchange=e=>{const o=cmpLS('sx_cmplast',{});o.auto=e.target.checked;if(!o.auto)delete o[w];cmpSave('sx_cmplast',o)};
-    $('#cmpSaveBtn').onclick=()=>{const n=($('#cmpName').value||'').trim();if(!n){toast('ตั้งชื่อชุดก่อน');return}const all=cmpLS('sx_cmpsets',{});all[w]=all[w]||{};if(all[w][n]&&!confirm('มีชุดชื่อ "'+n+'" แล้ว — บันทึกทับหรือไม่?'))return;all[w][n]=getL().slice();cmpSave('sx_cmpsets',all);toast('✅ บันทึกชุด "'+n+'" แล้ว');draw()};
+    $('#cmpSaveBtn').onclick=()=>{const n=($('#cmpName').value||'').trim();if(!n){toast('ตั้งชื่อชุดก่อน');return}const all=cmpLS('sx_cmpsets',{});all[w]=all[w]||{};if(all[w][n]&&!confirm('มีชุดชื่อ "'+n+'" แล้ว — บันทึกทับหรือไม่?'))return;all[w][n]=getL().slice();cmpSave('sx_cmpsets',all);cmpPush();toast('✅ บันทึกชุด "'+n+'" แล้ว');draw()};
     $$('#mbox [data-use]').forEach(b=>b.onclick=()=>{setL((sets[b.dataset.use]||[]).slice(0,99));closeModal()});
     $$('#mbox [data-add]').forEach(b=>b.onclick=()=>{const l=getL().slice();(sets[b.dataset.add]||[]).forEach(k=>{if(l.indexOf(k)<0&&l.length<99)l.push(k)});setL(l);closeModal()});
-    $$('#mbox [data-del]').forEach(b=>b.onclick=()=>{if(!confirm('ลบชุด "'+b.dataset.del+'" ?'))return;const all=cmpLS('sx_cmpsets',{});if(all[w])delete all[w][b.dataset.del];cmpSave('sx_cmpsets',all);draw()})};
+    $$('#mbox [data-del]').forEach(b=>b.onclick=()=>{if(!confirm('ลบชุด "'+b.dataset.del+'" ?'))return;const all=cmpLS('sx_cmpsets',{});if(all[w])delete all[w][b.dataset.del];cmpSave('sx_cmpsets',all);cmpPush();draw()})};
   draw()}
 const PAL=['#0ecb81','#40c4ff','#f0b90b','#ff6e9c','#b388ff'];
 const palC=i=>i<PAL.length?PAL[i]:`hsl(${Math.round((i*137.508)%360)},${70+(i%3)*8}%,${58+(i%4)*4}%)`;
@@ -4047,7 +4060,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-14.4';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-14.5';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
