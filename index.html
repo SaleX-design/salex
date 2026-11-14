@@ -2235,6 +2235,9 @@ function renderSpotTab(fromEnsure){
     <div class="mrow" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><select id="phWho">${MEM.filter(AG).map(m=>`<option value="${esc(m.id)}">${esc(m.name)}${m.nick?' ('+esc(m.nick)+')':''}</option>`).join('')}</select><label class="btn primary" style="cursor:pointer">📷 เลือกรูป<input type="file" accept="image/*" hidden id="phFile"></label><button class="btn danger" id="phDel">🗑 ลบรูปคนนี้</button></div><div id="phErr" class="err"></div></div>`;
   el.innerHTML=h;
   $$('[data-spm]').forEach(b=>b.onclick=()=>{S.spm=b.dataset.spm;renderSpotTab(true)});
+  if(!fromEnsure||!S.spot.phTry){S.spot.phTry=S.spot.phTry||{}}
+  {const need=[...new Set([...spMetList('m',SM),...spMetList('i',SM),...(SP.talk||[]).slice(0,5)].map(p=>p.m))].filter(id=>!(SP.photos||{})[id]&&!SP.phTry[id]);
+   if(need.length){need.forEach(id=>SP.phTry[id]=1);api('photosGet',{ids:need}).then(r=>{const g=r&&r.photos||{};if(Object.keys(g).length&&S.spot===SP){SP.photos=Object.assign({},SP.photos,g);if(S.tab==='rank')renderSpotTab(true)}}).catch(()=>{})}}
   const send=async(id,file)=>{try{const img=file?await spResize(file):'';await api('photoSet',{m:id,img});toast(img?'✅ บันทึกรูปแล้ว':'🗑 ลบรูปแล้ว');await ensureSpot(true)}catch(e){const x=$('#phErr');if(x)x.textContent=e.message;toast('⚠️ '+esc(e.message))}};
   $$('[data-ph]').forEach(i=>i.onchange=()=>{if(i.files[0])send(i.dataset.ph,i.files[0])});
   if($('#phFile')){$('#phFile').onchange=e=>{if(e.target.files[0])send($('#phWho').value,e.target.files[0])};$('#phDel').onclick=()=>{if(confirm('ลบรูปของคนนี้?'))send($('#phWho').value,null)}}
@@ -3421,14 +3424,14 @@ function infoModal(pid){
   const f=((SC.d||{}).info||{})[pid]||{},rdy=(SC.d||{}).imgsReady!==false;
   const tile=i=>{const dis=i>0&&!rdy;return `<div style="border:1px dashed var(--line);border-radius:10px;padding:8px;text-align:center;${dis?'opacity:.5':''}"><div style="height:96px;display:flex;align-items:center;justify-content:center"><img data-ipv="${i}" alt="" style="max-width:100%;max-height:96px;object-fit:contain;border-radius:8px;display:none"><span class="hint" data-ipph="${i}">รูปที่ ${i+1}</span></div><div style="display:flex;gap:4px;justify-content:center;margin-top:6px"><label class="btn sm" style="cursor:pointer">📷<input type="file" accept="image/*" hidden data-ipf="${i}" ${dis?'disabled':''}></label><button class="btn sm" type="button" data-ipr="${i}" hidden>🗑</button></div><div class="hint" data-ipn="${i}" style="min-height:16px"></div></div>`};
   openModal(`<h2>🛍 ข้อมูลสินค้า: ${esc(scPName(pid))}</h2>
-   <div class="fld"><label>รูปสินค้า (สูงสุด 5 รูป — อัปโหลดจากเครื่อง ระบบย่อให้อัตโนมัติ)</label>
-     ${rdy?'':'<div class="err">ยังไม่มีชีต ProductImgs — รัน setup ใน Apps Script ก่อน จึงจะเพิ่มรูปที่ 2–5 ได้ (ตอนนี้เพิ่มได้รูปเดียว)</div>'}
-     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">${[0,1,2,3,4].map(tile).join('')}</div></div>
+   <div class="fld"><label>รูปสินค้า (สูงสุด 8 รูป — อัปโหลดจากเครื่อง ระบบย่อให้อัตโนมัติ)</label>
+     ${rdy?'':'<div class="err">ยังไม่มีชีต ProductImgs — รัน setup ใน Apps Script ก่อน จึงจะเพิ่มรูปที่ 2–8 ได้ (ตอนนี้เพิ่มได้รูปเดียว)</div>'}
+     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">${[0,1,2,3,4,5,6,7].map(tile).join('')}</div></div>
    <div class="fld"><label>คุณสมบัติ (พิมพ์บรรทัดละข้อ — แสดงเป็นกล่องข้อมูล)</label><textarea id="ipF" rows="5" maxlength="2000">${esc(f.features||'')}</textarea></div>
    <div class="fld"><label>เงื่อนไข (พิมพ์บรรทัดละข้อ หรือขึ้นต้นด้วย 1. 2. 3. ระบบจะจัดเป็นกล่องเรียงเลขให้)</label><textarea id="ipC" rows="5" maxlength="2000">${esc(f.conditions||'')}</textarea></div>
    <div class="fld"><label>ลิงก์ดูรายละเอียดเต็ม (https://…)</label><input id="ipL" maxlength="600" value="${esc(f.link||'')}" placeholder="https://…"></div>
    <div id="ipE" class="err"></div><div class="mrow"><button class="btn primary" id="ipGo">บันทึก</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
-  const imgs=[undefined,undefined,undefined,undefined,undefined];
+  const imgs=new Array(8).fill(undefined);
   const show=(i,u)=>{const v=document.querySelector(`[data-ipv="${i}"]`),ph=document.querySelector(`[data-ipph="${i}"]`),rm=document.querySelector(`[data-ipr="${i}"]`);if(!v)return;if(u){v.src=u;v.style.display='';ph.style.display='none';rm.hidden=false}else{v.removeAttribute('src');v.style.display='none';ph.style.display='';rm.hidden=true}};
   const note=(i,t)=>{const n=document.querySelector(`[data-ipn="${i}"]`);if(n)n.textContent=t};
   const slots=f.slots||(f.hasImg?[0]:[]);
@@ -4044,7 +4047,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-14.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-14.4';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
