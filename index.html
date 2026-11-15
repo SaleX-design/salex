@@ -317,6 +317,8 @@ html,body{overflow-x:hidden}
 .ma-row b{font-weight:600}
 .ma-row i{display:inline-block;width:14px;height:0;border-top:2px solid;vertical-align:middle;margin-right:4px}
 .ma-row i.d{border-top-style:dashed}
+@media(min-width:701px){.tabs{display:grid;grid-template-columns:repeat(var(--tc,8),auto);justify-content:space-between;gap:4px 2px;width:100%;overflow-x:auto}.tabbtn{padding:7px 8px;text-align:center;font-size:13px}}
+@media(min-width:701px) and (max-width:1320px){.tabs{grid-template-columns:repeat(var(--tc,8),minmax(0,1fr));overflow:hidden}.tabbtn{padding:7px 2px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 @media(max-width:700px){.tabs{order:5;width:100%;overflow-x:auto}.clock{display:none}.atbl{display:block;overflow-x:auto}}
 
 /* ---- v4: broadcast, news, claim, rank ---- */
@@ -4243,6 +4245,7 @@ function render(){
   if(S.tab==='run'&&!D.canSeeAll)S.tab='dash';
   ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins','eng','tips','prof','script','coach','wfm'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
   $$('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab));
+  tabsBalance();
   if(S.tab==='dash'){rebuildProd();syncControls();renderTop();renderComStrip();renderSvcStrip();renderQuote();renderChart();ensureSpot();ensureTips();ensurePostPop()}
   else if(S.tab==='rank'){renderRank();renderSpotTab();renderTokBoard()}
   else if(S.tab==='com')renderCom();
@@ -5025,9 +5028,11 @@ function menuList(raw){   // คืน [{id,show}] ตามลำดับท�
   const L=[],seen={};String(raw==null?((D.v5&&D.v5.cfg&&D.v5.cfg.menu)||''):raw).split(/[,;\s]+/).filter(Boolean).forEach(x=>{const h=x[0]==='-',id=h?x.slice(1):x;if(seen[id]||!TABDEF.some(t=>t[0]===id))return;seen[id]=1;L.push({id,show:!(h&&id!=='dash'&&id!=='admin')})});
   TABDEF.forEach(t=>{if(!seen[t[0]])L.push({id:t[0],show:true})});return L}
 const menuVisible=()=>menuList().filter(x=>x.show&&((x.id!=='admin'&&x.id!=='eng')||(D&&D.isAdmin))&&(x.id!=='run'||(D&&D.canSeeAll))).map(x=>TABDEF.find(t=>t[0]===x.id));
+function tabsBalance(){$$('.tabbtn').forEach(b=>b.title=b.textContent.trim());const vis=$$('.tabbtn').filter(b=>!b.hidden&&getComputedStyle(b).display!=='none').length,tb=$('#tabs');if(tb&&vis)tb.style.setProperty('--tc',Math.ceil(vis/2))}
 function applyMenu(){
   const nav=$('#tabs');if(!nav||!D)return;const L=menuList();
   L.forEach(x=>{const b=nav.querySelector(`[data-tab="${x.id}"]`);if(!b)return;nav.appendChild(b);if(x.id==='run')b.hidden=!x.show||!D.canSeeAll;else if(x.id==='eng')b.hidden=!x.show||!D.isAdmin;else if(x.id!=='admin')b.hidden=!x.show});
+  tabsBalance();
 }
 function renderBnav(){
   const n=inboxUnread();
