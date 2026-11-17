@@ -303,6 +303,7 @@ button.dod{font:inherit;color:inherit;text-align:left;cursor:pointer;min-height:
 .wft tr.dome td{background:color-mix(in srgb,var(--up) 9%,var(--panel))!important}.wft tr.dome td:first-child{box-shadow:inset 3px 0 0 var(--up)}tr.dome{background:color-mix(in srgb,var(--up) 9%,transparent)}
 .dod .dods i{font-style:normal}@media(max-width:600px){.dod .dods{font-size:10px;letter-spacing:-.2px}.dod .dods i{display:none}button.dod{min-height:54px}.donav b{min-width:70px}}
 .dork{display:inline-block;margin-left:5px;font-family:var(--mono);font-size:11px;color:var(--flat)}.doh{display:inline-block;min-width:22px;padding:1px 4px;border-radius:6px;font-family:var(--mono);font-size:12px;background:color-mix(in srgb,var(--blue) 22%,transparent);color:var(--blue)}.doh.hi{background:color-mix(in srgb,var(--down) 24%,transparent);color:var(--down)}
+th.tbxs{cursor:pointer;user-select:none}th.tbxs:hover{color:var(--text)}th[aria-sort=ascending]::after{content:' ▲';color:var(--up)}th[aria-sort=descending]::after{content:' ▼';color:var(--up)}.tbxbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0;font-size:13px;color:var(--mute)}.tbxbar select{padding:4px 8px;max-width:100%}
 .wflg{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:8px 0 2px;font-size:12px;color:var(--mute)}.wflg span{display:inline-flex;align-items:center;gap:5px}.wflg u{display:inline-block;width:16px;height:16px;border-radius:4px;text-decoration:none}
 .wfwrap{overflow:auto;max-height:70vh;margin-top:6px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
 .wfg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.wfgh{text-align:center;font-size:12px;font-weight:600;color:var(--mute);padding:2px 0}.wfgh.we{color:var(--pink,#ff6e9c)}
@@ -4219,10 +4220,11 @@ function prodRankHTML(R,key,by){
   let h=`<div class="panel sec"><h3>🏅 อันดับคนขาย แยกรายสินค้า · ${rkLabel(key)} <span class="hint" style="font-weight:400">(เรียงจากมากสุดไปน้อยสุด · ตามตัวเลือก ${by==='amount'?'ยอดขาย':by==='point'?'POINT':'จำนวนชิ้น'} ด้านบน)</span></h3>`;
   if(!pids.length)return h+`<div class="empty">ยังไม่มียอดขายรายสินค้าของ${rkLabel(key)}</div></div>`;
   if(!R.rkProd||!P[R.rkProd]||!(T[R.rkProd]>0))R.rkProd=pids[0];
-  const pid=R.rkProd,rows=Object.keys(P[pid]).map(id=>({id,...P[pid][id],v:val(P[pid][id])})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v),tot=rows.reduce((t,x)=>t+x.v,0),top=Math.max(1,...rows.map(x=>x.v));
-  h+=`<div class="rule" style="margin:8px 0;align-items:center;gap:8px;flex-wrap:wrap"><select id="rkProd" style="max-width:100%">${pids.map(p=>`<option value="${esc(p)}" ${p===pid?'selected':''}>${esc(prodName(p))} · ${esc(skillOf(p))} (${fm(T[p])})</option>`).join('')}</select><span class="hint">${rows.length} คนที่ขายได้ · รวม <b>${fm(tot)}</b></span></div>`;
+  const pid=R.rkProd,sold=Object.keys(P[pid]).map(id=>({id,...P[pid][id],v:val(P[pid][id])})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v),tot=sold.reduce((t,x)=>t+x.v,0),top=Math.max(1,...sold.map(x=>x.v));
+  const got=new Set(sold.map(x=>x.id)),rows=sold.concat(MEM.filter(m=>!got.has(m.id)&&okM(m.id)&&m.role!=='admin'&&m.role!=='manager').map(m=>({id:m.id,q:0,a:0,pt:0,v:0})).sort((x,y)=>String((memOf(x.id)||{}).nick||'').localeCompare(String((memOf(y.id)||{}).nick||''),'th')));   // แสดงทุกคน — คนที่ยังไม่มียอดอยู่ท้ายตาราง
+  h+=`<div class="rule" style="margin:8px 0;align-items:center;gap:8px;flex-wrap:wrap"><select id="rkProd" style="max-width:100%">${pids.map(p=>`<option value="${esc(p)}" ${p===pid?'selected':''}>${esc(prodName(p))} · ${esc(skillOf(p))} (${fm(T[p])})</option>`).join('')}</select><span class="hint">ขายได้ <b>${sold.length}</b> จาก ${rows.length} คน · รวม <b>${fm(tot)}</b> · กดหัวคอลัมน์เพื่อเรียง</span></div>`;
   h+=`<div class="tblwrap"><table class="tbl"><thead><tr><th>#</th><th>AGENT</th><th>ทีม</th><th>ยอดขาย</th><th>ชิ้น</th><th>POINT</th><th>สัดส่วน</th></tr></thead><tbody>${rows.map((x,i)=>{const m=memOf(x.id)||{},t=TEAMS.find(q=>q.id===m.team)||{};
-    return `<tr class="row"><td class="rk"><span class="medal">${medal(i)}</span></td><td><span style="display:inline-flex;align-items:center;gap:6px">${nmAv(x.id,26)}<b>${esc(m.nick||m.name||x.id)}</b></span>${m.name&&m.nick&&m.name!==m.nick?`<div class="hint">${esc(m.name)}</div>`:''}</td><td>${esc(t.name||'')}</td><td class="num">${by==='amount'?'<b>':''}฿${fmt(x.a)}${by==='amount'?'</b>':''}</td><td class="num">${by!=='amount'&&by!=='point'?'<b>':''}${fmt(x.q)}${by!=='amount'&&by!=='point'?'</b>':''}</td><td class="num">${by==='point'?'<b>':''}${fmt(x.pt)}${by==='point'?'</b>':''}</td><td><div class="pbar"><i style="width:${x.v/top*100}%"></i></div><span class="hint">${(x.v/tot*100).toFixed(1)}%</span></td></tr>`}).join('')}</tbody></table></div>`;
+    return `<tr class="row" ${x.v>0?'':'style="opacity:.6"'}><td class="rk"><span class="medal">${x.v>0?medal(i):'–'}</span></td><td><span style="display:inline-flex;align-items:center;gap:6px">${nmAv(x.id,26)}<b>${esc(m.nick||m.name||x.id)}</b></span>${m.name&&m.nick&&m.name!==m.nick?`<div class="hint">${esc(m.name)}</div>`:''}</td><td>${esc(t.name||'')}</td><td class="num">${by==='amount'?'<b>':''}฿${fmt(x.a)}${by==='amount'?'</b>':''}</td><td class="num">${by!=='amount'&&by!=='point'?'<b>':''}${fmt(x.q)}${by!=='amount'&&by!=='point'?'</b>':''}</td><td class="num">${by==='point'?'<b>':''}${fmt(x.pt)}${by==='point'?'</b>':''}</td><td><div class="pbar"><i style="width:${x.v/top*100}%"></i></div><span class="hint">${(x.v/tot*100).toFixed(1)}%</span></td></tr>`}).join('')}</tbody></table></div>`;
   return h+`<div class="hint" style="margin-top:6px">แสดงเฉพาะคนที่คุณมีสิทธิ์เห็น · เลือกดูทีละสินค้าได้จากช่องด้านบน</div></div>`;
 }
 function prodWhoHTML(key,by){
@@ -4259,7 +4261,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-16.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-17.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -5105,6 +5107,52 @@ function doOpenM(){
       closeModal();toast(`🏖 เปิดให้เลือกวันหยุด ${wfMonthTxt(month)} ถึง ${doD(r.to)} แล้ว`,true);DO.month=month;DO.cache={};await doLoad();doDraw()}
     catch(e){toast('⚠️ '+esc(e.message));b.disabled=false;b.textContent='✅ ลองอีกครั้ง'}};
 }
+/* ===================================================================
+ *  ตารางทุกเมนู (ระบบกลาง): ① กดหัวคอลัมน์เพื่อเรียง ② เลือกดูเป็นทีม ③ รูปโปรไฟล์หน้าชื่อ
+ *  ทำงานอัตโนมัติกับทุก <table> ที่ถูกวาดขึ้น (ยกเว้นตารางวันหยุด และตารางที่มีระบบเรียงของตัวเองอยู่แล้ว)
+ * =================================================================== */
+const TBX={st:{},t:0,names:null,sig:''};
+function tbxNames(){const sig=MEM.length+'|'+(MEM[0]||{}).id+'|'+(MEM[MEM.length-1]||{}).id;if(TBX.names&&TBX.sig===sig)return TBX.names;
+  const c={},dup={};MEM.forEach(m=>{[m.name,m.nick].forEach(n=>{n=String(n||'').replace(/\s+/g,' ').trim();if(n.length<2)return;if(c[n]&&c[n]!==m.id)dup[n]=1;c[n]=m.id})});Object.keys(dup).forEach(n=>delete c[n]);TBX.names=c;TBX.sig=sig;return c}
+const tbxRowId=tr=>{const a=tr.querySelector('[data-zid],[data-phid]');return a?(a.dataset.zid||a.dataset.phid):''};
+function tbxVal(td){let src=td;if(td&&td.querySelector('span.sav')){src=td.cloneNode(true);src.querySelectorAll('span.sav').forEach(x=>x.remove())}const t=(src?(src===td?src.innerText:src.textContent):'').replace(/\s+/g,' ').trim(),n=t.replace(/[฿,%\s+]|pt$|Point$|ชิ้น$|คน$|วัน$|บาท$|นาที$|ครั้ง$/g,'');return {t,n:n!==''&&!isNaN(n)?+n:null}}
+function tbxSort(tb,ci,dir){
+  const body=tb.tBodies[0],rows=[...body.rows],v=rows.map(r=>tbxVal(r.cells[ci])),filled=v.filter(x=>x.t!=='').length,num=filled>0&&v.filter(x=>x.n!==null).length>=filled*.7;
+  if(!dir)dir=num?'desc':'asc';
+  rows.map((r,i)=>i).sort((a,b)=>{const A=v[a],B=v[b];let c;
+    if(num){if(A.n===null&&B.n===null)c=0;else if(A.n===null)return 1;else if(B.n===null)return -1;else c=A.n-B.n}
+    else{if(!A.t&&!B.t)c=0;else if(!A.t)return 1;else if(!B.t)return -1;else c=A.t.localeCompare(B.t,'th',{numeric:true})}
+    return (dir==='asc'?c:-c)||a-b}).forEach(i=>body.appendChild(rows[i]));
+  [...tb.tHead.rows[0].cells].forEach((th,i)=>{if(i===ci)th.setAttribute('aria-sort',dir==='asc'?'ascending':'descending');else th.removeAttribute('aria-sort')});
+  return dir;
+}
+function tbxScan(){
+  if(!MEM.length)return;const names=tbxNames();
+  $$('table').forEach(tb=>{
+    if(tb.dataset.tbx||tb.classList.contains('wft')||tb.closest('.nosort,#gate'))return;const body=tb.tBodies[0];if(!body)return;tb.dataset.tbx='1';
+    const rows=[...body.rows];
+    rows.forEach(tr=>{if(tr.querySelector('.sav'))return;   // ③ รูปโปรไฟล์: ช่องที่ข้อความตรงกับชื่อ/ชื่อเล่นของพนักงานพอดี
+      for(const td of tr.cells){const w=document.createTreeWalker(td,NodeFilter.SHOW_TEXT);let n,k=0;
+        while((n=w.nextNode())&&k++<6){const id=names[n.nodeValue.replace(/\s+/g,' ').trim()];if(!id)continue;
+          const t=document.createElement('template');t.innerHTML=phAv(id,(memOf(id)||{}).nick||(memOf(id)||{}).name,20)+' ';n.parentNode.insertBefore(t.content,n);return}}});
+    const head=tb.tHead&&tb.tHead.rows[0];if(!head||rows.length<2||tb.tBodies.length>1)return;
+    const ths=[...head.cells],nc=rows[0].cells.length;
+    if(ths.length!==nc||ths.some(c=>c.colSpan>1)||rows.some(r=>r.cells.length!==nc||[...r.cells].some(c=>c.colSpan>1||c.rowSpan>1)))return;
+    const key=(S.tab||'')+'|'+ths.map(t=>t.innerText.replace(/[▲▼↑↓⇅\s]/g,'')).join('|').slice(0,160),st=TBX.st[key]||(TBX.st[key]={});
+    const own=ths.some(th=>th.onclick||Object.keys(th.dataset).length||th.querySelector('button,select,input'));
+    if(!own){   // ① เรียงตามคอลัมน์
+      ths.forEach((th,ci)=>{th.classList.add('tbxs');if(!th.title)th.title='กดเพื่อเรียงลำดับ';th.addEventListener('click',()=>{st.dir=tbxSort(tb,ci,st.ci===ci?(st.dir==='asc'?'desc':'asc'):'');st.ci=ci})});
+      if(st.ci!=null&&st.ci<nc)tbxSort(tb,st.ci,st.dir)}
+    const ids=rows.map(tbxRowId),known=ids.filter(Boolean),tms=[...new Set(known.map(i=>(memOf(i)||{}).team).filter(Boolean))];
+    if(known.length>=rows.length*.6&&tms.length>1){   // ② เลือกดูเป็นทีม
+      const bar=document.createElement('div');bar.className='tbxbar';
+      bar.innerHTML=`<span>👥 ดูเฉพาะทีม</span><select><option value="">ทุกทีม (${known.length} คน)</option>${tms.map(t=>[t,(teamOf(t)||{}).name||t]).sort((a,b)=>a[1].localeCompare(b[1],'th')).map(t=>`<option value="${esc(t[0])}">${esc(t[1])} (${known.filter(i=>(memOf(i)||{}).team===t[0]).length})</option>`).join('')}</select><span class="hint"></span>`;
+      const host=tb.closest('.tblwrap')||tb;host.parentNode.insertBefore(bar,host);
+      const sel=bar.querySelector('select'),apply=()=>{const t=sel.value;st.team=t;rows.forEach((tr,i)=>{tr.hidden=!!t&&(!ids[i]||(memOf(ids[i])||{}).team!==t)})};
+      sel.onchange=apply;if(st.team&&tms.includes(st.team)){sel.value=st.team;apply()}}
+  });
+}
+new MutationObserver(ms=>{if(!ms.some(m=>[...m.addedNodes].some(n=>n.nodeType===1&&(n.tagName==='TABLE'||n.tagName==='TBODY'||n.tagName==='TR'||(n.querySelector&&n.querySelector('table'))))))return;clearTimeout(TBX.t);TBX.t=setTimeout(()=>{try{tbxScan()}catch(e){console.error(e)}},80)}).observe(document.body,{childList:true,subtree:true});
 function refreshInboxSoon(){try{if(D)D.inbox=(D.inbox||[]).filter(i=>i.k!=='wfm');renderBell()}catch(e){}}
 /* ---------- จัดตาราง (ผู้ดูแลทีม) ---------- */
 function wfPlan(){
