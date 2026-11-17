@@ -302,6 +302,8 @@ button.dod{font:inherit;color:inherit;text-align:left;cursor:pointer;min-height:
 .doc{min-width:34px;height:34px}.doc.ed{cursor:pointer}.doc.ed:hover{background:color-mix(in srgb,var(--up) 14%,transparent)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--up) 55%,transparent)}.doc.wpast .wfb{opacity:.45}.wfb.on{--c:var(--up)}.wfb.sp{--c:var(--purple,#b388ff)}
 .wft tr.dome td{background:color-mix(in srgb,var(--up) 9%,var(--panel))!important}.wft tr.dome td:first-child{box-shadow:inset 3px 0 0 var(--up)}tr.dome{background:color-mix(in srgb,var(--up) 9%,transparent)}
 .dod .dods i{font-style:normal}@media(max-width:600px){.dod .dods{font-size:10px;letter-spacing:-.2px}.dod .dods i{display:none}button.dod{min-height:54px}.donav b{min-width:70px}}
+.dod.lvd{background:color-mix(in srgb,var(--blue) 18%,var(--panel));border-color:var(--blue);cursor:default}.dod.lvd .dods{color:var(--blue);font-weight:700}.dod.lvp{border-style:dashed;border-color:var(--blue);cursor:default}.dod.lvp .dods{color:var(--blue)}.wfb.lvb{--c:var(--blue)}.wfb.lvq{border-style:dashed;opacity:.75}
+.rkc{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:13px}.rkc select{padding:4px 8px}.rkc span{color:var(--mute)}
 .dork{display:inline-block;margin-left:5px;font-family:var(--mono);font-size:11px;color:var(--flat)}.doh{display:inline-block;min-width:22px;padding:1px 4px;border-radius:6px;font-family:var(--mono);font-size:12px;background:color-mix(in srgb,var(--blue) 22%,transparent);color:var(--blue)}.doh.hi{background:color-mix(in srgb,var(--down) 24%,transparent);color:var(--down)}
 th.tbxs{cursor:pointer;user-select:none}th.tbxs:hover{color:var(--text)}th[aria-sort=ascending]::after{content:' ▲';color:var(--up)}th[aria-sort=descending]::after{content:' ▼';color:var(--up)}.tbxbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0;font-size:13px;color:var(--mute)}.tbxbar select{padding:4px 8px;max-width:100%}.tbxteam{display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap}.tbxbar .tbxx{margin-left:auto;border-color:color-mix(in srgb,var(--up) 50%,var(--line));color:var(--up)}
 .wflg{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:8px 0 2px;font-size:12px;color:var(--mute)}.wflg span{display:inline-flex;align-items:center;gap:5px}.wflg u{display:inline-block;width:16px;height:16px;border-radius:4px;text-decoration:none}
@@ -4261,7 +4263,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-17.3';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-17.4';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -4952,10 +4954,16 @@ function wfReqForm(kind){
 const DO={month:'',d:null,team:'',q:[],t:0,busy:0,cache:{},at:0};
 const doDays=ym=>{const [y,m]=ym.split('-').map(Number),n=new Date(Date.UTC(y,m,0)).getUTCDate();return Array.from({length:n},(_,i)=>ym+'-'+pad(i+1))};
 const doD=k=>k?+k.slice(8)+' '+THMON[+k.slice(5,7)-1]:'–';
-function doIdx(){const d=DO.d;d.M={};d.members.forEach(a=>d.M[a[0]]={id:a[0],nick:a[1],team:a[2],role:a[3]});d.O={};d.offs.forEach(o=>{d.O[o[1]+'|'+o[0]]=o[2]?2:1})}
+function doIdx(){const d=DO.d;d.M={};d.members.forEach(a=>d.M[a[0]]={id:a[0],nick:a[1],team:a[2],role:a[3]});d.O={};d.offs.forEach(o=>{d.O[o[1]+'|'+o[0]]=o[2]?2:1});
+  d.LV={};const f=d.month+'-01',e=doDays(d.month).slice(-1)[0];(d.lv||[]).forEach(l=>{for(let k=l[1]<f?f:l[1];k<=l[2]&&k<=e;k=addDays(k,1))d.LV[l[0]+'|'+k]={t:l[3],ok:l[4],half:l[5]}})}
+const doLv=(id,k)=>DO.d.LV[id+'|'+k];
+const DOLT={annual:'พักร้อน',sick:'ลาป่วย',personal:'ลากิจ',ordain:'ลาบวช',maternity:'ลาคลอด',other:'ลา',leave:'ลา'};
+const DOB={amount:['ยอดขาย','฿'],point:['POINT','pt'],sub:['SUB','SUB']};
+const doBasisTxt=b=>{const [k,ym]=String(b||'').split(':');return DOB[k]?`${DOB[k][0]} ${ym?wfMonthTxt(ym):''}`:''};
+const doRankOf=(team,id)=>{const r=(DO.d.rank[team]||[]).findIndex(x=>x[0]===id);return r<0?1e6:r+1};
 const doIsOff=(id,k)=>DO.d.O[id+'|'+k]||0;
 const doNonWork=k=>DO.d.weekOff.includes(U(k).getUTCDay())||DO.d.hol.includes(k);
-const doTeamN=(team,k)=>DO.d.members.reduce((n,a)=>n+(a[2]===team&&DO.d.O[a[0]+'|'+k]?1:0),0);
+const doTeamN=(team,k)=>DO.d.members.reduce((n,a)=>{if(a[2]!==team)return n;if(DO.d.O[a[0]+'|'+k])return n+1;const l=DO.d.LV[a[0]+'|'+k];return n+(l&&l.ok&&!l.half?1:0)},0);   // รวมคนที่ลา (อนุมัติแล้ว เต็มวัน)
 const doCan=team=>!!(DO.d.teams.find(t=>t.id===team)||{}).can;
 function doMy(){const d=DO.d,c=d.cfg,on=!!c.month&&c.month===d.month,open=on&&d.today>=c.from&&d.today<=c.to,g=d.gate||{},locked=open&&!!g.has&&!!g.locked;
   const used=doDays(d.month).filter(k=>doIsOff(d.me,k)===1).length;return {on,open,locked,can:open&&!locked,used,quota:c.quota,left:Math.max(0,c.quota-used)}}
@@ -4978,9 +4986,14 @@ function doTap(id,k){
     if(my.locked)return toast(`⏳ ยังไม่ถึงคิวของคุณ (ลำดับ #${d.gate.rank}) — เลือกได้ตั้งแต่ ${doD(d.gate.opensAt)}`);
     if(k<=d.today)return toast('เลือกได้ตั้งแต่วันพรุ่งนี้เป็นต้นไป');
     if(cur===2)return toast('วันนี้เป็นวันหยุดพิเศษที่อนุมัติแล้ว — แจ้งหัวหน้าหากต้องการยกเลิก');
+    if(!cur&&doLv(id,k))return toast('วันนี้คุณมีใบลาอยู่แล้ว');
     if(!cur){if(doNonWork(k))return toast('วันนี้เป็นวันหยุดประจำอยู่แล้ว');
       if(my.left<=0)return toast(`เลือกครบ ${my.quota} วันแล้ว — กดวันเดิมเพื่อยกเลิกก่อน`);
-      if(d.cfg.cap>0&&doTeamN(M.team,k)>=d.cfg.cap)return toast(`วันที่ ${doD(k)} เต็มแล้ว (หยุดได้ไม่เกิน ${d.cfg.cap} คน/วัน)`)}}
+      if(d.cfg.cap>0&&doTeamN(M.team,k)>=d.cfg.cap){   // วันเต็ม → อันดับสูงกว่าได้สิทธิ์ก่อน
+        const mine=doRankOf(M.team,id),low=d.members.filter(a=>a[2]===M.team&&a[0]!==id&&d.O[a[0]+'|'+k]===1&&doRankOf(M.team,a[0])>mine).sort((a,b)=>doRankOf(M.team,b[0])-doRankOf(M.team,a[0]))[0];
+        if(!low)return toast(`วันที่ ${doD(k)} เต็มแล้ว (หยุดได้ไม่เกิน ${d.cfg.cap} คน/วัน) — คนที่เลือกไว้อันดับคิวสูงกว่าคุณ`);
+        if(!confirm(`วันที่ ${doD(k)} เต็มแล้ว แต่คุณอันดับคิวสูงกว่า ${low[1]} (#${mine} vs #${doRankOf(M.team,low[0])})\n\nใช้สิทธิ์แทนที่หรือไม่? ${low[1]} จะได้รับแจ้งให้เลือกวันใหม่`))return;
+        delete d.O[low[0]+'|'+k];d.O[id+'|'+k]=1;DO.q.push({m:id,d:k,on:1,bump:1});doDraw();doStat('saving');clearTimeout(DO.t);DO.t=setTimeout(doFlush,300);return}}}
   else{if(k<d.today&&!d.isAdmin)return toast('แก้วันที่ผ่านมาแล้วไม่ได้');
     if(!cur&&d.cfg.cap>0&&doTeamN(M.team,k)>=d.cfg.cap&&!confirm(`วันที่ ${doD(k)} มีคนหยุดครบ ${d.cfg.cap} คนแล้ว — ลงเพิ่มอีกคนหรือไม่?`))return}
   if(cur)delete d.O[id+'|'+k];else d.O[id+'|'+k]=1;
@@ -4997,13 +5010,14 @@ async function doFlush(){
 }
 function doReqCard(r){
   const d=DO.d,nm=i=>esc((d.M[i]||{}).nick||i),me=d.me,sw=r.kind==='swap';
-  const what=sw?`<b>${nm(r.m)}</b> ขอแลกวันหยุดกับ <b>${nm(r.w)}</b>: ${nm(r.m)} หยุด <b>${doD(r.b)}</b> แทน · ${nm(r.w)} หยุด <b>${doD(r.a)}</b> แทน`:`<b>${nm(r.m)}</b> ขอวันหยุดพิเศษ <b>${doD(r.a)}</b>${r.reason?` — “${esc(r.reason)}”`:''}`;
+  const what=sw?`<b>${nm(r.m)}</b> ขอแลกวันหยุดกับ <b>${nm(r.w)}</b>: ${nm(r.m)} หยุด <b>${doD(r.b)}</b> แทน · ${nm(r.w)} หยุด <b>${doD(r.a)}</b> แทน`:r.kind==='move'?`<b>${nm(r.m)}</b> ขอย้ายวันหยุด <b>${doD(r.a)}</b> → <b>${doD(r.b)}</b>${r.reason?` — “${esc(r.reason)}”`:''}`:r.kind==='bump'?`วันหยุด <b>${doD(r.a)}</b> ของ <b>${nm(r.m)}</b> ถูกแทนที่โดย <b>${nm(r.w)}</b> (อันดับคิวสูงกว่า)`:`<b>${nm(r.m)}</b> ขอวันหยุดพิเศษ <b>${doD(r.a)}</b>${r.reason?` — “${esc(r.reason)}”`:''}`;
   const st={peer:['⏳ รอเพื่อนตอบ','var(--flat)'],pending:['⏳ รอหัวหน้าอนุมัติ','var(--flat)'],approved:['✅ สำเร็จ','var(--up)'],rejected:['❌ ไม่สำเร็จ','var(--down)'],cancelled:['⚪ ยกเลิก','var(--mute)']}[r.st]||[r.st,'var(--mute)'];
   let b='';
   if(r.st==='peer'&&r.w===me)b=`<button class="btn sm primary" data-dqa="${esc(r.id)}|accept">👍 ตกลงแลก</button><button class="btn sm" data-dqa="${esc(r.id)}|reject">ไม่ตกลง</button>`;
   else if(r.st==='pending'&&r.m!==me&&doCan(r.team))b=`<button class="btn sm primary" data-dqa="${esc(r.id)}|approve">✅ อนุมัติ</button><button class="btn sm" data-dqa="${esc(r.id)}|reject">ไม่อนุมัติ</button>`;
   else if((r.st==='peer'||r.st==='pending')&&r.m===me)b=`<button class="btn sm" data-dqa="${esc(r.id)}|cancel">ยกเลิกคำขอ</button>`;
-  return `<div class="wfnote" style="--c:${st[1]}"><div>${sw?'🔁':'🙏'} ${what}<div class="hint" style="color:${st[1]}">${st[0]}${r.note?' · '+esc(r.note):''}</div></div><span style="display:flex;gap:6px;flex-wrap:wrap">${b}</span></div>`;
+  if(r.kind==='bump')st[0]='⚠️ ต้องเลือกวันใหม่';
+  return `<div class="wfnote" style="--c:${st[1]}"><div>${sw?'🔁':r.kind==='move'?'📅':r.kind==='bump'?'⚠️':'🙏'} ${what}<div class="hint" style="color:${st[1]}">${st[0]}${r.note?' · '+esc(r.note):''}</div></div><span style="display:flex;gap:6px;flex-wrap:wrap">${b}</span></div>`;
 }
 function doDraw(){
   const el=$('#wfmBody'),d=DO.d;if(!el||!d)return;
@@ -5011,20 +5025,22 @@ function doDraw(){
   if(!DO.team||(DO.team!=='*'&&!teams.some(t=>t.id===DO.team)))DO.team=teams.some(t=>t.id===d.myTeam)?d.myTeam:((teams.find(t=>t.can)||teams[0]||{}).id||'*');
   const T=teams.find(t=>t.id===DO.team),my=!adm&&d.M[d.me]&&!doCan(d.M[d.me].team)?doMy():null;   // หัวหน้า/แอดมินลงในตารางทีมได้เลย ไม่ต้องมีปฏิทินส่วนตัว
   const wrap=$('.dowrap',el),sx=wrap?wrap.scrollLeft:0,sy=wrap?wrap.scrollTop:0,stat=($('#doSt')||{}).innerHTML||'';
-  const act=d.reqs.filter(r=>(r.st==='peer'&&(r.w===d.me||r.m===d.me))||(r.st==='pending'&&(r.m===d.me||doCan(r.team)))),hist=d.reqs.filter(r=>!act.includes(r)).slice(0,20);
+  const act=d.reqs.filter(r=>(r.st==='peer'&&(r.w===d.me||r.m===d.me))||(r.st==='pending'&&(r.m===d.me||doCan(r.team)))||(r.kind==='bump'&&r.m===d.me&&r.a>d.today&&Date.now()-r.ts<7*864e5)),hist=d.reqs.filter(r=>!act.includes(r)).slice(0,20);
   let h=`<div class="panel"><div class="dohd"><h3>🏖 วันหยุด</h3><span id="doSt" class="hint">${stat}</span><span class="donav"><button class="btn sm" id="doPm">◀</button><b>${wfMonthTxt(d.month)}</b><button class="btn sm" id="doNm">▶</button>${d.month!==d.today.slice(0,7)?'<button class="btn sm" id="doTm">เดือนนี้</button>':''}</span></div>`;
   // รอบเลือกวันหยุด
   if(c.month){const openNow=d.today>=c.from&&d.today<=c.to;
-    h+=`<div class="wfnote" style="--c:var(--purple)"><div><b>🏖 ${openNow?'กำลังเปิด':d.today<c.from?'จะเปิด':'ปิดรับแล้ว —'}ให้เลือกวันหยุดของ ${wfMonthTxt(c.month)}</b><div class="hint">${doD(c.from)} – ${doD(c.to)} · คนละ <b>${c.quota}</b> วัน${c.cap?` · หยุดพร้อมกันได้ไม่เกิน <b>${c.cap}</b> คน/วัน/ทีม`:''}${c.group?` · เรียงคิวตาม POINT วันละ ${c.group} คน`:' · ทุกคนเลือกได้พร้อมกัน'}</div></div><span style="display:flex;gap:6px;flex-wrap:wrap">${c.month!==d.month?'<button class="btn sm primary" id="doGoM">ไปเดือนนั้น ›</button>':''}${c.group&&c.month===d.month&&T?'<button class="btn sm" id="doRk">🏅 ดูลำดับคิว</button>':''}${adm?'<button class="btn sm" id="doOp">⚙️ แก้ไข/ปิดรอบ</button>':''}</span></div>`}
+    h+=`<div class="wfnote" style="--c:var(--purple)"><div><b>🏖 ${openNow?'กำลังเปิด':d.today<c.from?'จะเปิด':'ปิดรับแล้ว —'}ให้เลือกวันหยุดของ ${wfMonthTxt(c.month)}</b><div class="hint">${doD(c.from)} – ${doD(c.to)} · คนละ <b>${c.quota}</b> วัน${c.cap?` · หยุดพร้อมกันได้ไม่เกิน <b>${c.cap}</b> คน/วัน/ทีม`:''}${c.group?` · เปิดคิวเป็นรอบ วันละ ${c.group} คน`:' · ทุกคนเลือกได้พร้อมกัน'}${T&&d.rkInfo&&d.rkInfo[T.id]?` · คิวตาม <b>${doBasisTxt(d.rkInfo[T.id].basis)}</b>${d.rkInfo[T.id].mode==='manual'?' (หัวหน้าปรับเอง)':''}`:''}${c.cap?' · <b>ถ้าวันเต็ม คนอันดับสูงกว่าได้สิทธิ์ก่อน</b>':''}</div></div><span style="display:flex;gap:6px;flex-wrap:wrap">${c.month!==d.month?'<button class="btn sm primary" id="doGoM">ไปเดือนนั้น ›</button>':''}${c.month===d.month&&T?`<button class="btn sm" id="doRk">🏅 ลำดับคิว${d.role==='admin'||d.role==='senior'?' / เงื่อนไข':''}</button>`:''}${adm?'<button class="btn sm" id="doOp">⚙️ แก้ไข/ปิดรอบ</button>':''}</span></div>`}
   else if(adm)h+=`<div class="wfnote"><div><b>ยังไม่ได้เปิดให้พนักงานเลือกวันหยุดเอง</b><div class="hint">เปิดรอบแล้วพนักงานจะกดเลือกวันหยุดเองตามลำดับ POINT · หัวหน้ายังลงแทนได้ตลอด</div></div><button class="btn sm primary" id="doOp">🏖 เปิดให้เลือกวันหยุด</button></div>`;
   h+=act.map(doReqCard).join('');
+  h+=(d.lvPend||[]).map(l=>`<div class="wfnote" style="--c:var(--blue)"><div>🌴 <b>${esc((d.M[l.m]||{}).nick||l.m)}</b> ขอลาพักร้อน <b>${doD(l.start)}${l.end!==l.start?' – '+doD(l.end):''}</b> (${l.days} วัน)${l.reason?` — “${esc(l.reason)}”`:''}<div class="hint" style="color:var(--flat)">⏳ รออนุมัติ${(()=>{const t=(d.M[l.m]||{}).team,cap=d.cfg.cap;if(!cap||!t)return '';const full=[];for(let k=l.start;k<=l.end&&full.length<4;k=addDays(k,1))if(k.slice(0,7)===d.month&&doTeamN(t,k)>=cap)full.push(doD(k));return full.length?` · ⚠️ วันที่ทีมหยุดครบเพดานแล้ว: ${full.join(', ')}`:''})()}</div></div><span style="display:flex;gap:6px"><button class="btn sm primary" data-lva="${esc(l.id)}|approved">✅ อนุมัติ</button><button class="btn sm" data-lva="${esc(l.id)}|rejected">ไม่อนุมัติ</button></span></div>`).join('');
   // วันหยุดของฉัน (พนักงาน/หัวหน้าที่ไม่ใช่แอดมิน)
   if(my){const mine=days.filter(k=>doIsOff(d.me,k)),lead=(U(days[0]).getUTCDay()+6)%7,myT=d.M[d.me].team,edit=doCan(myT);
     const msg=edit?'คุณเป็นหัวหน้าทีม — กดวันที่เพื่อลง/ยกเลิกวันหยุดของตัวเองได้เลย':!my.on?(c.month?`รอบที่เปิดอยู่เป็นของ ${wfMonthTxt(c.month)}`:'เดือนนี้ไม่ได้เปิดให้เลือกเอง')+' — ถ้าต้องการเปลี่ยน ใช้ปุ่มด้านล่าง':!my.open?(d.today<c.from?`จะเปิดให้เลือกวันที่ ${doD(c.from)}`:'ปิดรับแล้ว — ถ้าต้องการเปลี่ยน ใช้ปุ่มด้านล่าง'):my.locked?`⏳ ลำดับคิวของคุณ <b>#${d.gate.rank}</b> จาก ${d.gate.n} — เลือกได้ตั้งแต่ <b>${doD(d.gate.opensAt)}</b>`:`👆 <b>ถึงคิวคุณแล้ว</b> — กดวันที่อยากหยุด (กดซ้ำเพื่อยกเลิก) ระบบบันทึกให้เอง · ปิดรับ ${doD(c.to)}`;
     h+=`<div class="domy" style="--c:${my.can||edit?'var(--up)':my.locked?'var(--flat)':'var(--line)'}"><div class="domyh"><b>วันหยุดของฉัน — ${wfMonthTxt(d.month)}</b><b class="num" style="color:${my.on&&my.used>=my.quota?'var(--up)':''}">${my.on?`${my.used}/${my.quota}`:mine.length} วัน</b></div><div class="domsg">${msg}</div>
-     <div class="wfg">${[1,2,3,4,5,6,0].map(x=>`<div class="wfgh ${x%6===0?'we':''}">${WFDOW[x]}</div>`).join('')}${'<div></div>'.repeat(lead)}${days.map(k=>{const o=doIsOff(d.me,k),nw=doNonWork(k),n=doTeamN(myT,k),full=!o&&c.cap>0&&n>=c.cap,past=k<=d.today;
-       return `<button class="wfd dod ${o?(o===2?'sp':'on'):nw?'nw':full?'full':''} ${k===d.today?'td':''} ${past&&!o?'wpast':''}" data-dok="${k}"><div class="wfdh"><b>${+k.slice(8)}</b></div><div class="dods">${o===2?'<i>⭐ </i>พิเศษ':o?'<i>✅ </i>หยุด':nw?'หยุดประจำ':full?'เต็ม':n?(c.cap?`${n}/${c.cap}`:`${n} คน`):''}</div></button>`}).join('')}</div>
-     <div class="dobtn"><button class="btn" id="doSw">🔁 แลกวันหยุดกับเพื่อน</button><button class="btn" id="doSp">🙏 ขอวันหยุดพิเศษ</button></div></div>`}
+     <div class="wfg">${[1,2,3,4,5,6,0].map(x=>`<div class="wfgh ${x%6===0?'we':''}">${WFDOW[x]}</div>`).join('')}${'<div></div>'.repeat(lead)}${days.map(k=>{const o=doIsOff(d.me,k),lv=!o&&doLv(d.me,k),nw=doNonWork(k),n=doTeamN(myT,k),full0=!o&&!lv&&c.cap>0&&n>=c.cap,mr=doRankOf(myT,d.me),bmp=full0&&my.can&&d.members.some(a=>a[2]===myT&&d.O[a[0]+'|'+k]===1&&doRankOf(myT,a[0])>mr),full=full0&&!bmp,past=k<=d.today;
+       return `<button class="wfd dod ${o?(o===2?'sp':'on'):lv?(lv.ok?'lvd':'lvp'):nw?'nw':full?'full':''} ${k===d.today?'td':''} ${past&&!o?'wpast':''}" data-dok="${k}"><div class="wfdh"><b>${+k.slice(8)}</b></div><div class="dods">${o===2?'<i>⭐ </i>พิเศษ':o?'<i>✅ </i>หยุด':lv?(lv.ok?'<i>🌴 </i>':'<i>⏳ </i>')+(DOLT[lv.t]||'ลา')+(lv.ok?'':' (รอ)'):nw?'หยุดประจำ':full?'เต็ม':bmp?'<span style="color:var(--flat)">เต็ม · แทนที่ได้</span>':n?(c.cap?`${n}/${c.cap}`:`${n} คน`):''}</div></button>`}).join('')}</div>
+     <div class="dobtn"><button class="btn" id="doSw">🔁 แลกวันหยุดกับเพื่อน</button><button class="btn" id="doMv">📅 ย้ายวันหยุด</button><button class="btn" id="doSp">🙏 ขอวันหยุดพิเศษ</button><button class="btn" id="doVa">🌴 ลาพักร้อน${d.vacUsed?` (ใช้ไป ${d.vacUsed} วันปีนี้)`:''}</button></div></div>`}
+  else if(!adm)h+=`<div class="dobtn" style="margin:4px 0 8px"><button class="btn sm" id="doVa">🌴 ขอลาพักร้อน</button></div>`;
   // ตารางของทีม / ภาพรวมทุกทีม
   h+=`<div class="wfmain"><b>ดูวันหยุดของ</b><select id="doT">${teams.map(t=>`<option value="${esc(t.id)}" ${t.id===DO.team?'selected':''}>${esc(t.name)}${t.id===d.myTeam?' (ทีมฉัน)':''}</option>`).join('')}<option value="*" ${DO.team==='*'?'selected':''}>📊 ทุกทีม (ภาพรวม)</option></select><span class="hint" style="flex:1">${DO.team==='*'?'ตัวเลข = จำนวนคนหยุดของแต่ละทีมในวันนั้น · กดตัวเลขเพื่อดูรายชื่อ':T&&T.can?'👆 <b>กดที่ช่อง</b>เพื่อลง/ยกเลิกวันหยุดให้ลูกทีม — บันทึกอัตโนมัติ':'ดูได้อย่างเดียว'}</span></div>`;
   const th=`<thead><tr><th>${DO.team==='*'?'ทีม':'พนักงาน'}</th>${days.map(k=>`<th class="${d.hol.includes(k)?'wfh':''} ${U(k).getUTCDay()%6===0?'we':''} ${k===d.today?'tdy':''}"><span>${+k.slice(8)}</span><small>${WFDOW[U(k).getUTCDay()]}</small></th>`).join('')}<th>รวม</th></tr></thead>`;
@@ -5034,19 +5050,20 @@ function doDraw(){
     const rk=(d.rank[T.id]||[]).map(x=>x[0]),ro={senior:0,leader:1,'':2};
     const mem=d.members.filter(a=>a[2]===T.id).sort((a,b)=>(a[0]===d.me?-1:b[0]===d.me?1:0)||(rk.length?((rk.indexOf(a[0])+1||999)-(rk.indexOf(b[0])+1||999)):0)||((ro[a[3]]??2)-(ro[b[3]]??2))||a[1].localeCompare(b[1],'th'));
     h+=`<div class="wfwrap dowrap"><table class="wft">${th}<tbody>${mem.map(a=>{const id=a[0],ed=T.can||id===d.me;let n=0;
-      return `<tr class="${id===d.me?'dome':''}"><td title="${esc(a[1])}">${nmAv(id,20)}<span class="wfnm">${esc(a[1])}</span>${a[3]?`<span class="wfrl">${a[3]==='senior'?'Senior':'Leader'}</span>`:''}${rk.length&&rk.indexOf(id)>=0?`<span class="dork">#${rk.indexOf(id)+1}</span>`:''}</td>${days.map(k=>{const o=doIsOff(id,k);if(o)n++;const nw=doNonWork(k);return `<td class="doc ${nw?'we':''} ${k===d.today?'tdy':''} ${ed?'ed':''} ${k<d.today?'wpast':''}" data-m="${esc(id)}" data-k="${k}">${o?`<b class="wfb ${o===2?'sp':'on'}">${o===2?'พิเศษ':'หยุด'}</b>`:''}</td>`}).join('')}<td class="wfrt"><b>${n}</b></td></tr>`}).join('')}
+      return `<tr class="${id===d.me?'dome':''}"><td title="${esc(a[1])}">${nmAv(id,20)}<span class="wfnm">${esc(a[1])}</span>${a[3]?`<span class="wfrl">${a[3]==='senior'?'Senior':'Leader'}</span>`:''}${rk.length&&rk.indexOf(id)>=0?`<span class="dork">#${rk.indexOf(id)+1}</span>`:''}</td>${days.map(k=>{const o=doIsOff(id,k),lv=!o&&doLv(id,k);if(o)n++;const nw=doNonWork(k);return `<td class="doc ${nw?'we':''} ${k===d.today?'tdy':''} ${ed?'ed':''} ${k<d.today?'wpast':''}" data-m="${esc(id)}" data-k="${k}">${o?`<b class="wfb ${o===2?'sp':'on'}">${o===2?'พิเศษ':'หยุด'}</b>`:lv?`<b class="wfb lvb ${lv.ok?'':'lvq'}" title="${esc(DOLT[lv.t]||'ลา')}${lv.ok?'':' (รออนุมัติ)'}">${lv.t==='annual'?'พักร้อน':'ลา'}</b>`:''}</td>`}).join('')}<td class="wfrt"><b>${n}</b></td></tr>`}).join('')}
       </tbody><tfoot><tr><td><b>คนหยุด${c.cap?' / เพดาน':''}</b></td>${days.map(k=>{const n=doTeamN(T.id,k);return `<td class="wfv ${c.cap&&n>c.cap?'bad':n?'ok':'nil'}"><b>${n}</b>${c.cap?`<small>/${c.cap}</small>`:''}</td>`}).join('')}<td></td></tr></tfoot></table></div>
-      <div class="wflg"><span><b class="wfb on">หยุด</b> วันหยุดที่เลือก</span><span><b class="wfb sp">พิเศษ</b> วันหยุดพิเศษ (อนุมัติแล้ว)</span><span><u style="background:color-mix(in srgb,var(--mute) 22%,transparent)"></u> วันหยุดประจำสัปดาห์/นักขัตฤกษ์</span>${rk.length?'<span><span class="dork">#1</span> ลำดับคิวเลือกวันหยุด</span>':''}</div>`}
+      <div class="wflg"><span><b class="wfb on">หยุด</b> วันหยุดที่เลือก</span><span><b class="wfb sp">พิเศษ</b> วันหยุดพิเศษ (อนุมัติแล้ว)</span><span><b class="wfb lvb">พักร้อน</b>/<b class="wfb lvb">ลา</b> ใบลาที่อนุมัติแล้ว (นับรวมคนหยุด)</span><span><u style="background:color-mix(in srgb,var(--mute) 22%,transparent)"></u> วันหยุดประจำสัปดาห์/นักขัตฤกษ์</span>${rk.length?'<span><span class="dork">#1</span> ลำดับคิวเลือกวันหยุด</span>':''}</div>`}
   if(hist.length)h+=`<details class="wfmore"><summary>📜 คำขอที่ผ่านมา (${hist.length})</summary><div style="padding:6px 0">${hist.map(doReqCard).join('')}</div></details>`;
   el.innerHTML=h+'</div>';
   const w2=$('.dowrap',el);if(w2){w2.scrollLeft=sx;w2.scrollTop=sy}
   const nav=async n=>{if(DO.q.length){clearTimeout(DO.t);await doFlush()}DO.month=n;renderDo(true)};
   $('#doPm').onclick=()=>nav(wfMonthAdd(d.month,-1));$('#doNm').onclick=()=>nav(wfMonthAdd(d.month,1));
   const on=(q,f)=>{const b=$(q,el);if(b)b.onclick=f};
-  on('#doTm',()=>nav(d.today.slice(0,7)));on('#doGoM',()=>nav(c.month));on('#doOp',doOpenM);on('#doRk',()=>doRankM(T.id));on('#doSw',doSwapM);on('#doSp',doSpecialM);
+  on('#doTm',()=>nav(d.today.slice(0,7)));on('#doGoM',()=>nav(c.month));on('#doOp',doOpenM);on('#doRk',()=>doRankM(T.id));on('#doSw',doSwapM);on('#doSp',doSpecialM);on('#doMv',doMoveM);on('#doVa',doVacM);
   $('#doT').onchange=e=>{DO.team=e.target.value;doDraw()};
   el.onclick=e=>{const a=e.target.closest('[data-dok]');if(a)return doTap(d.me,a.dataset.dok);
-    const b=e.target.closest('td.doc.ed[data-m]');if(b)return doTap(b.dataset.m,b.dataset.k);
+    const b=e.target.closest('td.doc.ed[data-m]');if(b){if(!doIsOff(b.dataset.m,b.dataset.k)&&doLv(b.dataset.m,b.dataset.k))return toast('วันนี้มีใบลา — แก้ไขได้ที่เมนูลา');return doTap(b.dataset.m,b.dataset.k)}
+    const lb=e.target.closest('[data-lva]');if(lb){const [id,dec]=lb.dataset.lva.split('|');return doLvDecide(id,dec,lb)}
     const l=e.target.closest('[data-dol]');if(l){const [t,k]=l.dataset.dol.split('|'),tm=teams.find(x=>x.id===t);return openModal(`<h3>🏖 ${esc(tm.name)} — หยุดวันที่ ${doD(k)}</h3>${d.members.filter(a=>a[2]===t&&doIsOff(a[0],k)).map(a=>`<div style="padding:4px 0">${nmAv(a[0],24)}${esc(a[1])}${doIsOff(a[0],k)===2?' <span class="hint">(พิเศษ)</span>':''}</div>`).join('')}<div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`)}
     const q=e.target.closest('[data-dqa]');if(q){const [id,act]=q.dataset.dqa.split('|');doReqAct(id,act,q)}};
 }
@@ -5079,15 +5096,49 @@ function doSpecialM(){
   $('#spOk').onclick=async()=>{const b=$('#spOk');if($('#spR').value.trim().length<3)return toast('กรุณาระบุเหตุผล');b.disabled=true;
     try{await api('doReqCreate',{kind:'special',dateA:$('#spD').value,reason:$('#spR').value});closeModal();toast('🙏 ส่งคำขอแล้ว — รอหัวหน้าอนุมัติ',true);await doLoad();doDraw()}catch(e){toast('⚠️ '+esc(e.message));b.disabled=false}};
 }
+function doMoveM(){
+  const d=DO.d,me=d.me,days=doDays(d.month),mine=days.filter(k=>k>d.today&&doIsOff(me,k)===1);
+  if(!mine.length)return toast('เดือนนี้คุณยังไม่มีวันหยุดที่ย้ายได้ (ต้องเป็นวันตั้งแต่พรุ่งนี้)');
+  const free=days.filter(k=>k>d.today&&!doIsOff(me,k)&&!doNonWork(k)&&!doLv(me,k)),team=d.M[me].team,cap=d.cfg.cap;
+  openModal(`<h3>📅 ย้ายวันหยุด</h3><div class="hint">ย้ายวันหยุดของคุณไปวันอื่น · หัวหน้าทีมเป็นผู้อนุมัติ${doMy().can?' · <b>ตอนนี้อยู่ในรอบเลือกวันหยุด กดในปฏิทินเพื่อเปลี่ยนเองได้เลย ไม่ต้องขอ</b>':''}</div>
+   <div class="fld"><label>① วันหยุดเดิม</label><select id="mv1">${mine.map(k=>`<option value="${k}">${doD(k)} (${WFDOW[U(k).getUTCDay()]})</option>`).join('')}</select></div>
+   <div class="fld"><label>② ย้ายไปวันที่</label><select id="mv2">${free.map(k=>{const n=doTeamN(team,k);return `<option value="${k}">${doD(k)} (${WFDOW[U(k).getUTCDay()]}) · หยุดแล้ว ${n}${cap?'/'+cap:''} คน${cap&&n>=cap?' ⚠️ เต็ม':''}</option>`}).join('')}</select></div>
+   <div class="fld"><label>เหตุผล (ไม่บังคับ)</label><input id="mvR" maxlength="200"></div>
+   <div class="mrow"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn primary" id="mvOk">ส่งคำขอ</button></div>`);
+  $('#mvOk').onclick=async()=>{const b=$('#mvOk');b.disabled=true;try{await api('doReqCreate',{kind:'move',dateA:$('#mv1').value,dateB:$('#mv2').value,reason:$('#mvR').value});closeModal();toast('📅 ส่งคำขอแล้ว — รอหัวหน้าอนุมัติ',true);await doLoad();doDraw()}catch(e){toast('⚠️ '+esc(e.message));b.disabled=false}};
+}
+function doVacM(){
+  const d=DO.d,t1=addDays(d.today,1);
+  openModal(`<h3>🌴 ขอลาพักร้อน</h3><div class="hint">ส่งเป็นใบลาประเภท “ลาพักร้อน” ในระบบลาเดิม · แอดมินเป็นผู้อนุมัติ · เมื่ออนุมัติแล้วจะแสดงในตารางวันหยุดและนับรวมจำนวนคนหยุดของทีม${d.vacUsed?` · ปีนี้ใช้ไปแล้ว <b>${d.vacUsed}</b> วัน`:''}</div>
+   <div class="fld"><label>ตั้งแต่วันที่</label><input type="date" id="vaS" min="${t1}" value="${t1}"></div>
+   <div class="fld"><label>ถึงวันที่</label><input type="date" id="vaE" min="${t1}" value="${t1}"></div>
+   <div class="fld"><label>หมายเหตุ (ไม่บังคับ)</label><input id="vaR" maxlength="300" placeholder="เช่น ไปต่างจังหวัด"></div>
+   <div id="vaH" class="hint"></div><div class="mrow"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn primary" id="vaOk">ส่งใบลา</button></div>`);
+  const hint=()=>{const a=$('#vaS').value,b=$('#vaE').value;if(b<a)$('#vaE').value=a;const t=(d.M[d.me]||{}).team,cap=d.cfg.cap,full=[];if(cap&&t)for(let k=a;k<=$('#vaE').value&&full.length<5;k=addDays(k,1))if(k.slice(0,7)===d.month&&doTeamN(t,k)>=cap)full.push(doD(k));$('#vaH').innerHTML=full.length?`⚠️ วันที่ทีมหยุดครบเพดานแล้ว: ${full.join(', ')} — อาจไม่ได้รับอนุมัติ`:''};
+  $('#vaS').onchange=hint;$('#vaE').onchange=hint;hint();
+  $('#vaOk').onclick=async()=>{const b=$('#vaOk');b.disabled=true;const rid='va'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+    try{await api('leaveRequest',{reqId:rid,type:'annual',start:$('#vaS').value,end:$('#vaE').value,reason:$('#vaR').value});closeModal();toast('🌴 ส่งใบลาพักร้อนแล้ว — รออนุมัติ',true);try{D.leaves=null}catch(e){}await doLoad();doDraw();refreshInboxSoon()}catch(e){toast('⚠️ '+esc(e.message));b.disabled=false}};
+}
+async function doLvDecide(id,dec,btn){
+  let note='';if(dec==='rejected'){note=prompt('เหตุผลที่ไม่อนุมัติ');if(!note)return}
+  btn.disabled=true;try{await api('leaveDecide',{id,decision:dec,note});toast(dec==='approved'?'✅ อนุมัติลาพักร้อนแล้ว':'บันทึกแล้ว');refreshInboxSoon()}catch(e){toast('⚠️ '+esc(e.message))}
+  try{await doLoad()}catch(e){}doDraw();
+}
 function doRankM(team){
-  const d=DO.d,c=d.cfg,can=doCan(team),tm=d.teams.find(t=>t.id===team);let ids=(d.rank[team]||[]).map(x=>x[0]);const val={};(d.rank[team]||[]).forEach(x=>val[x[0]]=x[1]);
+  const d=DO.d,c=d.cfg,can=doCan(team),tm=d.teams.find(t=>t.id===team),cond=d.role==='admin'||d.role==='senior',info=(d.rkInfo||{})[team]||{},bk=String(info.basis||'').split(':'),unit=(DOB[bk[0]]||['',''])[1];
+  let ids=(d.rank[team]||[]).map(x=>x[0]);const val={};(d.rank[team]||[]).forEach(x=>val[x[0]]=x[1]);
   d.members.filter(a=>a[2]===team&&!ids.includes(a[0])).forEach(a=>ids.push(a[0]));let dirty=false;
-  const draw=()=>{openModal(`<h3>🏅 ลำดับคิวเลือกวันหยุด — ${esc(tm.name)}</h3><div class="hint">เรียงตาม POINT อัตโนมัติ · วันละ ${c.group} คน เริ่ม ${doD(c.from)}${can?' · หัวหน้ากด ▲▼ ขยับลำดับเองได้':''}</div>
-    <div style="max-height:52vh;overflow:auto;margin-top:6px"><table class="tbl" style="width:100%"><tbody>${ids.map((id,i)=>`<tr class="${id===d.me?'dome':''}"><td class="num" style="width:38px"><b>#${i+1}</b></td><td style="white-space:nowrap">${nmAv(id)}${esc((d.M[id]||{}).nick||id)}</td><td class="r num hint">${val[id]!==undefined?fmt(val[id])+' pt':''}</td><td class="r" style="white-space:nowrap">เลือกได้ <b>${doD(addDays(c.from,Math.floor(i/c.group)))}</b></td>${can?`<td class="r" style="white-space:nowrap"><button class="btn sm" data-ru="${i}" ${i?'':'disabled'}>▲</button> <button class="btn sm" data-rd="${i}" ${i<ids.length-1?'':'disabled'}>▼</button></td>`:''}</tr>`).join('')}</tbody></table></div>
-    <div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button>${can?`<button class="btn primary" id="rkOk" ${dirty?'':'disabled'}>💾 บันทึกลำดับ</button>`:''}</div>`);
+  const yms=[];for(let i=0,ym=d.today.slice(0,7);i<13;i++,ym=wfMonthAdd(ym,-1))yms.push(ym);
+  const draw=()=>{openModal(`<h3>🏅 ลำดับคิวเลือกวันหยุด — ${esc(tm.name)}</h3>
+    <div class="hint">เรียงตาม <b>${doBasisTxt(info.basis)||'—'}</b>${info.mode==='manual'?' · หัวหน้าปรับลำดับเอง':''} · ${c.group?`เปิดคิวเป็นรอบ วันละ ${c.group} คน เริ่ม ${doD(c.from)}`:'ทุกคนเลือกได้พร้อมกัน'}${c.cap?` · <b>ถ้าวันเต็ม (${c.cap} คน) คนอันดับสูงกว่าแทนที่คนอันดับต่ำสุดของวันนั้นได้</b>`:''}</div>
+    ${cond?`<div class="rkc"><b>⚙️ เงื่อนไขคิว</b><span>เรียงจาก</span><select id="rkB">${Object.keys(DOB).map(k=>`<option value="${k}" ${(bk[0]||'point')===k?'selected':''}>${DOB[k][0]}</option>`).join('')}</select><span>ของเดือน</span><select id="rkY">${yms.map(y=>`<option value="${y}" ${(bk[1]||d.basisYm)===y?'selected':''}>${wfMonthTxt(y)}${y===d.basisYm?' (ล่าสุดที่ครบเดือน)':y===d.today.slice(0,7)?' (เดือนนี้ ยังไม่ครบ)':''}</option>`).join('')}</select><select id="rkS"><option value="one">เฉพาะทีมนี้</option><option value="*">ทุกทีม${d.role==='senior'?'ที่ดูแล':''}</option></select><button class="btn sm primary" id="rkGo">🔄 จัดคิวใหม่</button></div>`:''}
+    <div style="max-height:46vh;overflow:auto;margin-top:6px"><table class="tbl nosort" style="width:100%"><tbody>${ids.map((id,i)=>`<tr class="${id===d.me?'dome':''}"><td class="num" style="width:38px"><b>#${i+1}</b></td><td style="white-space:nowrap">${nmAv(id)}${esc((d.M[id]||{}).nick||id)}</td><td class="r num hint" style="white-space:nowrap">${val[id]!==undefined?(unit==='฿'?'฿'+fmt(val[id]):fmt(val[id])+' '+unit):''}</td>${c.group?`<td class="r" style="white-space:nowrap">เลือกได้ <b>${doD(addDays(c.from,Math.floor(i/c.group)))}</b></td>`:''}${can?`<td class="r" style="white-space:nowrap"><button class="btn sm" data-ru="${i}" ${i?'':'disabled'}>▲</button> <button class="btn sm" data-rd="${i}" ${i<ids.length-1?'':'disabled'}>▼</button></td>`:''}</tr>`).join('')}</tbody></table></div>
+    <div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button>${can?`<button class="btn primary" id="rkOk" ${dirty?'':'disabled'}>💾 บันทึกลำดับที่ขยับ</button>`:''}</div>`);
     $$('[data-ru]').forEach(b=>b.onclick=()=>{const i=+b.dataset.ru;[ids[i-1],ids[i]]=[ids[i],ids[i-1]];dirty=true;draw()});
     $$('[data-rd]').forEach(b=>b.onclick=()=>{const i=+b.dataset.rd;[ids[i+1],ids[i]]=[ids[i],ids[i+1]];dirty=true;draw()});
-    if($('#rkOk'))$('#rkOk').onclick=async()=>{$('#rkOk').disabled=true;try{await api('doRankSet',{team,order:ids});closeModal();toast('💾 บันทึกลำดับแล้ว');await doLoad();doDraw()}catch(e){toast('⚠️ '+esc(e.message))}}};
+    if($('#rkOk'))$('#rkOk').onclick=async()=>{$('#rkOk').disabled=true;try{await api('doRankSet',{team,order:ids});closeModal();toast('💾 บันทึกลำดับแล้ว');await doLoad();doDraw()}catch(e){toast('⚠️ '+esc(e.message))}};
+    if($('#rkGo'))$('#rkGo').onclick=async()=>{const b=$('#rkGo'),sc=$('#rkS').value;if(!confirm(`จัดคิวใหม่${sc==='*'?'ทุกทีม':'ทีมนี้'} ตาม ${DOB[$('#rkB').value][0]} ${wfMonthTxt($('#rkY').value)}?\\nลำดับเดิม (รวมที่หัวหน้าขยับเอง) จะถูกแทนที่`))return;b.disabled=true;b.textContent='กำลังคำนวณ…';
+      try{const r=await api('doRankBuild',{team:sc==='*'?'*':team,basis:$('#rkB').value,ym:$('#rkY').value});closeModal();toast(`🔄 จัดคิวใหม่แล้ว ${r.teams} ทีม`);await doLoad();doDraw();doRankM(team)}catch(e){toast('⚠️ '+esc(e.message));b.disabled=false;b.textContent='🔄 จัดคิวใหม่'}}};
   draw();
 }
 function doOpenM(){
@@ -5097,13 +5148,14 @@ function doOpenM(){
    <div class="fld"><label>② เปิดให้เลือกถึงวันที่</label><input type="date" id="wzT" min="${d.today}" value="${on&&c.to>=d.today?c.to:addDays(d.today,7)}"></div>
    <div class="fld"><label>③ เลือกได้คนละกี่วัน <span class="hint">(ไม่นับวันหยุดประจำสัปดาห์)</span></label><input type="number" id="wzQ" min="1" max="31" value="${on?c.quota:4}" style="width:110px"></div>
    <div class="fld"><label>④ ในหนึ่งวัน หยุดพร้อมกันได้ไม่เกินกี่คนต่อทีม <span class="hint">(0 = ไม่จำกัด)</span></label><input type="number" id="wzC" min="0" max="500" value="${on?c.cap:0}" style="width:110px"></div>
-   <div class="fld"><label>⑤ ใครได้เลือกก่อน</label><div style="display:grid;gap:6px"><label class="chip wzr"><input type="radio" name="wzO" value="pt" ${on&&!c.group?'':'checked'}> คน POINT สูงกว่าได้เลือกก่อน — เปิดคิววันละ <input type="number" id="wzG" min="1" max="200" value="${c.group||5}" style="width:64px;padding:2px 6px"> คน/ทีม</label><label class="chip wzr"><input type="radio" name="wzO" value="all" ${on&&!c.group?'checked':''}> ทุกคนเลือกได้พร้อมกัน (ใครมาก่อนได้ก่อน)</label></div></div>
-   ${on&&c.group?'<label class="hint" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="wzRe" style="width:auto"> จัดลำดับใหม่ตาม POINT ทุกทีม (ทับลำดับที่หัวหน้าขยับเอง)</label>':''}
-   <div class="hint">ลำดับใช้ POINT ของเดือนก่อนเดือนที่เลือก · ถ้าวันปิดรับเร็วเกินไป ระบบจะขยายให้คนคิวท้ายเลือกทัน</div>
+   <div class="fld"><label>⑤ คิวลำดับสิทธิ์ (แยกแต่ละทีม) — ถ้าวันเต็ม คนอันดับสูงกว่าได้สิทธิ์ก่อน</label><div class="rkc" style="margin:0"><span>เรียงจาก</span><select id="wzB">${Object.keys(DOB).map(k=>`<option value="${k}" ${(c.basis||'point')===k?'selected':''}>${DOB[k][0]}</option>`).join('')}</select><span>ของเดือน</span><select id="wzY">${(()=>{const o=[];for(let i=0,ym=d.today.slice(0,7);i<13;i++,ym=wfMonthAdd(ym,-1))o.push(ym);return o})().map(y=>`<option value="${y}" ${y===d.basisYm?'selected':''}>${wfMonthTxt(y)}${y===d.basisYm?' (ล่าสุดที่ครบเดือน)':y===d.today.slice(0,7)?' (เดือนนี้ ยังไม่ครบ)':''}</option>`).join('')}</select></div></div>
+   <div class="fld"><label>⑥ วิธีเปิดให้เลือก</label><div style="display:grid;gap:6px"><label class="chip wzr"><input type="radio" name="wzO" value="all" ${on&&c.group?'':'checked'}> ทุกคนเลือกได้พร้อมกัน — ถ้าวันเต็ม อันดับสูงกว่าแทนที่อันดับต่ำกว่าได้ <span class="hint">(แนะนำ)</span></label><label class="chip wzr"><input type="radio" name="wzO" value="pt" ${on&&c.group?'checked':''}> เปิดคิวเป็นรอบ ตามอันดับ วันละ <input type="number" id="wzG" min="1" max="200" value="${c.group||5}" style="width:64px;padding:2px 6px"> คน/ทีม</label></div></div>
+   ${on?'<label class="hint" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="wzRe" style="width:auto"> จัดคิวใหม่ทุกทีมตามเงื่อนไขข้อ ⑤ (ทับลำดับที่หัวหน้าขยับเอง)</label>':''}
+   <div class="hint">Senior ปรับเงื่อนไขคิวของทีมตัวเองภายหลังได้ที่ปุ่ม “🏅 ลำดับคิว / เงื่อนไข” · ถ้าวันปิดรับเร็วเกินไปสำหรับแบบเปิดเป็นรอบ ระบบจะขยายให้</div>
    <div class="mrow">${on?'<button class="btn warn" id="wzOff" style="margin-right:auto">⏹ ปิดรอบ</button>':''}<button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn primary" id="wzOk">✅ ${on?'บันทึก':'เปิดรับเลย'}</button></div>`);
   if($('#wzOff'))$('#wzOff').onclick=async()=>{if(!confirm('ปิดรอบเลือกวันหยุด? (วันหยุดที่ลงไว้แล้วยังอยู่ครบ)'))return;$('#wzOff').disabled=true;try{await api('doOpen',{month:''});closeModal();toast('⏹ ปิดรอบแล้ว');await doLoad();doDraw()}catch(e){toast('⚠️ '+esc(e.message))}};
   $('#wzOk').onclick=async()=>{const b=$('#wzOk'),pt=$('input[name=wzO]:checked').value==='pt',month=$('#wzM').value;b.disabled=true;b.textContent='กำลังบันทึก…';
-    try{const r=await api('doOpen',{month,to:$('#wzT').value,quota:+$('#wzQ').value,cap:+$('#wzC').value||0,group:pt?Math.max(1,+$('#wzG').value||5):0,rerank:!!($('#wzRe')&&$('#wzRe').checked)});
+    try{const r=await api('doOpen',{month,to:$('#wzT').value,quota:+$('#wzQ').value,cap:+$('#wzC').value||0,group:pt?Math.max(1,+$('#wzG').value||5):0,basis:$('#wzB').value,ym:$('#wzY').value,rerank:!on||!!($('#wzRe')&&$('#wzRe').checked)});
       closeModal();toast(`🏖 เปิดให้เลือกวันหยุด ${wfMonthTxt(month)} ถึง ${doD(r.to)} แล้ว`,true);DO.month=month;DO.cache={};await doLoad();doDraw()}
     catch(e){toast('⚠️ '+esc(e.message));b.disabled=false;b.textContent='✅ ลองอีกครั้ง'}};
 }
