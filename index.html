@@ -278,7 +278,7 @@ html,body{overflow-x:hidden}
 .wft{border-collapse:separate;border-spacing:0;font-size:13px}.wft th,.wft td{border-bottom:1px solid var(--line);border-right:1px solid color-mix(in srgb,var(--line) 45%,transparent);padding:2px 3px;text-align:center;white-space:nowrap}
 .wft thead th{background:var(--panel2);position:sticky;top:0;z-index:3;padding:5px 3px;border-bottom:2px solid var(--line)}.wft thead th span{display:block;font-family:var(--mono);font-size:14px;font-weight:700;line-height:1.1}.wft thead th small{display:block;color:var(--mute);font-size:11px;font-weight:500}
 .wft thead th.we small,.wft thead th.wfh small{color:var(--pink,#ff6e9c)}.wft thead th.tdy{background:color-mix(in srgb,var(--up) 22%,var(--panel2))}.wft thead th.tdy span{color:var(--up)}
-.wft td:first-child,.wft th:first-child{position:sticky;left:0;background:var(--panel);z-index:4;text-align:left;padding:4px 10px;min-width:120px;max-width:190px;overflow:hidden;text-overflow:ellipsis;border-right:2px solid var(--line)}.wft thead th:first-child{background:var(--panel2);z-index:5}
+.wft td:first-child,.wft th:first-child{position:sticky;left:0;background:var(--panel);z-index:4;text-align:left;padding:4px 10px;min-width:120px;max-width:270px;overflow:hidden;text-overflow:ellipsis;border-right:2px solid var(--line)}.wft thead th:first-child{background:var(--panel2);z-index:5}
 .wft tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--panel2) 55%,transparent)}.wft tbody tr:nth-child(even) td:first-child{background:color-mix(in srgb,var(--panel2) 55%,var(--panel))}.wft tbody tr:hover td:first-child{color:var(--up)}
 .wft .wfnm{font-weight:600}.wft .wfrl{display:inline-block;margin-left:5px;padding:0 5px;border-radius:5px;font-size:11px;font-weight:700;background:color-mix(in srgb,var(--blue) 22%,transparent);color:var(--blue)}
 .wfc{min-width:34px;height:34px;cursor:pointer;user-select:none;touch-action:none;transition:background .1s}.wfc:not(.lk):hover{background:color-mix(in srgb,var(--up) 14%,transparent)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--up) 55%,transparent)}
@@ -306,6 +306,7 @@ button.dod{font:inherit;color:inherit;text-align:left;cursor:pointer;min-height:
 .rkc{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:13px}.rkc select{padding:4px 8px}.rkc span{color:var(--mute)}
 .dork{display:inline-block;margin-left:5px;font-family:var(--mono);font-size:11px;color:var(--flat)}.doh{display:inline-block;min-width:22px;padding:1px 4px;border-radius:6px;font-family:var(--mono);font-size:12px;background:color-mix(in srgb,var(--blue) 22%,transparent);color:var(--blue)}.doh.hi{background:color-mix(in srgb,var(--down) 24%,transparent);color:var(--down)}
 th.tbxs{cursor:pointer;user-select:none}th.tbxs:hover{color:var(--text)}th[aria-sort=ascending]::after{content:' ▲';color:var(--up)}th[aria-sort=descending]::after{content:' ▼';color:var(--up)}.tbxbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0;font-size:13px;color:var(--mute)}.tbxbar select{padding:4px 8px;max-width:100%}.tbxteam{display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap}.tbxbar .tbxx{margin-left:auto;border-color:color-mix(in srgb,var(--up) 50%,var(--line));color:var(--up)}
+.eid{display:inline-block;margin-left:5px;padding:0 5px;border-radius:5px;font-family:var(--mono);font-size:11px;font-weight:600;line-height:1.5;color:var(--mute);background:color-mix(in srgb,var(--mute) 14%,transparent);vertical-align:middle;white-space:nowrap}
 .wflg{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:8px 0 2px;font-size:12px;color:var(--mute)}.wflg span{display:inline-flex;align-items:center;gap:5px}.wflg u{display:inline-block;width:16px;height:16px;border-radius:4px;text-decoration:none}
 .wfwrap{overflow:auto;max-height:70vh;margin-top:6px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
 .wfg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.wfgh{text-align:center;font-size:12px;font-weight:600;color:var(--mute);padding:2px 0}.wfgh.we{color:var(--pink,#ff6e9c)}
@@ -3253,7 +3254,7 @@ function coCard(p){
   const oc=p.outcome&&COOC[p.outcome];
   return `<div class="panel" data-coid="${esc(p.id)}" style="cursor:pointer;margin:6px 0;padding:10px 12px;border-left:4px solid ${st[2]}">
    <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>${esc(p.title)}</b><span><button class="btn sm" data-copdf="${esc(p.id)}" title="ดาวน์โหลดข้อตกลงเป็น PDF ให้ลงนาม">📄 PDF</button> <span class="role" style="background:${st[2]}22;color:${st[2]}">${st[0]} ${st[1]}</span></span></div>
-   <div class="hint">${k[0]} ${esc(k[1])} · 🧑‍🏫 ${esc(p.coachName)} → 👤 ${esc(p.agentName)} · ${dShort(p.from)} – ${dShort(p.to)}${mineC?' · <b>คุณเป็นโค้ช</b>':mineA?' · <b>คุณเป็นผู้รับโค้ช</b>':''}</div>
+   <div class="hint">${k[0]} ${esc(k[1])} · 🧑‍🏫 ${esc(p.coachName)}${eidH(p.coach)} → 👤 ${esc(p.agentName)}${eidH(p.agent)} · ${dShort(p.from)} – ${dShort(p.to)}${mineC?' · <b>คุณเป็นโค้ช</b>':mineA?' · <b>คุณเป็นผู้รับโค้ช</b>':''}</div>
    <div class="hint" style="margin:6px 0 2px">เริ่มต้น <b>${coFmt(p,p.baseline)}</b> → ตอนนี้ <b>${coFmt(p,cur.v)}</b> → เป้า <b>${coFmt(p,p.target)}</b>${oc?` · <b style="color:${oc[2]}">${oc[0]} ${oc[1]}</b>`:''}</div>
    ${p.target!=null?coBar(p,p.status==='closed'&&p.finalVal!=null?p.finalVal:cur.v):''}</div>`;
 }
@@ -3282,7 +3283,7 @@ function coForm(p){
   const ag=p?p.agent:(agents[0]&&agents[0].id)||'';
   openModal(`<h3>${edit?'✏️ แก้ไขแผนโค้ช':'➕ สร้างแผนโค้ช'}</h3>
    <div class="hint" style="margin-bottom:8px">แผนจะ “ยังไม่เริ่มวัดผล” จนกว่า Agent จะกดยอมรับ</div>
-   <div class="fld"><label>Agent ที่จะโค้ช</label>${edit?`<input disabled value="${esc(p.agentName)}">`:`<select id="cfA">${agents.map(a=>`<option value="${esc(a.id)}" ${a.id===ag?'selected':''}>${esc(a.nick||a.name)} · ${esc(teamOf(a.team).name||a.team)}</option>`).join('')}</select>`}</div>
+   <div class="fld"><label>Agent ที่จะโค้ช</label>${edit?`<input disabled value="${esc(p.agentName)} (${esc(p.agent)})">`:`<select id="cfA">${agents.map(a=>`<option value="${esc(a.id)}" ${a.id===ag?'selected':''}>${esc(a.nick||a.name)} · ${esc(teamOf(a.team).name||a.team)} (${esc(a.id)})</option>`).join('')}</select>`}</div>
    <div class="fld"><label>ชื่อแผน</label><input id="cfT" maxlength="80" value="${esc(p?p.title:'')}" placeholder="เช่น เพิ่ม POINT ต่อวันให้ถึงเป้าภายใน 30 วัน"></div>
    <div class="fld"><label>ตัวชี้วัด KPI</label><select id="cfK">${Object.keys(COK).map(k=>`<option value="${k}" ${k===k0?'selected':''}>${COK[k][0]} ${COK[k][1]}</option>`).join('')}</select></div>
    <div style="display:flex;gap:8px;flex-wrap:wrap"><div class="fld" style="flex:1;min-width:130px"><label>เริ่ม</label><input type="date" id="cfF" value="${f0}"></div><div class="fld" style="flex:1;min-width:130px"><label>สิ้นสุด (ไม่เกิน 3 เดือน)</label><input type="date" id="cfE" value="${t0}"></div></div>
@@ -3341,7 +3342,7 @@ function coPdf(p,bd){   // เอกสารข้อตกลงการโ�
   <h1>ข้อตกลงการโค้ชและติดตามผลงาน (COACHING & FEEDBACK)</h1>
   <div class="sub">ระบบ SALE X · เลขที่แผน ${esc(p.id)} · สถานะ: <span class="tag">${st[0]} ${st[1]}</span></div>
   ${agreed?`<p class="ok">✔ ผู้รับการโค้ชกดยอมรับแผนในระบบเมื่อ ${dt(p.agreeTs)}</p>`:`<p class="wm">⚠ ฉบับสำหรับลงนาม — ในระบบ SALE X ผู้รับการโค้ชยังไม่ได้กดยอมรับแผน (ควรกดยอมรับในระบบด้วย เพื่อเริ่มติดตามผล)</p>`}
-  <h2>1. คู่ตกลง</h2><table><tr><th>โค้ช (ผู้ให้คำแนะนำ)</th><td>${esc(p.coachName)}</td></tr><tr><th>ผู้รับการโค้ช (Agent)</th><td>${esc(p.agentName)} · ${esc(teamOf(p.team).name||p.team)}</td></tr><tr><th>ระยะเวลา</th><td>${dl(p.from)} – ${dl(p.to)}</td></tr></table>
+  <h2>1. คู่ตกลง</h2><table><tr><th>โค้ช (ผู้ให้คำแนะนำ)</th><td>${esc(p.coachName)} · รหัส ${esc(p.coach)}</td></tr><tr><th>ผู้รับการโค้ช (Agent)</th><td>${esc(p.agentName)} · รหัส ${esc(p.agent)} · ${esc(teamOf(p.team).name||p.team)}</td></tr><tr><th>ระยะเวลา</th><td>${dl(p.from)} – ${dl(p.to)}</td></tr></table>
   <h2>2. เป้าหมาย KPI (อ้างอิงข้อมูลในระบบ SALE X)</h2><table><tr><th>ตัวชี้วัด</th><td>${esc(k[1])}${p.kpi==='custom'&&p.unit?' ('+esc(p.unit)+')':''}</td></tr><tr><th>ค่าเริ่มต้น (Baseline)</th><td>${coFmt(p,p.baseline)}</td></tr><tr><th>เป้าหมาย</th><td><b>${coFmt(p,p.target)}</b></td></tr>
   <tr><th>ค่าปัจจุบัน ณ ${dt(Date.now())}</th><td>${coFmt(p,cur.v)}${cur.n?` (${cur.n} ${p.kpi==='custom'?'เช็กอิน':'วันทำการ'})`:''}${r!=null?` · ความคืบหน้า ${r>9.99?'999%+':Math.round(r*100)+'%'}`:''}</td></tr></table>
   ${BN&&BN.rows.some(x=>x.n)?`<h2>ข้อมูลเปรียบเทียบกับทีม (ใช้ประกอบการตั้งเป้า)</h2><div class="sub">ช่วงอ้างอิง ${dl(bw.from)} – ${dl(bw.to)} (ย้อนหลัง ${bd} วันก่อนเริ่มแผน) · เฉพาะ Agent ในทีมเดียวกัน · คิดต่อวันทำงาน (หักวันลา) · ค่ากลาง (Median) = ค่าตรงกลางของทีม</div>
@@ -3366,7 +3367,7 @@ function coDetail(id,keep,fresh){
   const L=CO.d.logs.filter(l=>l.cid===p.id),dr=(v)=>v;
   const fbAvg=(()=>{const r=L.filter(l=>l.rating>0).map(l=>l.rating);return r.length?(r.reduce((a,b)=>a+b,0)/r.length).toFixed(1):null})();
   openModal(`<h3>${esc(p.title)} <span class="role" style="background:${st[2]}22;color:${st[2]}">${st[0]} ${st[1]}</span></h3>
-   <div class="hint">🧑‍🏫 โค้ช ${esc(p.coachName)} → 👤 ${esc(p.agentName)} · ${esc(teamOf(p.team).name||p.team)} · ${dShort(p.from)} – ${dShort(p.to)}</div>
+   <div class="hint">🧑‍🏫 โค้ช ${esc(p.coachName)}${eidH(p.coach)} → 👤 ${esc(p.agentName)}${eidH(p.agent)} · ${esc(teamOf(p.team).name||p.team)} · ${dShort(p.from)} – ${dShort(p.to)}</div>
    ${fresh?`<div class="panel" style="margin:8px 0;border-left:4px solid var(--up)"><b>✅ บันทึกแผนแล้ว</b><div class="hint">พิมพ์เอกสารข้อตกลงให้โค้ชและ Agent ลงนามยืนยันได้ทันที (ไม่บังคับ) · Agent ยังต้องกด “ยอมรับ” ในระบบเพื่อเริ่มวัดผล</div><button class="btn primary" id="coPdf2" style="margin-top:6px">📄 ดาวน์โหลดเอกสารให้ลงนาม (PDF)</button></div>`:''}
    <div class="panel" style="margin:8px 0;background:var(--panel2)"><b>${k[0]} ${esc(k[1])}${p.kpi==='custom'&&p.unit?' ('+esc(p.unit)+')':''}</b>
     <div class="stats" style="margin:6px 0"><div class="stat"><small>เริ่มต้น</small><b>${coFmt(p,p.baseline)}</b></div><div class="stat"><small>ตอนนี้${cur.n?` (${cur.n} ${p.kpi==='custom'?'เช็กอิน':'วัน'})`:''}</small><b>${coFmt(p,cur.v)}</b></div><div class="stat"><small>เป้า</small><b>${coFmt(p,p.target)}</b></div>${p.status==='closed'?`<div class="stat"><small>ผลสรุป</small><b style="color:${oc?oc[2]:''}">${oc?oc[0]+' '+oc[1]:'–'}</b></div>`:''}</div>
@@ -4263,7 +4264,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-18.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-18.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -5159,6 +5160,16 @@ function doOpenM(){
       closeModal();toast(`🏖 เปิดให้เลือกวันหยุด ${wfMonthTxt(month)} ถึง ${doD(r.to)} แล้ว`,true);DO.month=month;DO.cache={};await doLoad();doDraw()}
     catch(e){toast('⚠️ '+esc(e.message));b.disabled=false;b.textContent='✅ ลองอีกครั้ง'}};
 }
+/* รหัสพนักงานต่อท้ายชื่อ (ทุกที่ที่มีรูปโปรไฟล์หน้าชื่อ ในเนื้อหาและหน้าต่าง) */
+const eidH=id=>id?`<span class="eid">${esc(id)}</span>`:'';
+function eidScan(){
+  $$('main .sav,#modal .sav').forEach(a=>{
+    if(a.dataset.eid)return;a.dataset.eid=1;const id=a.dataset.zid||a.dataset.phid;if(!id||!memOf(id))return;
+    const par=a.parentNode;if(!par||par.querySelector(`:scope>.eid[data-e="${CSS.escape(id)}"]`)||a.closest('.domy,.wfgh,.ticker,#me'))return;
+    let n=a.nextSibling;while(n&&n.nodeType===3&&!n.nodeValue.trim())n=n.nextSibling;if(!n)return;
+    if(n.nodeType===1&&(n.classList.contains('sav')||n.matches('button,select,input,br')))return;
+    const b=document.createElement('span');b.className='eid';b.dataset.e=id;b.textContent=id;n.after(b)})}
+new MutationObserver(ms=>{if(!ms.some(m=>m.addedNodes.length))return;clearTimeout(eidScan.t);eidScan.t=setTimeout(()=>{try{eidScan()}catch(e){}},120)}).observe(document.body,{childList:true,subtree:true});
 /* ===================================================================
  *  ตารางทุกเมนู (ระบบกลาง): ① กดหัวคอลัมน์เพื่อเรียง ② เลือกดูเป็นทีม ③ รูปโปรไฟล์หน้าชื่อ
  *  ทำงานอัตโนมัติกับทุก <table> ที่ถูกวาดขึ้น (ยกเว้นตารางวันหยุด และตารางที่มีระบบเรียงของตัวเองอยู่แล้ว)
