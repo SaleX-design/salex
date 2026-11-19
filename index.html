@@ -315,6 +315,11 @@ th.tbxs{cursor:pointer;user-select:none}th.tbxs:hover{color:var(--text)}th[aria-
 .tabarr{position:sticky;z-index:2;flex:none;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:7px;padding:4px 9px;font-size:12px;cursor:pointer;box-shadow:0 0 12px 6px var(--panel)}.tabarr.l{left:0}.tabarr.r{right:0}.tabarr:hover{border-color:var(--up);color:var(--up)}.tabs:not(.ovf) .tabarr{display:none}
 #navPad{position:fixed;right:14px;bottom:18px;z-index:45;display:flex;flex-direction:column;gap:6px}#navPad button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:color-mix(in srgb,var(--panel2) 92%,transparent);color:var(--text);font-size:14px;cursor:pointer;box-shadow:0 2px 10px #0006;backdrop-filter:blur(6px)}#navPad button:hover{border-color:var(--up);color:var(--up)}@media(max-width:700px){#navPad{bottom:84px;right:10px}#navPad button{width:36px;height:36px}}
 .tbxnav{display:inline-flex;gap:4px}.tbxnav .btn{padding:3px 10px}.tbxnav .btn:disabled{opacity:.35}
+#vaBar{position:sticky;top:0;z-index:70;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between;padding:8px 14px;background:linear-gradient(90deg,#7c3aed,#c026d3);color:#fff;font-size:13px;box-shadow:0 2px 12px #0006}#vaBar .eid{background:#ffffff30;color:#fff}#vaBar .btn{background:#ffffff22;color:#fff;border-color:#ffffff55}#vaBar .btn.primary{background:#fff;color:#7c3aed}
+.vai{display:flex;align-items:center;gap:6px;width:100%;text-align:left;padding:6px 8px;border:1px solid transparent;border-radius:8px;background:none;color:inherit;font:inherit;cursor:pointer}.vai:hover{border-color:var(--up);background:var(--panel2)}
+.tdh{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px}.tdi{display:flex;gap:10px;align-items:center;padding:9px 12px;margin:6px 0;border:1px solid var(--line);border-left:4px solid var(--flat);border-radius:10px;background:var(--panel2);cursor:pointer}.tdi.down{border-left-color:var(--down)}.tdi.up{border-left-color:var(--up)}.tdi>div{flex:1;min-width:0}.tdi>b{color:var(--mute);font-size:12px;white-space:nowrap}.tdi:hover{border-color:var(--up)}
+.tdg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.tdg button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--text);font:inherit;font-size:13px;cursor:pointer}.tdg button span{font-size:22px}.tdg button:hover{border-color:var(--up)}
+#grpBar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:0 0 10px;padding:8px 12px;background:var(--panel);border:1px solid var(--line);border-radius:12px}#grpBar[hidden]{display:none}#grpBar .grpn{font-weight:700;font-size:14px}#grpBar .seg button{padding:6px 14px}
 .wflg{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:8px 0 2px;font-size:12px;color:var(--mute)}.wflg span{display:inline-flex;align-items:center;gap:5px}.wflg u{display:inline-block;width:16px;height:16px;border-radius:4px;text-decoration:none}
 .wfwrap{overflow:auto;max-height:70vh;margin-top:6px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
 .wfg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.wfgh{text-align:center;font-size:12px;font-weight:600;color:var(--mute);padding:2px 0}.wfgh.we{color:var(--pink,#ff6e9c)}
@@ -572,7 +577,12 @@ body.nohl .hlw::before{content:""}
   <div class="clock" id="clock"></div>
   <div class="spacer"></div>
   <nav class="tabs" id="tabs">
+    <button class="tabbtn" data-tab="today">☀️ วันนี้</button>
+    <button class="tabbtn" data-tab="appr" hidden>✅ รออนุมัติ</button>
     <button class="tabbtn on" data-tab="dash">📈 ยอดขาย</button>
+    <button class="tabbtn grp" data-tab="learn">📚 คลังความรู้</button>
+    <button class="tabbtn grp" data-tab="fun">🎁 รางวัล & กิจกรรม</button>
+    <button class="tabbtn grp" data-tab="work">📅 วันทำงาน & ลา</button>
     <button class="tabbtn" data-tab="prof">👤 PROFILE</button>
     <button class="tabbtn" data-tab="rank">🏆 อันดับ &amp; TOP SALE</button>
     <button class="tabbtn" data-tab="com">💸 คอม</button>
@@ -592,6 +602,7 @@ body.nohl .hlw::before{content:""}
     <button class="tabbtn" data-tab="game">🎮 เกม</button>
     <button class="tabbtn" data-tab="admin" id="adminTab" hidden>🛠 แอดมิน</button>
   </nav>
+  <button class="btn" id="viewAsBtn" title="ดูในฐานะพนักงาน (ตรวจว่าแต่ละตำแหน่งเห็นอะไร)" hidden>👁</button>
   <button class="btn" id="themeBtn" title="เปลี่ยนโหมดสี">🌙</button>
   <button class="btn" id="festBtn" title="เปิด/ปิดธีมเทศกาล" hidden>✨</button>
   <button class="btn" id="refBtn" title="โหลดข้อมูลล่าสุด">⟳</button>
@@ -602,6 +613,7 @@ body.nohl .hlw::before{content:""}
 <div class="tape" style="position:relative"><div class="tape-in" id="tape"></div><button id="tapeSpd" class="btn sm" title="ปรับความเร็วแถบตัวเลข" style="position:absolute;right:6px;top:5px;padding:0 8px;height:26px;opacity:.85;background:#0b0f14ee"></button></div>
 
 <main>
+<div id="grpBar" hidden></div>
 <div id="bcast"></div>
 <div class="banner" id="banner"></div>
 
@@ -711,6 +723,8 @@ body.nohl .hlw::before{content:""}
 <section id="tab-script" hidden><div id="scriptBody"></div></section>
 <section id="tab-coach" hidden><div id="coachBody"></div></section>
 <section id="tab-wfm" hidden><div id="wfmBody"></div></section>
+<section id="tab-today" hidden><div id="todayBody"></div></section>
+<section id="tab-appr" hidden><div id="apprBody"></div></section>
 <section id="tab-prof" hidden><div id="profBody"></div></section>
 <section id="tab-ins" hidden><div id="insBody"></div></section>
 <section id="tab-eng" hidden><div id="engBody"></div></section>
@@ -735,6 +749,7 @@ body.nohl .hlw::before{content:""}
     <button data-a="live">👥 ออนไลน์</button>
     <button data-a="plog">🗓 ประวัติเข้าใช้ 30 วัน</button>
     <button data-a="audit">ตรวจข้อมูล</button>
+    <button data-a="health">🩺 สุขภาพระบบ</button>
     <button data-a="set">ตั้งค่า</button>
   </div>
   <div id="admBody"></div>
@@ -820,7 +835,7 @@ function festApply(){
   if(fx.children.length)document.body.appendChild(fx)}
 $('#festBtn').onclick=()=>{let off='';try{off=localStorage.getItem('sx_fest')||''}catch(e){}try{localStorage.setItem('sx_fest',off==='off'?'':'off')}catch(e){}festApply();toast(off==='off'?'✨ เปิดธีมเทศกาลแล้ว':'ปิดธีมเทศกาลแล้ว')};
 festApply();setInterval(()=>{if(festPick(new Date(),new URLSearchParams(location.search).get('fest')||'')!==FEST_CUR)festApply()},600000);
-document.getElementById('themeBtn').onclick=thmCycle;thmApply();setInterval(()=>{if(THM.m==='auto')thmApply()},60000);
+document.getElementById('viewAsBtn').onclick=()=>vaPick();document.getElementById('themeBtn').onclick=thmCycle;thmApply();setInterval(()=>{if(THM.m==='auto')thmApply()},60000);
 const OKURL=u=>/^https:\/\/script\.google\.com\/.+\/exec$/.test(u||'');
 let API_URL=(typeof window.SB_API_URL==='string'&&OKURL(window.SB_API_URL.trim()))?window.SB_API_URL.trim():(OKURL(LS.get('sb_api'))?LS.get('sb_api'):'');
 let TOKEN=LS.get('sb_token')||'';
@@ -848,7 +863,7 @@ Object.defineProperty(METRIC.prod,'label',{get:()=>'📦 '+prodTitle()+' ('+({q:
 Object.defineProperty(METRIC.prod,'unit',{get:()=>(S.pmeas==='a'?'฿':'')});
 const DEFN={day:30,month:12,year:4},RANGES={'1W':{m:'day',n:7},'1M':{m:'day',n:30},'3M':{m:'day',n:90},'1Y':{m:'month',n:12},'ALL':{m:'year',n:4}};
 const MAC={5:'#f0b90b',10:'#b388ff',20:'#40c4ff'},MAL=[5,10,20],LOOK=19;
-const S={com:{ym:'',who:'',el:null,target:null},rank:{mode:'month',anchor:'',grp:'all',view:'person',pm:'amount',pby:'amount',sort:'_t'},metric:'amount',count:null,range:null,ma:true,ema:true,tab:'dash',mode:'day',ctype:'bar',scope:{type:'all'},split:false,boardMode:'person',anchor:'',adm:'sales'};
+const S={com:{ym:'',who:'',el:null,target:null},rank:{mode:'month',anchor:'',grp:'all',view:'person',pm:'amount',pby:'amount',sort:'_t'},metric:'amount',count:null,range:null,ma:true,ema:true,tab:'today',mode:'day',ctype:'bar',scope:{type:'all'},split:false,boardMode:'person',anchor:'',adm:'sales'};
 const PREV={};
 let PS=[],PRODS=[],PSBY={};const BCHID=new Set();
 const ROLE={admin:'แอดมิน',senior:'Senior Leader',leader:'Leader','':'สมาชิก'};
@@ -869,11 +884,12 @@ function confetti(){
 }
 
 /* ---------- API ---------- */
+let VIEWAS='',VIEWAS_ADMIN=null;   // 👁 ดูในฐานะ (แอดมิน) — ทุกคำขอส่ง _as ไปให้หลังบ้านใช้สิทธิ์ของคนนั้น
 async function api(action,payload,noAuth){
   if(!API_URL)throw Object.assign(new Error('ยังไม่ได้ตั้งค่า URL เชื่อมต่อ'),{code:'NOURL'});
   let j;
   try{
-    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action,token:TOKEN},payload||{}))});
+    const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action,token:TOKEN},VIEWAS&&!noAuth?{_as:VIEWAS}:{},payload||{}))});
     j=await r.json();
   }catch(e){throw Object.assign(new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ — ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'),{code:'NET'})}
   if(!j.ok){
@@ -1515,6 +1531,7 @@ async function renderAdmin(){
   else if(S.adm==='plog'){admPlog(body)}
   else if(S.adm==='scr'){await ensureScripts(true);admScripts(body)}
   else if(S.adm==='audit'){await admLoad('audit');admAudit(body)}
+  else if(S.adm==='health'){admHealth(body)}
   else{if(!ADM.content)await admLoad('content');admSettings(body)}
 }
 
@@ -2850,7 +2867,7 @@ function insMeHTML(){
 const ENG={d:null,q:'',role:'',lv:'',busy:0,mq:'',mo:{},tq:''};
 const ENGF={claim:['🎁','รับ TOKEN ประจำวัน'],wheel:['🎡','หมุนวงล้อ'],predict:['🔮','ทายผล'],feedback:['💬','ส่ง Feedback'],comment:['🗨','คอมเมนต์'],like:['❤️','กดไลก์'],redeem:['🛍','แลกของรางวัล'],leave:['🗓','ยื่นลา']};
 const ENGL={power:['🔥','Power User','var(--up)'],regular:['✅','ใช้สม่ำเสมอ','#40c4ff'],light:['🌱','ใช้นาน ๆ ครั้ง','var(--flat)'],none:['😴','ไม่เข้าเลย','var(--down)']};
-const ENGM={dash:'📈 ยอดขาย',prof:'👤 PROFILE',feed:'💬 หัวข้อ & Feedback',ins:'📊 Insight',eng:'📈 Engagement',tips:'💡 เทคนิคขาย',script:'📞 สคริปต์ขาย',run:'🚀 Run Rate',rank:'🏆 อันดับ & TOP SALE',talk:'⏱ Talk Time',svc:'🗂 ลา/ร้องเรียน',game:'🎮 เกม',prod:'🛍 สินค้า',com:'💸 ค่าคอม',road:'🗺 ROAD MAP',login:'🎁 รางวัล/ล็อกอิน',admin:'🛠 แอดมิน',jarvis:'🤖 J.A.R.V.I.S.'};
+const ENGM={dash:'📈 ยอดขาย',prof:'👤 PROFILE',feed:'💬 หัวข้อ & Feedback',ins:'📊 Insight',eng:'📈 Engagement',tips:'💡 เทคนิคขาย',script:'📞 สคริปต์ขาย',run:'🚀 Run Rate',rank:'🏆 อันดับ & TOP SALE',talk:'⏱ Talk Time',svc:'🗂 ลา/ร้องเรียน',game:'🎮 เกม',prod:'🛍 สินค้า',com:'💸 ค่าคอม',road:'🗺 ROAD MAP',login:'🎁 รางวัล/ล็อกอิน',admin:'🛠 แอดมิน',jarvis:'🤖 J.A.R.V.I.S.',coach:'🤝 สอนงาน',wfm:'📅 ตารางงาน',today:'☀️ วันนี้ของฉัน',appr:'✅ รออนุมัติ'};
 function engMenusHTML(E,U,tot,tn){
   if(!E.menusReady)return '<div class="panel sec"><h3>📂 ใครใช้เมนูไหน</h3><div class="hint">ยังไม่มีชีต MenuUsage — ให้รัน setup ใน Apps Script 1 ครั้ง</div></div>';
   const ok=new Set(U.map(u=>u.id)),nm={};E.users.forEach(u=>nm[u.id]=u);
@@ -2858,6 +2875,7 @@ function engMenusHTML(E,U,tot,tn){
   const any=rows.some(r=>r.us>0),q=ENG.mq.trim().toLowerCase();
   const pcn=(a,b)=>b?Math.round(a/b*100):0;
   return `<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>📂 ใครใช้เมนูไหน (${E.keep} วัน)</span><input id="egMq" placeholder="🔍 ค้นหาชื่อในทุกเมนู" value="${esc(ENG.mq)}" style="padding:6px"></h3>
+   ${any?`<div class="tblwrap" style="margin-bottom:10px"><table class="tbl"><thead><tr><th>เมนู</th><th>คนที่เปิด</th><th>% ของพนักงาน</th><th>ครั้ง</th><th>ข้อเสนอแนะ</th></tr></thead><tbody>${rows.filter(r=>r.k!=='eng'&&r.k!=='admin').map(r=>{const p=pcn(r.us,tot),t=p>=50?['⭐ เมนูหลัก','var(--up)']:p>=15?['ใช้ปกติ','var(--mute)']:['⚠️ ใช้น้อย — พิจารณารวม/ซ่อน','var(--flat)'];return `<tr><td>${esc(ENGM[r.k]||r.k)}</td><td class="num">${r.us}</td><td class="num"><b>${p}%</b></td><td class="num">${fmt(r.v)}</td><td style="color:${t[1]}">${t[0]}</td></tr>`}).join('')}</tbody></table></div><div class="hint" style="margin-bottom:8px">ข้อเสนอแนะคิดจากสัดส่วนพนักงานที่เปิดเมนูอย่างน้อย 1 ครั้งในช่วงนี้ · เมนูของหัวหน้า/แอดมินจะมีคนเปิดน้อยเป็นปกติ</div>`:''}
    ${any?'':'<div class="hint" style="margin-bottom:8px">⏳ เพิ่งเริ่มเก็บสถิติ — จะมีรายชื่อตั้งแต่ที่อัปเดตเป็นต้นไป (ข้อมูลก่อนหน้านี้ย้อนหลังไม่ได้)</div>'}
    ${rows.map(r=>{const L=q?r.L.filter(x=>((nm[x.id]||{}).name||x.id).toLowerCase().includes(q)||x.id.toLowerCase().includes(q)):r.L;if(q&&!L.length)return '';const op=ENG.mo[r.k]||!!q;
     return `<div style="border:1px solid var(--line);border-radius:10px;margin:8px 0;background:var(--panel2)"><div data-egm="${r.k}" style="display:flex;gap:10px;align-items:center;padding:10px 12px;cursor:pointer;flex-wrap:wrap"><b style="min-width:170px">${esc(ENGM[r.k]||r.k)}</b><div class="chbar" style="flex:1;min-width:120px;margin:0"><i style="width:${pcn(r.us,tot)}%"></i></div><span class="num"><b>${q?L.length+' / ':''}${r.us}</b> คน <span class="hint">(${pcn(r.us,tot)}%) · ${fmt(r.v)} ครั้ง</span></span><span class="hint">${r.us?(op?'▾ ซ่อน':'▸ ดูรายชื่อ'):''}</span></div>
@@ -4358,7 +4376,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-19.9';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-19.12';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -4367,15 +4385,66 @@ function menuTrack(tab){   // บันทึกว่าเปิดเมน�
   try{if(!D||!TOKEN||!tab||MTR.off)return;const n=Date.now();if(MTR.t[tab]&&n-MTR.t[tab]<600000)return;MTR.t[tab]=n;
     api('menuPing',{tab}).catch(()=>{})}catch(e){}
 }
+/* ---- 👁 ดูในฐานะ: แอดมินสลับดูหน้าจอเหมือนพนักงานคนนั้นเห็นจริง (อ่านอย่างเดียว) ---- */
+const VA_ROLE={senior:'Senior',leader:'Leader','':'Agent',agent:'Agent',manager:'Manager',admin:'แอดมิน'};
+function vaBar(){
+  const btn=$('#viewAsBtn');if(btn)btn.hidden=!(D.isAdmin||VIEWAS);
+  let b=$('#vaBar');if(!VIEWAS){if(b)b.remove();document.body.classList.remove('va');return}
+  const m=memOf(VIEWAS)||{};if(!b){b=document.createElement('div');b.id='vaBar';document.body.prepend(b)}document.body.classList.add('va');
+  b.innerHTML=`<span>👁 กำลังดูในฐานะ <b>${esc(m.nick||m.name||VIEWAS)}</b> <span class="eid">${esc(VIEWAS)}</span> · ${esc(VA_ROLE[m.role||'']||m.role)} · ${esc((teamOf(m.team)||{}).name||m.team||'')} — เห็นเหมือนที่เขาเห็นจริง · ดูได้อย่างเดียว</span><span style="display:flex;gap:6px"><button class="btn sm" id="vaSw">สลับคน</button><button class="btn sm primary" id="vaOut">ออกจากโหมด</button></span>`;
+  $('#vaOut').onclick=()=>vaSet('');$('#vaSw').onclick=vaPick;
+}
+async function vaSet(id){
+  if(id&&!VIEWAS)VIEWAS_ADMIN={tab:S.tab};
+  VIEWAS=id;try{DO.d=null;DO.cache={};CO.d=null}catch(e){}
+  try{toast(id?'👁 กำลังโหลดมุมมองของพนักงาน…':'กลับสู่มุมมองแอดมิน…');await load();if(!id&&VIEWAS_ADMIN){S.tab=VIEWAS_ADMIN.tab;VIEWAS_ADMIN=null}render();window.scrollTo(0,0)}
+  catch(e){VIEWAS='';toast('⚠️ '+esc(e.message));try{await load();render()}catch(x){}}
+}
+function vaPick(){
+  const ppl=MEM.filter(m=>m.role!=='admin'),grp={};ppl.forEach(m=>{const k=m.role==='senior'?'1 Senior':m.role==='leader'?'2 Leader':m.role==='manager'?'0 Manager':'3 Agent';(grp[k]=grp[k]||[]).push(m)});
+  openModal(`<h3>👁 ดูในฐานะ</h3><div class="hint">เลือกพนักงาน แล้วระบบจะแสดงทุกเมนูเหมือนที่คนนั้นเห็นจริง (ใช้สิทธิ์ของเขาจากหลังบ้าน) · ดูได้อย่างเดียว ไม่บันทึกการเข้าใช้แทนเขา · ใช้ตรวจว่าแต่ละตำแหน่งใช้งานได้ครบหรือไม่</div>
+   <input id="vaQ" placeholder="🔎 ค้นหาชื่อ / รหัส / ทีม" style="margin:8px 0">
+   <div id="vaL" style="max-height:52vh;overflow:auto">${Object.keys(grp).sort().map(k=>`<div class="hint" style="margin:8px 0 4px;font-weight:700">${k.slice(2)} (${grp[k].length})</div>${grp[k].sort((a,b)=>String(a.nick||a.name).localeCompare(String(b.nick||b.name),'th')).map(m=>`<button class="vai" data-va="${esc(m.id)}">${phAv(m.id,m.nick||m.name,24)} <b>${esc(m.nick||m.name)}</b> <span class="eid">${esc(m.id)}</span> <span class="hint">${esc((teamOf(m.team)||{}).name||m.team||'')}</span></button>`).join('')}`).join('')}</div>
+   <div class="mrow"><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
+  $('#vaQ').oninput=e=>{const q=e.target.value.trim().toLowerCase();$$('.vai').forEach(b=>b.hidden=!!q&&!b.textContent.toLowerCase().includes(q))};
+  $$('[data-va]').forEach(b=>b.onclick=()=>{closeModal();vaSet(b.dataset.va)});setTimeout(()=>$('#vaQ').focus(),50);
+}
+/* 🩺 ตรวจสุขภาพระบบ */
+async function admHealth(body,fresh){
+  if(!ADM.health||fresh){body.innerHTML='<div class="panel"><div class="empty">⏳ กำลังตรวจทุกชีต… (อาจใช้เวลา 10–40 วินาที)</div></div>';try{ADM.health=await api('healthCheck')}catch(e){body.innerHTML=`<div class="panel"><div class="err">${esc(e.message)}</div></div>`;return}}
+  const r=ADM.health,ic={bad:'⛔',warn:'⚠️',info:'ℹ️'},col={bad:'var(--down)',warn:'var(--flat)',info:'var(--blue)'},conv=r.issues.some(i=>i.lv==='bad'&&/แปลงข้อความ/.test(i.msg));
+  const tot=r.sheets.reduce((n,x)=>n+(x.rows||0),0);
+  body.innerHTML=`<div class="panel"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:6px"><span>🩺 สุขภาพระบบ <span class="hint" style="font-weight:400">ตรวจล่าสุด ${new Date(r.ts).toLocaleString('th-TH')}</span></span><span style="display:flex;gap:6px">${conv?'<button class="btn sm primary" id="hcFix">🛠 ซ่อมอัตโนมัติ</button>':''}<button class="btn sm" id="hcRe">🔄 ตรวจใหม่</button></span></h3>
+   <div class="wfnote" style="--c:${r.ok?'var(--up)':'var(--down)'}"><div><b>${r.ok?'✅ ไม่พบปัญหาร้ายแรง':'⛔ พบปัญหาที่ควรแก้'}</b><div class="hint">${r.issues.filter(i=>i.lv==='bad').length} ร้ายแรง · ${r.issues.filter(i=>i.lv==='warn').length} ควรตรวจ · ${r.issues.filter(i=>i.lv==='info').length} แจ้งให้ทราบ · ข้อมูลทั้งหมด ${fmt(tot)} แถวใน ${r.sheets.filter(x=>!x.missing).length} ชีต</div></div></div>
+   ${r.issues.length?r.issues.map(i=>`<div class="wfnote" style="--c:${col[i.lv]}"><div>${ic[i.lv]} <b>${esc(i.area)}</b> — ${esc(i.msg)}${i.fix?`<div class="hint">วิธีแก้: ${esc(i.fix)}</div>`:''}</div></div>`).join(''):'<div class="empty">ไม่มีรายการที่ต้องแก้ 🎉</div>'}
+   <details class="wfmore"><summary>📊 ขนาดแต่ละชีต</summary><div class="tblwrap"><table class="tbl"><thead><tr><th>ชีต</th><th>จำนวนแถว</th><th>ค่าที่ถูกแปลง</th></tr></thead><tbody>${r.sheets.filter(x=>!x.missing).sort((a,b)=>b.rows-a.rows).map(x=>`<tr><td>${esc(x.name)}</td><td class="num">${fmt(x.rows)}</td><td class="num ${x.conv?'down':''}">${x.conv||''}</td></tr>`).join('')}</tbody></table></div></details>
+   <div class="hint" style="margin-top:8px">“ซ่อมอัตโนมัติ” จะแปลงค่าที่ Google Sheets เปลี่ยนเป็นวันที่/เวลาเอง กลับเป็นข้อความเดิม (เช่น 2026-11-18, 09:00) และตั้งคอลัมน์เหล่านั้นเป็นรูปแบบข้อความ เพื่อไม่ให้เกิดซ้ำ — แนะนำให้ทำสำเนาไฟล์ชีตไว้ก่อน (ไฟล์ → ทำสำเนา)</div></div>`;
+  $('#hcRe').onclick=()=>admHealth(body,true);
+  if($('#hcFix'))$('#hcFix').onclick=async()=>{if(!confirm('ซ่อมค่าที่ถูกแปลงในทุกชีตเลยหรือไม่?\n(แนะนำให้ทำสำเนาไฟล์ชีตไว้ก่อน)'))return;const b=$('#hcFix');b.disabled=true;b.textContent='กำลังซ่อม…';
+    try{const x=await api('healthFix');toast(x.fixed.length?`🛠 ซ่อมแล้ว: ${x.fixed.join(', ')}`:'ตั้งรูปแบบข้อความเรียบร้อย',true);admHealth(body,true)}catch(e){toast('⚠️ '+esc(e.message));b.disabled=false;b.textContent='🛠 ซ่อมอัตโนมัติ'}};
+}
+/* ---- 🗂 กลุ่มเมนู (รวมเมนูที่เกี่ยวข้องไว้ปุ่มเดียว · ข้างในมีแถบย่อย) — เมนูเดิมยังอยู่ครบ ลิงก์/แจ้งเตือนเดิมใช้ได้ ---- */
+const GROUPS={learn:{e:'📚',n:'คลังความรู้',full:'📚 คลังความรู้การขาย',kids:['script','tips']},fun:{e:'🎁',n:'รางวัล',full:'🎁 รางวัล & กิจกรรม',kids:['road','login','game']},work:{e:'📅',n:'วันทำงาน',full:'📅 วันทำงาน & ลา',kids:['wfm','svc']}};
+const GRP_LAST={};
+const grpOf=t=>Object.keys(GROUPS).find(g=>GROUPS[g].kids.includes(t))||'';
+const grpKids=g=>{const L=menuList(),sh={};L.forEach(x=>sh[x.id]=x.show);return GROUPS[g].kids.filter(k=>sh[k]!==false)};
+function grpPick(g){const ks=grpKids(g);return ks.includes(GRP_LAST[g])?GRP_LAST[g]:(ks[0]||'today')}
+function grpBar(){
+  const b=$('#grpBar');if(!b)return;const g=grpOf(S.tab),ks=g?grpKids(g):[];
+  if(!g||ks.length<2){b.hidden=true;return}GRP_LAST[g]=S.tab;b.hidden=false;
+  b.innerHTML=`<span class="grpn">${GROUPS[g].full}</span><span class="seg">${ks.map(k=>{const t=TABDEF.find(x=>x[0]===k)||[k,'',k,k];return `<button data-gk="${k}" class="${S.tab===k?'on':''}">${t[3]}</button>`}).join('')}</span>`;
+  $$('[data-gk]',b).forEach(x=>x.onclick=()=>goTab(x.dataset.gk));
+}
 function render(){
-  if(!D)return;renderVer();jvShow();
+  if(!D)return;if(GROUPS[S.tab])S.tab=grpPick(S.tab);renderVer();jvShow();vaBar();
   const cnt=S.count||DEFN[S.mode];S.ext=buildPeriods(S.mode,S.anchor,cnt+LOOK);S.periods=S.ext.slice(-cnt);
   renderHeader();renderTicker();renderBell();applyMenu();renderBnav();
   if(S.tab==='spot')S.tab='rank';if(S.tab==='fb'){S.tab='feed';S.feedView='fb'}
-  if((S.tab==='admin'||S.tab==='eng')&&!D.isAdmin)S.tab='dash';
+  if((S.tab==='admin'||S.tab==='eng')&&!D.isAdmin)S.tab='today';
+  if(S.tab==='appr'&&!tdMgr())S.tab='today';
   if(S.tab==='run'&&!D.canSeeAll)S.tab='dash';
-  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins','eng','tips','prof','script','coach','wfm'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
-  $$('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab));
+  ['dash','rank','prod','com','road','login','talk','svc','game','admin','run','feed','ins','eng','tips','prof','script','coach','wfm','today','appr'].forEach(t=>$('#tab-'+t).hidden=S.tab!==t);ensureNoti();
+  $$('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===S.tab||b.dataset.tab===grpOf(S.tab)));grpBar();
   tabsBalance();
   if(S.tab==='dash'){rebuildProd();syncControls();renderTop();renderComStrip();renderSvcStrip();renderQuote();renderChart();ensureSpot();ensureTips();ensurePostPop()}
   else if(S.tab==='rank'){renderRank();renderSpotTab();renderTokBoard()}
@@ -4392,6 +4461,8 @@ function render(){
   else if(S.tab==='script')renderScript();
   else if(S.tab==='coach')renderCoach();
   else if(S.tab==='wfm')renderDo();
+  else if(S.tab==='today')renderToday();
+  else if(S.tab==='appr')renderAppr();
   else if(S.tab==='prof')renderProfPage();
   else if(S.tab==='svc')renderSvc();
   else if(S.tab==='game'){if(S.tab!==LASTTAB)GM=null;renderGame()}
@@ -4915,133 +4986,18 @@ function renderBell(){const n=inboxUnread(),b=$('#bellN');b.hidden=!n;b.textCont
 function openInbox(){
   const L=(D.inbox||[]).concat((SOC.noti||[]).map(i=>Object.assign({tone:''},i))).sort((a,b)=>b.ts-a.ts);
   openModal(`<h2>🔔 แจ้งเตือน</h2><div class="mlist">${L.length?L.map(i=>`<div class="ibi ${i.tone}" data-ib="${esc(i.go)}"><span>${{leave:'🙋',pend:'📝',cmp:'🗂',like:'❤️',cm:'💬',post:'📢',scaudit:'🔍',screp:'💡',coach:'🤝',wfm:'📅'}[i.k]||'⏰'}</span><div>${esc(i.k==='coach'?i.text.replace(/^\S+\s/,''):i.text)}<small>${tsTxt(i.ts)}</small></div></div>`).join(''):'<div class="empty">ไม่มีแจ้งเตือน</div>'}</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`);
-  $$('[data-ib]').forEach(x=>x.onclick=()=>{closeModal();if(x.dataset.ib==='scaudit'){S.adm='scr';goTab('admin')}else if(x.dataset.ib==='coach'){CO.d=null;goTab('coach')}else if(x.dataset.ib==='wfm'){WF.d=null;WF.view='my';goTab('wfm')}else if(x.dataset.ib==='feed'){S.feedView='feed';goTab('feed')}else goTab('svc:'+(x.dataset.ib==='leave'?'leave':'cmp'))});
+  $$('[data-ib]').forEach(x=>x.onclick=()=>{closeModal();if(x.dataset.ib==='scaudit'){S.adm='scr';goTab('admin')}else if(x.dataset.ib==='coach'){CO.d=null;goTab('coach')}else if(x.dataset.ib==='wfm'){DO.d=null;DO.cache={};goTab('wfm')}else if(x.dataset.ib==='feed'){S.feedView='feed';goTab('feed')}else goTab('svc:'+(x.dataset.ib==='leave'?'leave':'cmp'))});
   LS.set('sb_inb',String(nowMs()));LS.set('sb_soc',String(nowMs()));renderBell();renderBnav();
 }
 $('#bellBtn').onclick=()=>D&&openInbox();
 /* =====================================================================
    📅 WFM — ตารางกะ + วันหยุด (Phase 1)
    ===================================================================== */
-const WF={d:null,month:'',team:'',view:'my',dirty:{},brush:'T',paint:false,ver:0};
 const WFDOW=['อา','จ','อ','พ','พฤ','ศ','ส'];
-const wfWS=()=>{const m={};((WF.d&&WF.d.shifts)||[]).forEach(s=>m[s.id]=s);return m};
 const wfMonthAdd=(ym,n)=>{const [y,m]=ym.split('-').map(Number),d=new Date(Date.UTC(y,m-1+n,1));return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)};
 const wfMonthTxt=ym=>{const [y,m]=ym.split('-').map(Number);return THMON[m-1]+' '+(y+543)};
-const wfDays=()=>{const o=[];for(let k=WF.d.from;k<=WF.d.to;k=addDays(k,1))o.push(k);return o};
-const wfLvOn=(ranges,k)=>{let v=0;(ranges||[]).forEach(r=>{if(k>=r[0]&&k<=r[1]){if(!r[2])v=1;else if(!v)v=2}});return v};
-function wfChip(code,lv,hol,full){
-  const S=wfWS()[code];
-  if(lv===1)return '<b class="wfb lv">ลา</b>';
-  if(S)return `<b class="wfb" style="--c:${S.color}" title="${esc(S.name)} ${S.start}-${S.end}">${esc(code)}</b>`+(lv===2?'<small>½</small>':'');
-  if(code==='OFF')return '<b class="wfb off">หยุด</b>';
-  if(hol)return '<b class="wfb hol" title="วันหยุดนักขัตฤกษ์">HOL</b>';
-  return '';
-}
-async function wfLoad(){
-  const d=await api('wfmLoad',{month:WF.month,team:WF.team});
-  WF.d=d;WF.month=d.month;WF.team=d.team||'';WF.ver++;return d;
-}
-async function wfReload(){try{await wfLoad()}catch(e){toast('⚠️ '+esc(e.message))}renderWfm()}
-function wfDirtyN(){return Object.keys(WF.dirty).length}
-function wfCodeOf(m,k){const x=m+'|'+k;if(x in WF.dirty)return WF.dirty[x];return (WF.d.cells[m]||{})[k]||''}
-async function renderWfm(force){
-  const el=$('#wfmBody');if(!el)return;
-  if(!WF.month)WF.month=today.slice(0,7);
-  if(!WF.d||force){el.innerHTML='<div class="empty">⏳ กำลังโหลดตารางกะ…</div>';try{await wfLoad()}catch(e){el.innerHTML=`<div class="empty">โหลดไม่สำเร็จ: ${esc(e.message)}<br><button class="btn" id="wfRetry">ลองใหม่</button></div>`;$('#wfRetry').onclick=()=>renderWfm(true);return}}
-  const d=WF.d;
-  if(!d.mgr&&WF.view!=='my')WF.view='my';if(!d.isAdmin&&WF.view==='set')WF.view='my';
-  const np=d.mgr?(d.reqs||[]).filter(r=>r.status==='pending').length:0;
-  const tabs=[['my','📅 ตารางของฉัน']];if(d.mgr)tabs.push(['plan','🗓 จัดตาราง'],['req','📝 คำขอ'+(np?` (${np})`:'')]);if(d.isAdmin)tabs.push(['set','⚙️ ตั้งค่า']);
-  el.innerHTML=`<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>📅 ตารางงาน & วันหยุด</span>
-   <span style="display:inline-flex;gap:6px;align-items:center"><button class="btn sm" id="wfPm">◀</button><b>${wfMonthTxt(d.month)}</b><button class="btn sm" id="wfNm">▶</button><button class="btn sm" id="wfTd">เดือนนี้</button></span></h3>
-   <div class="chips" style="margin:6px 0">${tabs.map(([k,l])=>`<button class="chip ${WF.view===k?'on':''}" data-wfv="${k}">${l}</button>`).join('')}</div>
-   <div id="wfView"></div></div>`;
-  const go=n=>{if(wfDirtyN()&&!confirm('มีการแก้ไขที่ยังไม่ได้บันทึก — ทิ้งการแก้ไขแล้วเปลี่ยนเดือน?'))return;WF.dirty={};WF.month=n;renderWfm(true)};
-  $('#wfPm').onclick=()=>go(wfMonthAdd(d.month,-1));$('#wfNm').onclick=()=>go(wfMonthAdd(d.month,1));$('#wfTd').onclick=()=>go(today.slice(0,7));
-  $$('[data-wfv]').forEach(b=>b.onclick=()=>{WF.view=b.dataset.wfv;renderWfm()});
-  ({my:wfMy,plan:wfPlan,req:wfReqs,set:wfSet})[WF.view]();
-}
 /* ---------- ตารางของฉัน ---------- */
-function wfMy(){
-  const d=WF.d,m=d.mine,hol=new Set(d.hol),S=wfWS(),days=wfDays(),off=U(d.from).getUTCDay(),lead=(off+6)%7;
-  let h='';
-  m.pending.forEach(p=>{h+=`<div class="panel" style="margin:6px 0;border-left:4px solid var(--down)"><b>📢 ประกาศตารางกะใหม่ v${p.ver}</b> <span class="hint">${dShort(p.from)} – ${dShort(p.to)} · โดย ${esc(p.by)}</span>
-    ${p.changes.length?`<div class="hint" style="margin:4px 0">ที่เปลี่ยนสำหรับคุณ: ${p.changes.slice(0,5).map(c=>`${dShort(c[1])} ${c[2]||'–'} → <b>${c[3]||'–'}</b>`).join(' · ')}${p.changes.length>5?` · …และอีก ${p.changes.length-5}+ วัน (ดูในปฏิทินด้านล่าง)`:''}</div>`:''}
-    <button class="btn primary" data-wfack="${esc(p.id)}">✅ รับทราบ</button></div>`});
-  const wk=days.filter(k=>S[m.cells[k]]&&!wfLvOn(m.lv,k)).length,offN=days.filter(k=>m.cells[k]==='OFF').length,nx=days.find(k=>k>=today&&S[m.cells[k]]&&wfLvOn(m.lv,k)!==1);
-  h+='<div id="wfPick">'+wfPickHTML()+'</div>';
-  h+=`<div class="wfk"><div style="--c:var(--up)"><small>💼 วันทำงานเดือนนี้</small><b>${wk}</b><i>วัน</i></div><div style="--c:var(--mute)"><small>🌙 วันหยุดเดือนนี้</small><b>${offN}</b><i>วัน</i></div><div style="--c:var(--blue)"><small>⏭ วันทำงานถัดไป</small><b style="font-size:18px">${nx?(nx===today?'วันนี้':dShort(nx)):'–'}</b><i>${nx?S[m.cells[nx]].start+'–'+S[m.cells[nx]].end:'ยังไม่มีตาราง'}</i></div></div>
-   <div class="hint" style="margin:4px 0 8px">เดือนนี้คุณทำงาน <b>${wk}</b> วัน · ตารางที่เห็นคือฉบับที่ประกาศแล้ว</div><div class="wfg">${[1,2,3,4,5,6,0].map(x=>`<div class="wfgh ${x%6===0?'we':''}">${WFDOW[x]}</div>`).join('')}${'<div></div>'.repeat(lead)}`;
-  days.forEach(k=>{const c=m.cells[k]||'',lv=wfLvOn(m.lv,k),sf=S[c],on=sf&&lv!==1;
-    h+=`<div class="wfd ${k===today?'td':''} ${hol.has(k)?'wfh':''} ${k<today?'wpast':''} ${on?'ison':c==='OFF'?'isoff':(!c&&!lv&&!hol.has(k))?'nil':''}" ${on?`style="--c:${sf.color}"`:''}><div class="wfdh"><b>${+k.slice(8)}</b>${k===today?'<em>วันนี้</em>':''}</div><div>${wfChip(c,lv,hol.has(k))}</div>${on?`<div class="wft2">${sf.start}–${sf.end}</div>`:''}</div>`});
-  h+=`</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button class="btn" data-wfr="off">🙏 ขอหยุด</button><button class="btn" data-wfr="swap">🔁 ขอสลับกะกับเพื่อน</button>${d.shifts.filter(x=>x.active).length>1?'<button class="btn" data-wfr="change">🔀 ขอเปลี่ยนกะ</button>':''}</div>
-   <div class="hint">ขอล่วงหน้าอย่างน้อย ${d.rules.advDays} วัน · เดือนละไม่เกิน ${d.rules.maxReq} ครั้ง · การลาป่วย/ลากิจใช้เมนู “ลา/ร้องเรียน” ตามเดิม</div>`;
-  h+=`<h4 style="margin:12px 0 4px">คำขอของฉัน</h4>`+(m.reqs.length?m.reqs.map(r=>wfReqRow(r,'me')).join(''):'<div class="empty">ยังไม่มีคำขอ</div>');
-  $('#wfView').innerHTML=h;
-  $$('[data-wfack]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{await api('wfmAck',{id:b.dataset.wfack});toast('✅ รับทราบแล้ว');wfReload();refreshInboxSoon()}catch(e){toast('⚠️ '+esc(e.message));b.disabled=false}});
-  $$('[data-wfr]').forEach(b=>b.onclick=()=>wfReqForm(b.dataset.wfr));
-  wfBindReqBtns();wfPickBind();
-}
 /* ---------- Agent เลือกวันหยุดล่วงหน้า ---------- */
-function wfPickHTML(){
-  const d=WF.d,p=d.pick;if(!p||(!p.open&&!p.mine.length&&!(p.windowOpen&&p.gate&&p.gate.has)))return '';
-  if(WF.pickVer!==WF.ver){WF.pickSel=p.mine.slice();WF.pickVer=WF.ver}
-  const sel=new Set(WF.pickSel),sv=new Set(p.mine),days=Object.keys(p.days).sort();if(!days.length)return '';
-  const lead=(U(days[0]).getUTCDay()+6)%7;
-  let h=`<div class="panel" style="margin:8px 0;padding:10px;border-left:4px solid var(--up)"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><b style="font-size:16px">🏖 เลือกวันหยุดของคุณ — ${wfMonthTxt(p.month)}</b><b class="num" style="font-size:18px;color:${sel.size>=p.quota?'var(--up)':'var(--flat)'}">${sel.size}/${p.quota} วัน</b></div>${p.open?'<div style="margin:2px 0 4px">👆 แตะวันที่อยากหยุด แล้วกด <b>บันทึก</b> ด้านล่าง</div>':''}
-   ${p.gate&&p.gate.has?`<div style="margin:4px 0;padding:6px 8px;border-radius:8px;background:${p.gate.locked?'#f0b90b22':'#2ea04322'}">🏅 ลำดับสิทธิ์ของคุณ <b>#${p.gate.rank}</b> จาก ${p.gate.n} · รอบที่ <b>${p.gate.round}/${p.gate.rounds}</b> · ${p.gate.locked?`<b style="color:var(--flat)">ยังไม่ถึงรอบ — เปิดให้เลือกวันที่ ${dShort(p.gate.opensAt)}</b>`:`<b style="color:var(--up)">ถึงรอบของคุณแล้ว</b>`}</div>`:''}
-   <div class="hint">${p.open?`เปิดให้เลือกถึง ${dShort(p.to)} · `:p.gate&&p.gate.locked?'':'<span style="color:var(--down)">ปิดรับแล้ว · </span>'}เลือกได้ไม่เกิน <b>${p.quota}</b> วัน · เลือกแล้ว <b id="wpkN">${sel.size}</b> วัน · วันที่เต็มจะกดไม่ได้ (เมื่อคนหยุดครบตามเงื่อนไขของบริษัท)</div>
-   <div class="wfg" style="margin:6px 0">${WFDOW.slice(1).concat(WFDOW[0]).map(x=>`<div class="hint" style="text-align:center">${x}</div>`).join('')}${'<div></div>'.repeat(lead)}`;
-  days.forEach(k=>{const di=p.days[k],dow=U(k).getUTCDay(),isOff=(d.weekOff||[]).includes(dow),past=k<=today,mine=sel.has(k),effN=di.n-(sv.has(k)?1:0),full=!mine&&di.cap!==null&&effN>=di.cap,dis=!p.open||past||isOff||full;
-    h+=`<button class="wfd" data-wpk="${k}" ${dis&&!mine?'disabled':''} style="text-align:center;cursor:${dis&&!mine?'not-allowed':'pointer'};${mine?'background:#2ea04333;border-color:var(--up);':''}${full?'opacity:.5;':''}${isOff?'opacity:.35;':''}"><b>${+k.slice(8)}</b><div class="hint" style="font-size:11px">${mine?'✅ หยุด':isOff?'วันหยุด':full?'เต็ม':di.cap!==null?`${effN}/${di.cap}`:''}</div></button>`});
-  return h+`</div>${p.open?`<button class="btn primary wfgo" id="wpkSv">💾 บันทึกวันหยุด (${sel.size} วัน)</button>${sel.size!==sv.size||[...sel].some(k=>!sv.has(k))?' <span style="color:var(--flat)">● ยังไม่ได้บันทึก</span>':sv.size?' <span style="color:var(--up)">✔ บันทึกแล้ว</span>':''}`:''}</div>`;
-}
-function wfPickBind(){
-  const p=WF.d.pick;if(!p)return;
-  $$('[data-wpk]').forEach(b=>b.onclick=()=>{const k=b.dataset.wpk,i=WF.pickSel.indexOf(k);
-    if(i>=0)WF.pickSel.splice(i,1);else{if(WF.pickSel.length>=p.quota)return toast('เลือกได้ไม่เกิน '+p.quota+' วัน');WF.pickSel.push(k)}
-    $('#wfPick').innerHTML=wfPickHTML();wfPickBind()});
-  const sv=$('#wpkSv');if(sv)sv.onclick=async()=>{sv.disabled=true;try{await api('wfmPickSave',{dates:WF.pickSel});toast('💾 บันทึกวันหยุดแล้ว');await wfLoad();renderWfm()}catch(e){toast('⚠️ '+esc(e.message));sv.disabled=false;try{await wfLoad();WF.pickSel=WF.d.pick.mine.slice();$('#wfPick').innerHTML=wfPickHTML();wfPickBind()}catch(x){}}};
-}
-const WFST={peer:['⏳ รอเพื่อนตอบรับ','var(--flat)'],pending:['⏳ รออนุมัติ','var(--flat)'],approved:['✅ อนุมัติแล้ว','var(--up)'],rejected:['❌ ไม่อนุมัติ','var(--down)'],cancelled:['⚪ ยกเลิก','var(--mute)']};
-const WFKIND={off:'ขอหยุด',change:'ขอเปลี่ยนกะ',swap:'ขอสลับกะ'};
-function wfReqRow(r,mode){
-  const st=WFST[r.status]||WFST.cancelled,me=WF.d.me;
-  const what=r.kind==='swap'?`${dShort(r.dateA)} ↔ ${dShort(r.dateB)} กับ <b>${esc(r.m===me?r.withName:r.mName)}</b>`:r.kind==='change'?`${dShort(r.dateA)} เป็นกะ <b>${esc(r.shiftB)}</b>`:`${dShort(r.dateA)}`;
-  let act='';
-  if(mode==='me'){
-    if(r.withId===me&&r.status==='peer')act=`<button class="btn sm primary" data-wfpa="${esc(r.id)}">ตกลงสลับ</button> <button class="btn sm" data-wfpr="${esc(r.id)}">ไม่สะดวก</button>`;
-    else if(r.m===me&&(r.status==='peer'||r.status==='pending'))act=`<button class="btn sm" data-wfcx="${esc(r.id)}">ยกเลิกคำขอ</button>`;
-  }else if(r.status==='pending')act=`<button class="btn sm primary" data-wfda="${esc(r.id)}">✅ อนุมัติ</button> <button class="btn sm" data-wfdr="${esc(r.id)}">❌ ไม่อนุมัติ</button>`;
-  const imp=mode==='mgr'&&r.impact?`<div class="hint" style="margin-top:3px">ผลต่อ coverage: ${r.impact.map(i=>`${dShort(i.d)} ${i.have}→<b style="color:${i.min&&i.after<i.min?'var(--down)':'var(--up)'}">${i.after}</b>${i.min?`/${i.min}`:''}`).join(' · ')}</div>`:'';
-  return `<div class="panel" style="margin:5px 0;padding:8px 10px;border-left:4px solid ${st[1]}"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span><b>${WFKIND[r.kind]||r.kind}</b>${mode==='mgr'?` · ${esc(r.mName)}`:''} · ${what}</span><span style="color:${st[1]};font-weight:700">${st[0]}</span></div>
-   <div class="hint">เหตุผล: ${esc(r.reason)}${r.note?` · หมายเหตุ: ${esc(r.note)}`:''}${r.reviewer?` · โดย ${esc(r.reviewer)}`:''}</div>${imp}${act?`<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${act}</div>`:''}</div>`;
-}
-function wfBindReqBtns(){
-  const call=async(act,p,msg)=>{try{await api(act,p);toast(msg);refreshInboxSoon();await wfLoad();renderWfm()}catch(e){toast('⚠️ '+esc(e.message))}};
-  $$('[data-wfpa]').forEach(b=>b.onclick=()=>call('wfmReqPeer',{id:b.dataset.wfpa,accept:true},'✅ ตอบรับแล้ว รอผู้อนุมัติ'));
-  $$('[data-wfpr]').forEach(b=>b.onclick=()=>call('wfmReqPeer',{id:b.dataset.wfpr,accept:false},'ปฏิเสธการสลับแล้ว'));
-  $$('[data-wfcx]').forEach(b=>b.onclick=()=>{if(confirm('ยกเลิกคำขอนี้?'))call('wfmReqCancel',{id:b.dataset.wfcx},'ยกเลิกแล้ว')});
-  $$('[data-wfda]').forEach(b=>b.onclick=()=>call('wfmReqDecide',{id:b.dataset.wfda,approve:true},'✅ อนุมัติแล้ว ตารางอัปเดตให้อัตโนมัติ'));
-  $$('[data-wfdr]').forEach(b=>b.onclick=()=>{openModal(`<h3>❌ ไม่อนุมัติคำขอ</h3><div class="fld"><label>เหตุผล (ผู้ขอจะเห็น)</label><input id="wfNt" maxlength="200"></div><div style="text-align:right;display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn primary" id="wfNk">ยืนยัน</button></div>`);
-    $('#wfNk').onclick=()=>{const n=$('#wfNt').value;closeModal();call('wfmReqDecide',{id:b.dataset.wfdr,approve:false,note:n},'บันทึกแล้ว')}});
-}
-function wfReqForm(kind){
-  const d=WF.d,S=wfWS(),min=addDays(today,d.rules.advDays),mine=Object.keys(d.mine.cells).filter(k=>S[d.mine.cells[k]]&&k>=min).sort();
-  if(!mine.length)return toast('ไม่มีวันทำงานที่ขอได้ในเดือนนี้ (ต้องขอล่วงหน้า '+d.rules.advDays+' วัน) — ลองเปลี่ยนเดือน');
-  const sel=`<select id="wqA">${mine.map(k=>`<option value="${k}">${dShort(k)} (${WFDOW[U(k).getUTCDay()]}) · ${esc(d.mine.cells[k])}</option>`).join('')}</select>`;
-  openModal(`<h3>${{off:'🙏 ขอหยุด',swap:'🔁 ขอสลับกะกับเพื่อน',change:'🔀 ขอเปลี่ยนกะ'}[kind]}</h3>
-   <div class="fld"><label>${kind==='swap'?'วันที่คุณจะให้เพื่อนทำแทน':'วันที่ต้องการ'}</label>${sel}</div>
-   ${kind==='swap'?`<div class="fld"><label>สลับกับ</label><select id="wqW">${d.mine.mates.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('')}</select></div>
-     <div class="fld"><label>วันที่คุณจะทำแทนเพื่อน (ต้องเป็นวันที่เพื่อนทำงาน และคุณหยุด)</label><input type="date" id="wqB" min="${min}" value="${min}"></div>`:''}
-   ${kind==='change'?`<div class="fld"><label>กะใหม่</label><select id="wqS">${d.shifts.filter(x=>x.active).map(x=>`<option value="${esc(x.id)}">${esc(x.id)} · ${esc(x.name)} ${x.start}–${x.end}</option>`).join('')}</select></div>`:''}
-   <div class="fld"><label>เหตุผล</label><textarea id="wqR" rows="2" maxlength="300"></textarea></div>
-   <div class="hint">${kind==='swap'?'เพื่อนต้องกดตอบรับก่อน แล้วจึงส่งให้ผู้อนุมัติ · ':''}ระบบตรวจเงื่อนไขให้ก่อนส่ง ผลอนุมัติจะแจ้งเตือนในระฆัง</div>
-   <div style="text-align:right;display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn primary" id="wqOk">ส่งคำขอ</button></div>`);
-  $('#wqOk').onclick=async()=>{const b=$('#wqOk');b.disabled=true;
-    try{await api('wfmReqCreate',{kind,dateA:$('#wqA').value,dateB:$('#wqB')?$('#wqB').value:'',withId:$('#wqW')?$('#wqW').value:'',shiftB:$('#wqS')?$('#wqS').value:'',reason:$('#wqR').value});closeModal();toast('ส่งคำขอแล้ว');await wfLoad();renderWfm();refreshInboxSoon()}
-    catch(e){toast('⚠️ '+esc(e.message));b.disabled=false}};
-}
 /* ===================================================================
  *  🏖 วันหยุด (ระบบใหม่ — แทนตารางกะ): หน้าเดียว · กดทีละช่อง · บันทึกเองอัตโนมัติ
  *  ทุกคนทำงานเป็นปกติ ลงเฉพาะวันที่หยุด · แยกตามทีม · ดูทุกทีมได้
@@ -5350,259 +5306,87 @@ function tbxScan(){
   });
 }
 new MutationObserver(ms=>{if(!ms.some(m=>[...m.addedNodes].some(n=>n.nodeType===1&&(n.tagName==='TABLE'||n.tagName==='TBODY'||n.tagName==='TR'||(n.querySelector&&n.querySelector('table'))))))return;clearTimeout(TBX.t);TBX.t=setTimeout(()=>{try{tbxScan()}catch(e){console.error(e)}},80)}).observe(document.body,{childList:true,subtree:true});
+/* ===================================================================
+ *  ☀️ วันนี้ของฉัน — หน้าแรก: ยอดของฉัน · วันนี้ทำงาน/Day Off · สิ่งที่รอฉันทำ · สินค้าที่ต้องเน้น · ทางลัด
+ *  ✅ รออนุมัติ — หัวหน้า/แอดมิน: รวมทุกเรื่องที่ต้องตัดสินใจไว้หน้าเดียว
+ * =================================================================== */
+const TD={do:null,doAt:0};
+const tdMgr=()=>!!(D&&(D.isAdmin||(D.me&&(D.me.role==='senior'||D.me.role==='leader'))));
+const tdAct=()=>(D.inbox||[]).filter(i=>i.act||i.k==='pend'||i.k==='sla'||i.k==='scaudit'||i.k==='screp');
+const TDIC={leave:'🙋',pend:'📝',cmp:'🗂',sla:'⏰',scaudit:'🔍',screp:'💡',coach:'🤝',wfm:'📅'};
+function tdGo(go){if(go==='scaudit'){S.adm='scr';goTab('admin')}else if(go==='coach'){CO.d=null;goTab('coach')}else if(go==='wfm'){DO.d=null;DO.cache={};goTab('wfm')}else if(go==='feed'){S.feedView='feed';goTab('feed')}else if(go==='appr')goTab('appr');else goTab('svc:'+(go==='leave'?'leave':'cmp'))}
+async function tdDo(){if(TD.do&&Date.now()-TD.doAt<120000)return TD.do;try{TD.do=await api('doLoad',{month:today.slice(0,7)});TD.doAt=Date.now()}catch(e){TD.do={err:e.message}}return TD.do}
+function tdWork(dd,id){   // วันนี้/วันหยุดถัดไปของฉัน จากระบบวันหยุด
+  if(!dd||dd.err||!id)return null;const off=new Set(dd.offs.filter(o=>o[1]===id).map(o=>o[0])),wo=dd.weekOff||[],hol=new Set(dd.hol||[]);
+  const isOff=k=>off.has(k)||wo.includes(U(k).getUTCDay())||hol.has(k),lv=(dd.lv||[]).find(l=>l[0]===id&&l[4]&&l[1]<=today&&l[2]>=today);
+  const w=dd.work||{s:'09:00',e:'18:00'},f=x=>String(x).replace(/^0(\d)/,'$1').replace(':','.');let nx='';for(let i=1;i<=31;i++){const k=addDays(today,i);if(k.slice(0,7)!==today.slice(0,7))break;if(isOff(k)){nx=k;break}}
+  return {off:isOff(today),lv,time:f(w.s)+'-'+f(w.e),next:nx};
+}
+async function renderToday(){
+  const el=$('#todayBody');if(!el||!D)return;const me=D.me,id=me.id,ym=today.slice(0,7),asOf=[D.asOf,D.psAsOf].filter(Boolean).sort().pop()||'',agent=!D.isAdmin;
+  const v=(ids,lv,k,m)=>val(ids,lv,k,m)||0,pt=v([id],'m',ym,'point'),amt=v([id],'m',ym,'amount'),last=asOf?v([id],'d',asOf,'point'):0;
+  const dd=asOf&&asOf.slice(0,7)===ym?+asOf.slice(8):0,pm=addMonths(ym,-1);let prev=0;for(let i=1;i<=dd;i++)prev+=v([id],'d',pm+'-'+pad(i),'point');
+  const tm=MEM.filter(m=>AG(m)&&m.team===me.team).map(m=>({id:m.id,p:v([m.id],'m',ym,'point')})).sort((a,b)=>b.p-a.p),rk=tm.findIndex(x=>x.id===id)+1;
+  const act=tdAct(),F=typeof auFocus==='function'?[...auFocus(me.team)]:[],h=new Date().getHours(),hi=h<12?'สวัสดีตอนเช้า':h<17?'สวัสดีตอนบ่าย':'สวัสดีตอนเย็น';
+  const wk=agent?tdWork(TD.do,id):null,cl=D.claim||{done:true},vis=menuVisible().filter(t=>t&&t[0]!=='today');
+  let x=`<div class="panel"><div class="tdh"><div><div class="hint">${hi} 👋</div><h2 style="margin:2px 0">${esc(me.nick||me.name)} <span class="eid">${esc(id)}</span></h2><div class="hint">${dayTxt(today)} · ${esc((teamOf(me.team)||{}).name||'')}</div></div>${!cl.done?'<button class="btn primary" id="tdClaim">🎁 รับ TOKEN เข้างานวันนี้</button>':''}</div>`;
+  x+=`<div class="wfk">`;
+  if(agent){x+=`<div style="--c:var(--up)"><small>⭐ POINT เดือนนี้</small><b>${fmt(pt)}</b>${dd&&prev?`<i style="color:${pt>=prev?'var(--up)':'var(--down)'}">${pt>=prev?'▲':'▼'} ${Math.abs(Math.round((pt-prev)/prev*100))}% vs ${dd} วันแรกของเดือนก่อน</i>`:''}</div>
+    <div style="--c:var(--blue)"><small>🏆 อันดับในทีม (POINT เดือนนี้)</small><b>${rk?'#'+rk:'–'}</b><i>จาก ${tm.length} คน${rk>1&&tm[rk-2]?` · ห่างคนข้างหน้า ${fmt(tm[rk-2].p-pt)}`:rk===1?' · 🥇 นำอยู่!':''}</i></div>
+    <div style="--c:var(--flat)"><small>📈 ยอดวันล่าสุด (${asOf?dShort(asOf):'–'})</small><b>${fmt(last)}</b><i>POINT · เดือนนี้ ${fmt(amt)} บาท</i></div>`;
+    x+=wk?`<div style="--c:${wk.off||wk.lv?'var(--purple)':'var(--up)'}"><small>📅 วันนี้</small><b style="font-size:20px">${wk.lv?'🌴 '+(DOLT[wk.lv[3]]||'ลา'):wk.off?'Day Off':'ทำงาน '+wk.time}</b><i>${wk.next?'Day Off ถัดไป '+dShort(wk.next):'เดือนนี้ไม่มี Day Off เหลือ'}</i></div>`:`<div style="--c:var(--line)"><small>📅 วันนี้</small><b style="font-size:18px">⏳</b><i>กำลังโหลด…</i></div>`}
+  else{const all=AGM(),tp=all.reduce((s,m)=>s+v([m.id],'m',ym,'point'),0);x+=`<div style="--c:var(--up)"><small>⭐ POINT รวม (ที่คุณเห็น) เดือนนี้</small><b>${fmt(tp)}</b><i>${all.length} คน</i></div><div style="--c:var(--flat)"><small>📈 ข้อมูลล่าสุดถึง</small><b style="font-size:20px">${asOf?dShort(asOf):'–'}</b><i>${asOf&&asOf<addDays(today,-1)?'⚠️ ข้อมูลยังไม่อัปเดต':'อัปเดตแล้ว'}</i></div>`}
+  if(tdMgr())x+=`<div data-tdgo="appr" style="--c:${act.length?'var(--down)':'var(--up)'};cursor:pointer"><small>✅ รออนุมัติ / รอดำเนินการ</small><b>${act.length}</b><i>${act.length?'กดเพื่อจัดการ ›':'ไม่มีเรื่องค้าง 🎉'}</i></div>`;
+  x+=`</div>`;
+  if(agent||!tdMgr())x+=`<h3 style="margin:14px 0 6px">📌 สิ่งที่รอฉันทำ</h3>${act.length?act.slice(0,8).map(i=>`<div class="tdi ${i.tone||''}" data-tdgo="${esc(i.go||'')}"><span>${TDIC[i.k]||'⏰'}</span><div>${esc(i.k==='coach'?i.text.replace(/^\S+\s/,''):i.text)}</div><b>›</b></div>`).join(''):'<div class="hint">ไม่มีเรื่องค้าง ✅</div>'}`;
+  if(F.length)x+=`<h3 style="margin:14px 0 6px">🎯 สินค้าที่ต้องเน้นขาย</h3><div>${F.map(p=>`<span class="auf on">${esc(prodName(p))}</span>`).join(' ')}</div>`;
+  x+=`<h3 style="margin:14px 0 6px">🧭 ไปที่เมนู</h3><div class="tdg">${vis.map(t=>`<button data-tdt="${t[0]}"><span>${t[1]}</span>${esc(t[2])}</button>`).join('')}</div></div>`;
+  el.innerHTML=x;
+  $$('[data-tdgo]',el).forEach(b=>b.onclick=()=>tdGo(b.dataset.tdgo));$$('[data-tdt]',el).forEach(b=>b.onclick=()=>goTab(b.dataset.tdt));
+  if($('#tdClaim'))$('#tdClaim').onclick=()=>goTab('login');
+  if(agent&&!wk&&!(TD.do&&TD.do.err)){await tdDo();if(S.tab==='today')renderToday()}
+}
+/* ✅ รออนุมัติ */
+async function renderAppr(force){
+  const el=$('#apprBody');if(!el||!D)return;
+  if(!tdMgr()){el.innerHTML='<div class="panel"><div class="empty">หน้านี้สำหรับหัวหน้าและแอดมิน</div></div>';return}
+  if(force||!TD.do||Date.now()-TD.doAt>60000){el.innerHTML='<div class="panel"><div class="empty">⏳ กำลังรวบรวมเรื่องที่รออนุมัติ…</div></div>';TD.doAt=0;await tdDo()}
+  const dd=TD.do&&!TD.do.err?TD.do:null;if(dd){DO.d=dd;DO.month=dd.month;DO.cache[dd.month]=dd;doIdx()}
+  const inb=D.inbox||[],lv=inb.filter(i=>i.k==='pend'),co=inb.filter(i=>i.k==='coach'&&i.act),sla=inb.filter(i=>i.k==='sla'),sc=inb.filter(i=>i.k==='scaudit'||i.k==='screp');
+  const reqs=dd?dd.reqs.filter(r=>(r.st==='pending'&&r.m!==dd.me&&doCan(r.team))||(r.st==='peer'&&r.w===dd.me)):[],vac=dd?(dd.lvPend||[]):[];
+  const vacIds=new Set(vac.map(l=>l.id)),lv2=lv.filter(i=>!vacIds.has(i.id)),n=reqs.length+vac.length+lv2.length+co.length+sla.length+sc.length;
+  const sec=(t,c,body)=>c?`<h3 style="margin:16px 0 6px">${t} <span class="hint">(${c})</span></h3>${body}`:'';
+  const row=i=>`<div class="tdi ${i.tone||''}" data-tdgo="${esc(i.go||'')}"><span>${TDIC[i.k]||'⏰'}</span><div>${esc(i.k==='coach'?i.text.replace(/^\S+\s/,''):i.text)}<small class="hint" style="display:block">${tsTxt(i.ts)}</small></div><b>เปิด ›</b></div>`;
+  el.innerHTML=`<div class="panel"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:6px"><span>✅ รออนุมัติ / รอดำเนินการ</span><button class="btn sm" id="apRe">🔄 โหลดใหม่</button></h3>
+   <div class="wfnote" style="--c:${n?'var(--flat)':'var(--up)'}"><div><b>${n?`มี ${n} เรื่องรอคุณ`:'✅ ไม่มีเรื่องค้าง'}</b><div class="hint">รวมทุกเรื่องที่ต้องตัดสินใจจากทุกเมนูไว้ที่นี่ — อนุมัติได้ทันทีในหน้านี้ หรือกด “เปิด” เพื่อไปที่เมนูนั้น</div></div></div>
+   ${sec('📅 วันหยุด (ย้าย/พิเศษ/แลก)',reqs.length,reqs.map(doReqCard).join(''))}
+   ${sec('🌴 ลาพักร้อน',vac.length,vac.map(l=>`<div class="wfnote" style="--c:var(--blue)"><div>🌴 <b>${esc((DO.d.M[l.m]||{}).nick||l.m)}</b> ขอลาพักร้อน <b>${doD(l.start)}${l.end!==l.start?' – '+doD(l.end):''}</b> (${l.days} วัน)${l.reason?` — “${esc(l.reason)}”`:''}</div><span style="display:flex;gap:6px"><button class="btn sm primary" data-lva="${esc(l.id)}|approved">✅ อนุมัติ</button><button class="btn sm" data-lva="${esc(l.id)}|rejected">ไม่อนุมัติ</button></span></div>`).join(''))}
+   ${sec('🙋 ใบลาอื่น ๆ',lv2.length,lv2.map(i=>`<div class="wfnote" style="--c:var(--flat)"><div>📝 ${esc(i.text)}<div class="hint">${tsTxt(i.ts)}</div></div><span style="display:flex;gap:6px">${i.id?`<button class="btn sm primary" data-lva="${esc(i.id)}|approved">✅ อนุมัติ</button><button class="btn sm" data-lva="${esc(i.id)}|rejected">ไม่อนุมัติ</button>`:''}<button class="btn sm" data-tdgo="leave">เปิด ›</button></span></div>`).join(''))}
+   ${sec('🤝 สอนงาน',co.length,co.map(row).join(''))}
+   ${sec('⏰ เรื่องร้องเรียนใกล้/เกิน SLA',sla.length,sla.map(row).join(''))}
+   ${sec('🔍 สคริปต์ขาย',sc.length,sc.map(row).join(''))}
+   ${dd?'':`<div class="hint" style="margin-top:8px">⚠️ โหลดคำขอวันหยุดไม่สำเร็จ${TD.do&&TD.do.err?': '+esc(TD.do.err):''}</div>`}</div>`;
+  $('#apRe').onclick=async()=>{try{await load()}catch(e){}renderAppr(true)};
+  $$('[data-tdgo]',el).forEach(b=>b.onclick=()=>tdGo(b.dataset.tdgo));
+  el.onclick=async e=>{const q=e.target.closest('[data-dqa]');if(q){const [rid,a]=q.dataset.dqa.split('|');await doReqAct(rid,a,q);TD.doAt=0;try{await load()}catch(x){}return renderAppr(true)}
+    const l=e.target.closest('[data-lva]');if(l){const [lid,dec]=l.dataset.lva.split('|');let note='';if(dec==='rejected'){note=prompt('เหตุผลที่ไม่อนุมัติ');if(!note)return}l.disabled=true;
+      try{await api('leaveDecide',{id:lid,decision:dec,note});toast(dec==='approved'?'✅ อนุมัติแล้ว':'บันทึกแล้ว')}catch(x){toast('⚠️ '+esc(x.message))}TD.doAt=0;try{await load()}catch(x){}renderAppr(true)}};
+}
 function refreshInboxSoon(){try{if(D)D.inbox=(D.inbox||[]).filter(i=>i.k!=='wfm');renderBell()}catch(e){}}
 /* ---------- จัดตาราง (ผู้ดูแลทีม) ---------- */
-function wfPlan(){
-  const d=WF.d,S=wfWS(),days=wfDays(),hol=new Set(d.hol),adm=d.isAdmin;
-  if(!d.teams.length){$('#wfView').innerHTML='<div class="empty">คุณยังไม่มีทีมที่ดูแล</div>';return}
-  const act=d.shifts.filter(x=>x.active),one=act.length===1,sid=act[0].id;
-  if(WF.useBrush===undefined)WF.useBrush=!one;
-  const simple=one&&!WF.useBrush;
-  const brushes=act.map(x=>[x.id,`${wfChip(x.id,0,false)} ${x.start}–${x.end}`]).concat([['OFF','หยุด'],['','🧽 ล้าง']]);
-  if(!brushes.some(b=>b[0]===WF.brush))WF.brush=brushes[0][0];
-  const np=(d.reqs||[]).filter(r=>r.status==='pending').length,f0=d.from<today&&!adm?today:d.from;
-  const blank=!d.members.some(m=>days.some(k=>k>=f0&&wfCodeOf(m.id,k)));
-  const pc=d.pickCfg||{},pcOn=/^\d{4}-\d{2}$/.test(pc.month||''),pcHere=pcOn&&pc.month===d.month,pcOpen=pcOn&&pc.from<=today&&today<=pc.to;
-  let h=`<div class="wfsum"><span>👥 <b>${d.members.length}</b> คน</span><span id="wfKs">⚠️ คนไม่ถึงเป้า <b id="wfK1">0</b> วัน</span><span id="wfKu">✏️ ยังไม่ประกาศ <b id="wfK2">0</b> ช่อง</span>${np?`<span data-wfgo="req" style="cursor:pointer;color:var(--flat)">📝 คำขอรออนุมัติ <b>${np}</b> ›</span>`:''}</div>
-   <div class="wfmain">${d.teams.length>1?`<select id="wfT">${d.teams.map(t=>`<option value="${esc(t.id)}" ${t.id===d.team?'selected':''}>${esc(t.name)}</option>`).join('')}</select>`:''}
-    <div class="wfhow">${simple?`👆 <b>กดที่ช่อง</b>เพื่อสลับ ${wfChip(sid,0,false)} ทำงาน ⇄ <b class="wfb off">หยุด</b> <span class="hint">(ลากเพื่อลงหลายช่อง)</span>`:`<span class="hint">พู่กัน:</span> ${brushes.map(b=>`<button class="chip ${WF.brush===b[0]?'on':''}" data-wfb="${esc(b[0])}">${b[1]}</button>`).join('')}${one?'<button class="chip" id="wfTg">👆 กลับไปโหมดกดสลับ</button>':''}`}</div>
-    ${d.canPub?`<button class="btn primary wfgo" id="wfGo">📢 บันทึกและประกาศ</button>`:`<button class="btn primary wfgo" id="wfSv">💾 บันทึก</button>`}</div>
-   ${blank?`<div class="wfnote" style="--c:var(--blue)"><div><b>เดือนนี้ยังไม่มีตาราง</b><div class="hint">กดปุ่มนี้ ระบบจะลงให้ทุกคน “ทำงาน” ทุกวันทำการ และ “หยุด” ตามวันหยุดประจำสัปดาห์/นักขัตฤกษ์ จากนั้นกดช่องเพื่อเปลี่ยนเป็นวันหยุดของแต่ละคน</div></div><button class="btn primary" id="wfAuto">⚡ สร้างตารางทั้งเดือนให้อัตโนมัติ</button></div>`:''}
-   ${pcHere?`<div class="wfnote" style="--c:var(--purple)"><div><b>🏖 ${pcOpen?'กำลังเปิด':today<pc.from?'จะเปิด':'ปิดรับแล้ว:'}ให้ทีมเลือกวันหยุด ${wfMonthTxt(pc.month)}</b><div class="hint">${dShort(pc.from)} – ${dShort(pc.to)} · คนละ ${pc.quota} วัน${d.pickInfo?` · เลือกแล้ว <b>${d.pickInfo.n}/${d.members.length}</b> คน${d.pickInfo.waiting.length?` · ยังไม่เลือก: ${d.pickInfo.waiting.slice(0,8).map(i=>esc((d.members.find(m=>m.id===i)||{}).nick||i)).join(', ')}${d.pickInfo.waiting.length>8?' …':''}`:' ✅'}`:' · ยังไม่มีใครเลือก'}</div></div><span style="display:flex;gap:6px;flex-wrap:wrap">${d.pickInfo?`<button class="btn sm primary" id="wfPk">⬇️ นำวันหยุดที่เลือกลงตาราง (${d.pickInfo.days})</button>`:''}${pc.group>0?'<button class="btn sm" id="wfRk">🏅 ลำดับสิทธิ์</button>':''}${adm?'<button class="btn sm" id="wfOp">✏️ แก้ไข/ปิดรับ</button>':''}</span></div>`
-    :pcOn&&pcOpen?`<div class="wfnote" style="--c:var(--purple)"><div><b>🏖 กำลังเปิดให้ทีมเลือกวันหยุดของ ${wfMonthTxt(pc.month)}</b><div class="hint">ถึง ${dShort(pc.to)}</div></div><button class="btn sm" id="wfGoM">ไปดูเดือนนั้น ›</button></div>`
-    :adm?`<div class="wfnote"><div><b>🏖 อยากให้พนักงานเลือกวันหยุดเอง?</b><div class="hint">เปิดรับได้ในหน้าต่างเดียว — กำหนดจำนวนวัน และจำนวนคนหยุดสูงสุดต่อวัน</div></div><button class="btn sm" id="wfOp">🏖 เปิดให้เลือกวันหยุด</button></div>`:''}
-   <div class="wfwrap"><table class="wft"><thead><tr><th>พนักงาน</th>${days.map(k=>`<th class="${hol.has(k)?'wfh':''} ${U(k).getUTCDay()%6===0?'we':''} ${k===today?'tdy':''}"><span>${+k.slice(8)}</span><small>${WFDOW[U(k).getUTCDay()]}</small></th>`).join('')}<th title="จำนวนวันทำงาน / วันหยุด ของเดือนนี้">ทำ/หยุด</th></tr></thead><tbody>
-   ${d.members.map(m=>`<tr><td title="${esc(m.name)}">${nmAv(m.id,20)}<span class="wfnm">${esc(m.nick||m.name)}</span>${m.role&&({leader:'L',senior:'S'}[m.role])?'<span class="wfrl">'+({leader:'Leader',senior:'Senior'}[m.role])+'</span>':''}</td>${days.map(k=>wfCellHTML(m.id,k)).join('')}<td class="wfrt" data-wfrt="${esc(m.id)}"></td></tr>`).join('')}
-   </tbody><tfoot><tr><td><b>คนทำงาน/เป้า</b></td>${days.map(k=>`<td class="wfv" data-wfcv="${k}"></td>`).join('')}<td></td></tr></tfoot></table></div>
-   <div class="wflg">${d.shifts.filter(x=>x.active).map(x=>`<span>${wfChip(x.id,0,false)} ${esc(x.name||x.id)} ${x.start}–${x.end}</span>`).join('')}<span><b class="wfb off">หยุด</b> วันหยุด</span><span><b class="wfb lv">ลา</b> ลาเต็มวัน (แก้ไม่ได้)</span><span><u style="background:linear-gradient(225deg,#f0b90b 7px,var(--panel2) 7.5px)"></u> มุมเหลือง = แก้แล้วยังไม่ประกาศ</span><span><u style="background:color-mix(in srgb,var(--up) 30%,transparent)"></u> วันนี้</span><span><u style="background:color-mix(in srgb,var(--down) 30%,transparent)"></u> คนไม่ถึงเป้า</span><span>· วันที่ผ่านไปแล้ว${adm?'แอดมินแก้ได้':'ถูกล็อก'}</span></div>
-   <details class="wfmore" id="wfMore" ${WF.more?'open':''}><summary>⚙️ เครื่องมือเพิ่มเติม <span class="hint">(ไม่จำเป็นต้องใช้)</span></summary><div class="wfmoreb">
-    ${blank?'':'<button class="btn sm" id="wfAuto">⚡ เติมช่องว่างทั้งเดือนอัตโนมัติ</button>'}<button class="btn sm" id="wfPat">🔁 ใส่รูปแบบ</button><button class="btn sm" id="wfCpy">📋 คัดลอก/ทำซ้ำสัปดาห์</button>${simple?'<button class="btn sm" id="wfTg">🖌 ใช้พู่กัน (ล้างช่อง/หลายกะ)</button>':''}<button class="btn sm" id="wfChk">🔍 ตรวจกฎอย่างเดียว</button>${d.canPub?'<button class="btn sm" id="wfSv">💾 บันทึกร่าง (ยังไม่ประกาศ)</button><button class="btn sm" id="wfPb">📢 ประกาศเฉพาะช่วงวันที่</button>':''}${pcHere&&pc.group>0?'':'<button class="btn sm" id="wfRk">🏅 จัดลำดับสิทธิ์เลือกวันหยุด</button>'}</div></details>`;
-  h+=`<h4 style="margin:12px 0 4px">ประวัติประกาศ</h4>`+(d.pubs.length?d.pubs.map(p=>`<div class="panel" style="margin:5px 0;padding:8px 10px"><b>v${p.ver}</b> · ${dShort(p.from)} – ${dShort(p.to)} · ${p.n} ช่อง · ${esc(p.by)} · ${tsTxt(p.ts)}${p.reason?` <span class="hint">(รับทราบคำเตือน: ${esc(p.reason)})</span>`:''}
-     <div class="hint">รับทราบแล้ว <b>${p.acked}/${p.need}</b>${p.wait.length?` · ยังไม่รับทราบ: ${p.wait.map(i=>esc((d.members.find(m=>m.id===i)||{}).nick||i)).join(', ')}`:' ✅'}</div></div>`).join(''):'<div class="empty">ยังไม่เคยประกาศตารางของเดือนนี้</div>');
-  $('#wfView').innerHTML=h;
-  wfCov();wfBtnLbl();
-  const more=$('#wfMore');if(more)more.ontoggle=()=>{WF.more=more.open};
-  $$('[data-wfgo]').forEach(x=>x.onclick=()=>{if(wfDirtyN()&&!confirm('มีการแก้ไขที่ยังไม่ได้บันทึก — ไปหน้าคำขอเลย?'))return;WF.view=x.dataset.wfgo;renderWfm()});
-  $('#wfT')&&($('#wfT').onchange=e=>{if(wfDirtyN()&&!confirm('ทิ้งการแก้ไขที่ยังไม่บันทึก?')){e.target.value=d.team;return}WF.dirty={};WF.team=e.target.value;renderWfm(true)});
-  $$('[data-wfb]').forEach(b=>b.onclick=()=>{WF.brush=b.dataset.wfb;$$('[data-wfb]').forEach(x=>x.classList.toggle('on',x===b))});
-  $$('#wfTg').forEach(b=>b.onclick=()=>{WF.useBrush=!WF.useBrush;wfPlan()});
-  const tb=$('.wft');
-  const paint=td=>{if(!td||!td.dataset.m||td.classList.contains('lk'))return;const x=td.dataset.m+'|'+td.dataset.k;WF.dirty[x]=WF.pv;
-    if(((d.cells[td.dataset.m]||{})[td.dataset.k]||'')===WF.pv)delete WF.dirty[x];
-    td.outerHTML=wfCellHTML(td.dataset.m,td.dataset.k);wfCov();wfBtnLbl()};
-  tb.onpointerdown=e=>{const td=e.target.closest('td.wfc');if(!td)return;WF.paint=true;WF.pv=simple?(wfCodeOf(td.dataset.m,td.dataset.k)===sid?'OFF':sid):WF.brush;paint(td);e.preventDefault()};
-  tb.onpointerover=e=>{if(!WF.paint)return;const td=e.target.closest('td.wfc');if(td)paint(td)};
-  if(!WF._up){WF._up=1;document.addEventListener('pointerup',()=>{WF.paint=false})}
-  const on=(q,f)=>$$(q).forEach(b=>b.onclick=f);
-  on('#wfSv',wfSave);on('#wfChk',wfCheck);on('#wfPat',wfPattern);on('#wfCpy',wfCopy);on('#wfPb',wfPublish);on('#wfGo',wfQuick);on('#wfAuto',wfAuto);on('#wfOp',wfPickWizard);
-  on('#wfGoM',()=>{if(wfDirtyN()&&!confirm('ทิ้งการแก้ไขที่ยังไม่บันทึก?'))return;WF.dirty={};WF.month=pc.month;renderWfm(true)});
-  on('#wfRk',()=>{if(!pcOn){if(adm)return wfPickWizard();return toast('⚙️ แอดมินยังไม่ได้เปิดให้เลือกวันหยุด — แจ้งแอดมินให้กด “เปิดให้เลือกวันหยุด” ในหน้าจัดตารางก่อน')}wfRank()});
-  if($('#wfPk'))$('#wfPk').onclick=async()=>{if(!(await wfSave(true)))return;if(!confirm('นำวันหยุดที่ Agent เลือก ลงเป็น "หยุด" ในฉบับร่าง? (ทับช่องเดิมของวันนั้น)'))return;try{const r=await api('wfmPickApply',{team:d.team,month:d.month});toast(`ลงตารางแล้ว ${r.n} ช่อง — ตรวจกฎและประกาศต่อได้เลย`);await wfLoad();renderWfm()}catch(e){toast('⚠️ '+esc(e.message))}};
-}
-function wfBtnLbl(){const n=wfDirtyN(),g=$('#wfGo'),u=+(($('#wfK2')||{}).textContent||0);
-  if(g){g.textContent=n||u?`📢 บันทึกและประกาศ (${u} ช่อง)`:'✅ ประกาศครบแล้ว';g.classList.toggle('idle',!(n||u))}
-  $$('#wfSv').forEach(b=>{b.textContent=(b.classList.contains('wfgo')?'💾 บันทึก':'💾 บันทึกร่าง (ยังไม่ประกาศ)')+(n?` (${n})`:'')})}
 /* ⚡ เติมตารางอัตโนมัติ: วันทำการ = กะแรก · วันหยุดประจำสัปดาห์/นักขัตฤกษ์ = หยุด (เติมเฉพาะช่องว่าง) */
-function wfAuto(){
-  const d=WF.d,act=d.shifts.filter(x=>x.active),sid=act[0].id,hol=new Set(d.hol),wo=d.weekOff||[];let n=0;
-  wfDays().forEach(k=>{if(k<today&&!d.isAdmin)return;const off=wo.includes(U(k).getUTCDay())||hol.has(k);
-    d.members.forEach(m=>{if(wfCodeOf(m.id,k)||wfLvOn(d.lv[m.id],k)===1)return;WF.dirty[m.id+'|'+k]=off?'OFF':sid;n++})});
-  if(!n)return toast('ไม่มีช่องว่างให้เติมแล้ว');
-  wfPlan();toast(`⚡ เติมแล้ว ${n} ช่อง — กดช่องเพื่อเปลี่ยนเป็นวันหยุด แล้วกด “บันทึกและประกาศ”`);
-}
 /* 📢 ปุ่มเดียวจบ: บันทึก → ตรวจกฎ → ประกาศ (ตั้งแต่วันนี้ถึงสิ้นเดือนที่เปิดอยู่) */
-async function wfQuick(){
-  if(!(await wfSave(true)))return;const d=WF.d,f0=d.from<today?today:d.from;
-  if(f0>d.to)return toast('เดือนนี้ผ่านไปแล้ว — ประกาศย้อนหลังใช้ “เครื่องมือเพิ่มเติม → ประกาศเฉพาะช่วงวันที่”');
-  const run=async reason=>{
-    try{const r=await api('wfmPublish',{team:d.team,from:f0,to:d.to,reason});
-      if(r.needReason){openModal(`<h3>⚠️ มีข้อควรระวัง ${r.warns} ข้อ</h3>${wfIssuesHTML(r.issues)}<div class="hint" style="margin-top:8px">ประกาศต่อได้ถ้ารับทราบแล้ว หรือกลับไปแก้ตารางก่อน</div><div class="mrow"><button class="btn" onclick="closeModal()">กลับไปแก้</button><button class="btn primary" id="wqGo">รับทราบ และประกาศเลย</button></div>`);$('#wqGo').onclick=()=>{closeModal();run('รับทราบคำเตือนแล้ว (ประกาศจากปุ่มบันทึกและประกาศ)')};return}
-      toast(`📢 ประกาศแล้ว (${r.n} ช่อง) — พนักงานจะได้รับแจ้งเตือนให้กดรับทราบ`,true);await wfLoad();renderWfm()}
-    catch(e){if(/ไม่มีการเปลี่ยนแปลง/.test(e.message))return toast('✅ ตารางเดือนนี้ประกาศครบแล้ว ไม่มีอะไรเปลี่ยน');openModal(`<h3>⛔ ยังประกาศไม่ได้</h3><div style="white-space:pre-wrap">${esc(e.message).replace(/ · /g,'\n• ').replace(': ',':\n• ')}</div><div class="mrow"><button class="btn primary" onclick="closeModal()">กลับไปแก้</button></div>`)}};
-  run('');
-}
 /* 🏖 เปิดให้เลือกวันหยุด — หน้าต่างเดียวจบ (แอดมิน) */
-function wfPickWizard(){
-  const d=WF.d,pc=d.pickCfg||{},on=/^\d{4}-\d{2}$/.test(pc.month||''),cm=today.slice(0,7),mo=[wfMonthAdd(cm,1),cm,wfMonthAdd(cm,2)];
-  const cur=(d.conds||[]).find(c=>c.type==='maxOffDay'&&c.team==='*'&&String(c.wd)==='*'&&c.level!=='warn'&&c.active!==false&&c.active!=='0'&&c.active!==0);
-  const big=Math.max(1,...d.teams.map(t=>MEM.filter(m=>m.team===t.id&&m.role!=='admin'&&m.role!=='manager').length));
-  openModal(`<h3>🏖 เปิดให้พนักงานเลือกวันหยุดเอง</h3><div class="hint">พนักงานจะเห็นปฏิทินให้แตะเลือกวันหยุดในเมนู “ตารางงาน” ของตัวเอง · ใช้กับทุกทีม</div>
-   <div class="fld"><label>① เลือกวันหยุดของเดือนไหน</label><select id="wzM">${mo.map(m=>`<option value="${m}" ${(on?pc.month:mo[0])===m?'selected':''}>${wfMonthTxt(m)}${m===cm?' (เดือนนี้)':m===mo[0]?' (เดือนหน้า)':''}</option>`).join('')}</select></div>
-   <div class="fld"><label>② เปิดให้เลือกถึงวันที่</label><input type="date" id="wzT" min="${today}" value="${on&&pc.to>=today?pc.to:addDays(today,7)}"></div>
-   <div class="fld"><label>③ เลือกได้คนละกี่วัน <span class="hint">(ไม่นับวันหยุดประจำสัปดาห์)</span></label><input type="number" id="wzQ" min="1" max="31" value="${on?pc.quota:4}" style="width:110px"></div>
-   <div class="fld"><label>④ ในหนึ่งวัน ให้หยุดพร้อมกันได้ไม่เกินกี่คนต่อทีม <span class="hint">(เว้นว่าง = ไม่จำกัด)</span></label><input type="number" id="wzC" min="0" max="500" value="${cur?esc(cur.value):''}" placeholder="เช่น 8" style="width:110px"></div>
-   <div class="fld"><label>⑤ ใครได้เลือกก่อน</label><div style="display:grid;gap:6px"><label class="chip wzr"><input type="radio" name="wzO" value="all" ${on&&pc.group>0?'':'checked'}> ทุกคนเลือกได้พร้อมกัน (ใครมาก่อนได้ก่อน)</label><label class="chip wzr"><input type="radio" name="wzO" value="pt" ${on&&pc.group>0?'checked':''}> คนที่ POINT เดือนนี้สูงกว่าได้เลือกก่อน — วันละ <input type="number" id="wzG" min="1" max="200" value="${on&&pc.group>0?pc.group:5}" style="width:64px;padding:2px 6px"> คน</label></div></div>
-   <div id="wzH" class="hint"></div>
-   <div class="mrow">${on?'<button class="btn warn" id="wzOff" style="margin-right:auto">⏹ ปิดรับ</button>':''}<button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn primary" id="wzOk">✅ ${on?'บันทึก':'เปิดรับเลย'}</button></div>`);
-  const val=()=>{const pt=$('input[name=wzO]:checked').value==='pt',g=pt?Math.max(1,Math.min(200,Math.round(+$('#wzG').value||5))):0,from=on&&pc.month===$('#wzM').value&&pc.from<=today?pc.from:today;
-    let to=$('#wzT').value;const last=g?addDays(from,Math.ceil(big/g)-1):from,ext=g&&to&&last>=to;if(ext)to=addDays(last,1);return {pt,g,from,to,ext,rounds:g?Math.ceil(big/g):1}};
-  const hint=()=>{const v=val();$('#wzH').innerHTML=v.pt?`ทีมใหญ่สุดมี ${big} คน → ใช้ ${v.rounds} วันกว่าจะครบทุกคน${v.ext?` · <b style="color:var(--flat)">ระบบจะขยายวันปิดรับเป็น ${dShort(v.to)} ให้คนลำดับท้ายเลือกทัน</b>`:''}`:''};
-  $$('#wzM,#wzT,#wzG,input[name=wzO]').forEach(x=>x.oninput=x.onchange=hint);hint();
-  const busy=(b,t)=>{b.disabled=true;b.textContent=t};
-  if($('#wzOff'))$('#wzOff').onclick=async()=>{if(!confirm('ปิดรับการเลือกวันหยุด? (วันที่พนักงานเลือกไว้แล้วยังอยู่)'))return;busy($('#wzOff'),'กำลังปิด…');try{await api('wfmCfgSave',{pick:{month:''}});closeModal();toast('⏹ ปิดรับแล้ว');await wfLoad();renderWfm()}catch(e){toast('⚠️ '+esc(e.message));closeModal()}};
-  $('#wzOk').onclick=async()=>{const b=$('#wzOk'),v=val(),month=$('#wzM').value,q=Math.round(+$('#wzQ').value||0),c=String($('#wzC').value).trim();
-    if(!v.to||v.to<today)return toast('ระบุวันปิดรับ (ต้องไม่ใช่วันที่ผ่านมาแล้ว)');if(q<1||q>31)return toast('จำนวนวันที่เลือกได้ต้องเป็น 1–31');
-    const conds=(d.conds||[]).filter(x=>x!==cur).map(x=>({team:x.team,type:x.type,value:x.value,wd:x.wd,level:x.level,active:x.active,note:x.note}));
-    if(c!==''&&+c>=0)conds.unshift({team:'*',type:'maxOffDay',value:String(Math.round(+c)),wd:'*',level:'block',active:true,note:'ตั้งจากหน้าเปิดให้เลือกวันหยุด'});
-    busy(b,'กำลังบันทึก…');
-    try{await api('wfmCfgSave',{conds,pick:{month,from:v.from,to:v.to,quota:q,group:v.g,step:v.g?1:0}});
-      if(v.pt){let i=0;for(const t of d.teams){busy(b,`กำลังจัดลำดับตาม POINT… ${++i}/${d.teams.length}`);try{await api('wfmRankBuild',{team:t.id,basis:cm})}catch(e){}}}
-      closeModal();toast(`🏖 เปิดให้เลือกวันหยุด ${wfMonthTxt(month)} ถึง ${dShort(v.to)} แล้ว — แจ้งพนักงานให้เข้าเมนู “ตารางงาน”`,true);WF.dirty={};WF.month=month;await wfLoad();renderWfm()}
-    catch(e){toast('⚠️ '+esc(e.message));b.disabled=false;b.textContent='✅ ลองอีกครั้ง'}};
-}
-function wfCellHTML(m,k){
-  const d=WF.d,S=wfWS(),hol=d.hol.includes(k),lv=wfLvOn(d.lv[m],k),c=wfCodeOf(m,k),p=((d.pcells||{})[m]||{})[k]||'',lk=(k<today&&!d.isAdmin)||lv===1;
-  return `<td class="wfc ${lk?'lk':''} ${c!==p?'dr':''} ${hol?'wfh':''} ${U(k).getUTCDay()%6===0?'we':''} ${k===today?'tdy':''} ${k<today?'wpast':''}" data-m="${esc(m)}" data-k="${k}">${wfChip(c,lv,hol)}</td>`;
-}
-function wfCov(){
-  const d=WF.d,S=wfWS();let short=0;
-  $$('[data-wfcv]').forEach(td=>{const k=td.dataset.wfcv;let n=0;d.members.forEach(m=>{if(S[wfCodeOf(m.id,k)]&&wfLvOn(d.lv[m.id],k)!==1)n++});
-    const wd=String(U(k).getUTCDay()),min=d.cov[wd]!==undefined?d.cov[wd]:(d.cov['*']!==undefined?d.cov['*']:0),bad=min&&n<min&&!d.hol.includes(k)&&k>=today;if(bad)short++;
-    td.className='wfv '+(bad?'bad':n?'ok':'nil')+(k===today?' tdy':'');td.innerHTML=`<b>${n}</b>${min?`<small>/${min}</small>`:''}`});
-  const days=wfDays();let unpub=0;
-  $$('[data-wfrt]').forEach(td=>{const id=td.dataset.wfrt;let w=0,o=0;days.forEach(k=>{const c=wfCodeOf(id,k);if(c!==(((d.pcells||{})[id]||{})[k]||''))unpub++;if(S[c]&&wfLvOn(d.lv[id],k)!==1)w++;else if(c==='OFF')o++});td.innerHTML=`<b>${w}</b> / ${o}`});
-  const k1=$('#wfK1'),k2=$('#wfK2');
-  if(k1){k1.textContent=short;k1.style.color=short?'var(--down)':'var(--up)'}
-  if(k2){k2.textContent=unpub;k2.style.color=unpub?'#f0b90b':''}
-
-}
-async function wfSave(quiet){
-  const ks=Object.keys(WF.dirty);if(!ks.length){if(quiet!==true)toast('ไม่มีการแก้ไขใหม่');return true}
-  const cells=ks.map(x=>{const [m,k]=x.split('|');return {m,d:k,s:WF.dirty[x]}});
-  const b=$('#wfSv');if(b)b.disabled=true;
-  try{for(let i=0;i<cells.length;i+=1000)await api('wfmSave',{cells:cells.slice(i,i+1000)});WF.dirty={};await wfLoad();renderWfm();if(quiet!==true)toast('💾 บันทึกร่างแล้ว (ยังไม่ประกาศถึงพนักงาน)');return true}
-  catch(e){toast('⚠️ '+esc(e.message));if(b)b.disabled=false;return false}
-}
-function wfIssuesHTML(is){
-  if(!is.length)return '<div class="empty">✅ ไม่พบข้อควรระวัง</div>';
-  const bl=is.filter(x=>x.lvl==='block'),wr=is.filter(x=>x.lvl!=='block');
-  return `${bl.length?`<div style="color:var(--down);font-weight:700">⛔ ข้อบล็อก (ประกาศไม่ได้) ${bl.length}</div>${bl.map(x=>`<div class="hint">• ${esc(x.msg)}</div>`).join('')}`:''}
-   ${wr.length?`<div style="color:var(--flat);font-weight:700;margin-top:6px">⚠️ คำเตือน ${wr.length}</div><div style="max-height:36vh;overflow:auto">${wr.map(x=>`<div class="hint">• ${esc(x.msg)}</div>`).join('')}</div>`:''}`;
-}
-async function wfCheck(){
-  if(!(await wfSave(true)))return;const d=WF.d;
-  try{const r=await api('wfmCheck',{team:d.team,from:d.from,to:d.to});openModal(`<h3>🔍 ผลตรวจกฎ ${wfMonthTxt(d.month)}</h3>${wfIssuesHTML(r.issues)}<div class="hint" style="margin-top:8px">ค่ากฎตั้งโดยแอดมิน (ค่าตั้งต้นเป็นหลักทั่วไป — HR ต้องตรวจสอบกับกฎหมายและข้อตกลงจ้างของบริษัท)</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`)}
-  catch(e){toast('⚠️ '+esc(e.message))}
-}
-async function wfPublish(){
-  if(!(await wfSave(true)))return;const d=WF.d,f0=d.from<today?today:d.from;
-  openModal(`<h3>📢 ประกาศตาราง</h3><div class="hint">ประกาศแล้ว พนักงานทีมนี้จะเห็นตาราง ได้รับแจ้งเตือน และกด “รับทราบ”</div>
-   <div style="display:flex;gap:8px;flex-wrap:wrap"><div class="fld"><label>ตั้งแต่</label><input type="date" id="wpF" value="${f0}"></div><div class="fld"><label>ถึง</label><input type="date" id="wpT" value="${d.to}"></div></div>
-   <div id="wpI"></div><div class="mrow"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn primary" id="wpOk">ตรวจและประกาศ</button></div>`);
-  let reason='';
-  const go=async()=>{const b=$('#wpOk');b.disabled=true;
-    try{const r=await api('wfmPublish',{team:d.team,from:$('#wpF').value,to:$('#wpT').value,reason});
-      if(r.needReason){$('#wpI').innerHTML=wfIssuesHTML(r.issues)+`<div class="fld"><label>มีคำเตือน ${r.warns} ข้อ — ระบุเหตุผลที่ยืนยันประกาศ (เก็บเป็นประวัติ)</label><input id="wpR" maxlength="200"></div>`;b.textContent='ยืนยันประกาศ';b.disabled=false;b.onclick=()=>{reason=$('#wpR').value;go()};return}
-      closeModal();toast(`📢 ประกาศ v${r.ver} แล้ว (${r.n} ช่อง) — แจ้งพนักงานให้รับทราบ`,true);await wfLoad();renderWfm()}
-    catch(e){$('#wpI').innerHTML=`<div style="color:var(--down)">⛔ ${esc(e.message)}</div>`;b.disabled=false}};
-  $('#wpOk').onclick=go;
-}
-function wfPattern(){
-  const d=WF.d,S=d.shifts.filter(x=>x.active);
-  openModal(`<h3>🔁 ใส่รูปแบบ</h3><div class="hint">ลงตารางแบบเร็วทั้งทีม (ข้ามวันที่ล็อก วันลา และวันหยุดนักขัตฤกษ์) · ยังเป็นฉบับร่าง ตรวจ/แก้ก่อนประกาศได้</div>
-   <div class="fld"><label>แบบ</label><select id="wpM"><option value="week">หยุดประจำสัปดาห์ (เลือกวันหยุด)</option><option value="cyc">ทำ N วัน หยุด M วัน (หมุนเวียน)</option></select></div>
-   <div class="fld"><label>กะที่ใช้วันทำงาน</label><select id="wpS">${S.map(x=>`<option value="${esc(x.id)}">${esc(x.id)} · ${x.start}–${x.end}</option>`).join('')}</select></div>
-   <div id="wpW" class="chips">${[1,2,3,4,5,6,0].map(i=>`<label class="chip"><input type="checkbox" data-wd="${i}" ${i===0||(d.weekOff||[]).includes(i)?'checked':''}> ${WFDOW[i]}</label>`).join('')}</div>
-   <div id="wpC" style="display:none;gap:8px;flex-wrap:wrap"><div class="fld"><label>ทำ (วัน)</label><input type="number" id="wpN" value="6" min="1" max="14" style="width:80px"></div><div class="fld"><label>หยุด (วัน)</label><input type="number" id="wpOf" value="1" min="1" max="7" style="width:80px"></div><label style="display:flex;gap:4px;align-items:center"><input type="checkbox" id="wpSt" checked> เหลื่อมวันหยุดแต่ละคน</label></div>
-   <div style="display:flex;gap:8px;flex-wrap:wrap"><div class="fld"><label>ตั้งแต่</label><input type="date" id="wpF" value="${d.from<today?today:d.from}"></div><div class="fld"><label>ถึง</label><input type="date" id="wpT" value="${d.to}"></div></div>
-   <div class="mrow"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn primary" id="wpOk">ใส่ลงตาราง</button></div>`);
-  $('#wpM').onchange=e=>{$('#wpW').style.display=e.target.value==='week'?'':'none';$('#wpC').style.display=e.target.value==='cyc'?'flex':'none'};
-  $('#wpOk').onclick=()=>{
-    const f=$('#wpF').value,t=$('#wpT').value,mode=$('#wpM').value,sh=$('#wpS').value,offs=$$('[data-wd]').filter(x=>x.checked).map(x=>+x.dataset.wd),N=+$('#wpN').value||6,M=+$('#wpOf').value||1,st=$('#wpSt').checked;
-    let n=0;d.members.forEach((m,i)=>{for(let k=f;k<=t;k=addDays(k,1)){
-      if(k<d.from||k>d.to||(k<today&&!d.isAdmin)||wfLvOn(d.lv[m.id],k)===1||d.hol.includes(k))continue;
-      let c;if(mode==='week')c=offs.includes(U(k).getUTCDay())?'OFF':sh;
-      else{const idx=Math.round((U(k)-U(f))/864e5)+(st?i:0);c=(((idx%(N+M))+N+M)%(N+M))<N?sh:'OFF'}
-      WF.dirty[m.id+'|'+k]=c;if(((d.cells[m.id]||{})[k]||'')===c)delete WF.dirty[m.id+'|'+k];n++}});
-    closeModal();renderWfm();toast(`ใส่รูปแบบแล้ว ${n} ช่อง — อย่าลืมกด “บันทึกร่าง”`)};
-}
-function wfCopy(){
-  const d=WF.d,mon=k=>addDays(k,-((U(k).getUTCDay()+6)%7));
-  openModal(`<h3>📋 คัดลอก/ทำซ้ำสัปดาห์</h3><div class="hint">นำรูปแบบของสัปดาห์ต้นแบบ (จันทร์–อาทิตย์) ไปใช้กับวันที่ถัดไปตามวันในสัปดาห์</div>
-   <div class="fld"><label>สัปดาห์ต้นแบบ (เลือกวันใดก็ได้ในสัปดาห์นั้น)</label><input type="date" id="wcS" value="${d.from}"></div>
-   <div class="fld"><label>นำไปใช้ตั้งแต่วันที่</label><input type="date" id="wcF" value="${addDays(mon(d.from),7)}"></div>
-   <div class="fld"><label>ถึงวันที่</label><input type="date" id="wcT" value="${d.to}"></div>
-   <div class="hint">ข้ามวันที่ล็อก วันลา และช่องที่ต้นแบบว่าง</div><div class="mrow"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn primary" id="wcOk">คัดลอก</button></div>`);
-  $('#wcOk').onclick=async()=>{
-    const s0=mon($('#wcS').value),f=$('#wcF').value,t=$('#wcT').value;let src=[];
-    try{const o=s0.slice(0,7)===d.month?d:await api('wfmLoad',{month:s0.slice(0,7),team:d.team});src=o===d?null:o}catch(e){return toast('⚠️ '+esc(e.message))}
-    let n=0;d.members.forEach(m=>{for(let k=f;k<=t;k=addDays(k,1)){
-      if(k<d.from||k>d.to||(k<today&&!d.isAdmin)||wfLvOn(d.lv[m.id],k)===1)continue;
-      const sk=addDays(s0,(U(k).getUTCDay()+6)%7),c=src?((src.cells[m.id]||{})[sk]||''):wfCodeOf(m.id,sk);if(!c)continue;
-      WF.dirty[m.id+'|'+k]=c;if(((d.cells[m.id]||{})[k]||'')===c)delete WF.dirty[m.id+'|'+k];n++}});
-    closeModal();renderWfm();toast(`คัดลอกแล้ว ${n} ช่อง — อย่าลืมกด “บันทึกร่าง”`)};
-}
 /* ---------- จัดลำดับสิทธิ์เลือกวันหยุด ---------- */
-function wfRank(){
-  const d=WF.d,rk=d.rank||{rows:[],group:0,step:0},pc=d.pickCfg,nameOf=i=>{const m=d.members.find(x=>x.id===i);return m?(m.nick||m.name):i};
-  let ids=rk.rows.map(r=>r.id);d.members.forEach(m=>{if(!ids.includes(m.id))ids.push(m.id)});
-  const info={};rk.rows.forEach(r=>info[r.id]=r);
-  const g=rk.group||0,st=rk.step||0,has=rk.rows.length>0;
-  const mo=[wfMonthAdd(pc.month,-1),today.slice(0,7),wfMonthAdd(pc.month,-2)].filter((x,i,a)=>a.indexOf(x)===i);
-  const draw=()=>{
-    $('#rkTb').innerHTML=ids.map((id,i)=>{const r=info[id],rd=g?Math.floor(i/g)+1:0;return `<tr><td>${i+1}</td><td style="text-align:left;white-space:nowrap">${nmAv(id)}${esc(nameOf(id))}</td><td>${r&&r.mode==='point'?fmt(r.value):r?'<small class="hint">กำหนดเอง</small>':'–'}</td><td>${g?`รอบ ${rd} · ${dShort(addDays(pc.from,(rd-1)*st))}`:'–'}</td><td><button class="btn sm" data-rk="up" data-i="${i}">▲</button> <button class="btn sm" data-rk="dn" data-i="${i}">▼</button> <button class="btn sm" data-rk="top" data-i="${i}">⤒</button></td></tr>`}).join('');
-    $$('[data-rk]').forEach(b=>b.onclick=()=>{const i=+b.dataset.i,a=b.dataset.rk;if(a==='up'&&i>0)[ids[i-1],ids[i]]=[ids[i],ids[i-1]];else if(a==='dn'&&i<ids.length-1)[ids[i+1],ids[i]]=[ids[i],ids[i+1]];else if(a==='top'){ids.unshift(ids.splice(i,1)[0])}draw()});
-  };
-  openModal(`<h3>🏅 ลำดับสิทธิ์เลือกวันหยุด — ${esc((d.teams.find(t=>t.id===d.team)||{}).name||'')} · ${wfMonthTxt(pc.month)}</h3>
-   <div class="hint">เรียงจากมากไปน้อยตาม POINT ของเดือนที่เลือก แล้วแบ่งเป็นรอบ — ลำดับต้นๆ ได้เลือกก่อน (${g?`รอบละ ${g} คน · ห่างกัน ${st} วัน · เริ่ม ${dShort(pc.from)} · ตั้งค่าได้ที่ ⚙️ ตั้งค่า`:'<b>ยังไม่ได้ตั้งจำนวนคนต่อรอบ</b> — ลำดับนี้ยังไม่ล็อกสิทธิ์ ให้แอดมินตั้งที่ ⚙️ ตั้งค่า'}) · ปรับลำดับเองด้วย ▲▼ ได้</div>
-   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0"><label>คำนวณจาก POINT เดือน <select id="rkB">${mo.map(m=>`<option value="${m}">${wfMonthTxt(m)}</option>`).join('')}</select></label><button class="btn sm primary" id="rkBuild">🔢 คำนวณลำดับตาม POINT</button></div>
-   ${g&&st&&pc.to&&addDays(pc.from,(Math.ceil(ids.length/g)-1)*st)>pc.to?`<div class="hint" style="color:var(--down)">⚠️ รอบสุดท้าย (รอบ ${Math.ceil(ids.length/g)}) จะเปิดวันที่ ${dShort(addDays(pc.from,(Math.ceil(ids.length/g)-1)*st))} ซึ่งเลยวันปิดรับ ${dShort(pc.to)} — คนลำดับท้ายจะเลือกไม่ทัน ควรขยายวันปิดรับ หรือเพิ่มคนต่อรอบในหน้าตั้งค่า</div>`:''}
-   ${has?'':'<div class="hint" style="color:var(--flat)">ยังไม่มีลำดับ — กด “คำนวณลำดับตาม POINT” หรือจัดเองแล้วกดบันทึก</div>'}
-   <div style="max-height:46vh;overflow:auto"><table class="wft" style="width:100%"><thead><tr><th>#</th><th>พนักงาน</th><th>POINT</th><th>รอบ · เปิดเลือก</th><th></th></tr></thead><tbody id="rkTb"></tbody></table></div>
-   <div class="mrow"><button class="btn" id="rkClr">🗑 ล้างลำดับ (ทุกคนเลือกได้พร้อมกัน)</button><button class="btn" onclick="closeModal()">ปิด</button><button class="btn primary" id="rkSv">💾 บันทึกลำดับ</button></div>`);
-  draw();
-  const run=async(fn,msg)=>{try{await fn();toast(msg);await wfLoad();renderWfm();wfRank()}catch(e){toast('⚠️ '+esc(e.message))}};
-  $('#rkBuild').onclick=()=>{if(has&&!confirm('คำนวณใหม่จะทับลำดับเดิม (รวมที่ปรับเอง) — ดำเนินการ?'))return;run(()=>api('wfmRankBuild',{team:d.team,basis:$('#rkB').value}),'🔢 คำนวณลำดับแล้ว')};
-  $('#rkSv').onclick=()=>run(()=>api('wfmRankSet',{team:d.team,order:ids}),'💾 บันทึกลำดับแล้ว');
-  $('#rkClr').onclick=()=>{if(confirm('ล้างลำดับของทีมนี้?'))run(()=>api('wfmRankSet',{team:d.team,clear:true}),'ล้างลำดับแล้ว')};
-}
 /* ---------- คำขอ (ผู้ดูแล) ---------- */
-function wfReqs(){
-  const d=WF.d,P=d.reqs.filter(r=>r.status==='pending'),O=d.reqs.filter(r=>r.status!=='pending');
-  $('#wfView').innerHTML=`<h4 style="margin:4px 0">รออนุมัติ (${P.length})</h4>${P.length?P.map(r=>wfReqRow(r,'mgr')).join(''):'<div class="empty">ไม่มีคำขอรออนุมัติ</div>'}
-   <h4 style="margin:12px 0 4px">ล่าสุด (30 วัน)</h4>${O.length?O.map(r=>wfReqRow(r,'mgr')).join(''):'<div class="empty">—</div>'}`;
-  wfBindReqBtns();
-}
 /* ---------- ตั้งค่า (แอดมิน) ---------- */
-function wfSet(){
-  const d=WF.d,r=d.rules,R=(k,l,min,max,hint)=>`<div class="fld" style="min-width:150px"><label>${l}</label><input type="number" data-wr="${k}" value="${r[k]}" min="${min}" max="${max}" step="any"><div class="hint">${hint||''}</div></div>`;
-  const dows=[['*','ทุกวัน'],[1,'จ'],[2,'อ'],[3,'พ'],[4,'พฤ'],[5,'ศ'],[6,'ส'],[0,'อา']];
-  $('#wfView').innerHTML=`<div class="panel" style="padding:10px"><b>⏰ แม่แบบกะ</b><div class="hint">รหัสกะ 1–6 ตัวอักษร/ตัวเลข (ห้ามใช้ OFF/LV/HOL) · กะที่เคยถูกใช้ลบไม่ได้ ปิดใช้งานแทน</div>
-    <div id="wsRows">${d.shifts.map(wfShRow).join('')}</div><button class="btn sm" id="wsAdd">➕ เพิ่มกะ</button></div>
-   <div class="panel" style="padding:10px;margin-top:8px"><b>📏 กฎตรวจสอบตาราง</b><div class="hint" style="color:var(--flat)">⚠️ ค่าตั้งต้นเป็นหลักทั่วไป ไม่ใช่คำปรึกษากฎหมาย — HR ต้องยืนยันกับกฎหมายคุ้มครองแรงงานและข้อตกลงจ้างของบริษัทก่อนใช้จริง</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">${R('maxDay','ชั่วโมงทำงาน/วัน (เตือนเมื่อเกิน)',1,24)}${R('maxWeek','ชั่วโมง/สัปดาห์ (เตือนเมื่อเกิน)',1,168)}${R('maxStreak','ทำงานติดกันได้ไม่เกิน (วัน)',1,31)}${R('minRest','พักระหว่างกะ อย่างน้อย (ชม.)',0,24)}${R('advDays','ขอสลับ/หยุดล่วงหน้า (วัน)',0,60)}${R('maxReq','ขอได้เดือนละ (ครั้ง)',0,31)}</div>
-    <label style="display:flex;gap:6px;align-items:center;margin-top:6px"><input type="checkbox" id="wsLp" ${r.leaderPub?'checked':''}> ให้ Leader กดประกาศตารางของทีมตัวเองได้ (ไม่ติ๊ก = Senior/แอดมินเท่านั้น)</label></div>
-   <div class="panel" style="padding:10px;margin-top:8px"><b>🏖 เปิดให้ Agent เลือกวันหยุดล่วงหน้า</b><div class="hint">เลือกเดือนที่จะจัดตาราง + ช่วงวันที่เปิดรับ + จำนวนวันหยุดที่เลือกได้ต่อคน · เว้นเดือนว่าง = ปิด · ระบบใช้เงื่อนไขด้านล่างจำกัดอัตโนมัติ (เช่น วันนั้นหยุดครบ 8 คนแล้วจะกดไม่ได้)</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap"><div class="fld"><label>เดือนที่จะหยุด</label><input type="month" id="wsPm" value="${esc((d.pickCfg||{}).month||'')}"></div><div class="fld"><label>เปิดรับตั้งแต่</label><input type="date" id="wsPf" value="${esc((d.pickCfg||{}).from||'')}"></div><div class="fld"><label>ถึงวันที่</label><input type="date" id="wsPt" value="${esc((d.pickCfg||{}).to||'')}"></div><div class="fld"><label>เลือกได้ (วัน/คน)</label><input type="number" id="wsPq" min="1" max="31" style="width:80px" value="${(d.pickCfg||{}).quota||''}"></div></div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px"><div class="fld"><label>🏅 แบ่งรอบตามลำดับ: คนต่อรอบ</label><input type="number" id="wsPg" min="0" max="200" style="width:90px" value="${(d.pickCfg||{}).group||0}"></div><div class="fld"><label>แต่ละรอบเปิดห่างกัน (วัน)</label><input type="number" id="wsPs" min="0" max="30" style="width:90px" value="${(d.pickCfg||{}).step||0}"></div></div>
-    <div class="hint">เช่น คนต่อรอบ 5 · ห่างกัน 1 วัน = 5 คนแรกตามลำดับเลือกได้วันแรก, 5 คนถัดไปเลือกได้วันที่สอง … (0 = ไม่แบ่งรอบ ใครก็เลือกได้พร้อมกัน) · จัดลำดับตาม POINT ได้ที่หน้า “จัดตาราง” → 🏅 จัดลำดับสิทธิ์เลือกวันหยุด</div></div>
-   <div class="panel" style="padding:10px;margin-top:8px"><b>🧩 เงื่อนไขที่กำหนดเอง</b><div class="hint">ใช้กับทั้งการเลือกวันหยุดของ Agent และการตรวจตาราง · ระดับ “บล็อก” = ห้ามเลย/ประกาศไม่ได้ · “เตือน” = แจ้งเตือนอย่างเดียว (Agent เลือกวันหยุดไม่ถูกจำกัดด้วยข้อที่เป็น “เตือน”) · ตัวอย่าง: คนหยุดสูงสุดต่อวัน = 8</div>
-    <div id="wcRows">${(d.conds||[]).map(wfCondRow).join('')}</div><button class="btn sm" id="wcAddC">➕ เพิ่มเงื่อนไข</button></div>
-   <div class="panel" style="padding:10px;margin-top:8px"><b>👥 เป้าจำนวนคนขั้นต่ำต่อวัน (Coverage)</b><div class="hint">เว้นว่าง = ไม่กำหนด · “ทุกวัน” ใช้กับวันที่ไม่ได้ระบุเฉพาะ</div>
-    <div style="overflow:auto"><table class="wft"><thead><tr><th>ทีม</th>${dows.map(x=>`<th>${x[1]}</th>`).join('')}</tr></thead><tbody>${TEAMS.map(t=>`<tr><td>${esc(t.name)}</td>${dows.map(x=>`<td><input type="number" min="0" max="500" style="width:56px" data-wc="${esc(t.id)}|${x[0]}" value="${((d.covAll||{})[t.id]||{})[x[0]]??''}"></td>`).join('')}</tr>`).join('')}</tbody></table></div></div>
-   <div style="margin-top:10px"><button class="btn primary" id="wsSv">💾 บันทึกการตั้งค่า</button></div>`;
-  $('#wcAddC').onclick=()=>$('#wcRows').insertAdjacentHTML('beforeend',wfCondRow({team:'*',type:'maxOffDay',value:'8',wd:'*',level:'block',active:true,note:''}));
-  $('#wcRows').onclick=e=>{const b=e.target.closest('[data-cdel]');if(b)b.closest('[data-cr]').remove()};
-  $('#wsAdd').onclick=()=>{$('#wsRows').insertAdjacentHTML('beforeend',wfShRow({id:'',name:'',start:'09:00',end:'18:00',breakMin:60,color:'#40c4ff',active:true}))};
-  $('#wsSv').onclick=async()=>{
-    const shifts=$$('#wsRows [data-sr]').map(r=>({id:r.querySelector('[data-f=id]').value.trim(),name:r.querySelector('[data-f=name]').value,start:r.querySelector('[data-f=start]').value,end:r.querySelector('[data-f=end]').value,breakMin:r.querySelector('[data-f=brk]').value,color:r.querySelector('[data-f=color]').value,active:r.querySelector('[data-f=act]').checked})).filter(x=>x.id);
-    const rules={};$$('[data-wr]').forEach(i=>rules[i.dataset.wr]=i.value);rules.leaderPub=$('#wsLp').checked?1:0;
-    const coverage=[];$$('[data-wc]').forEach(i=>{if(i.value!=='')coverage.push({team:i.dataset.wc.split('|')[0],wd:i.dataset.wc.split('|')[1],min:i.value})});
-    const b=$('#wsSv');b.disabled=true;try{const conds=$$('#wcRows [data-cr]').map(r=>({team:r.querySelector('[data-c=team]').value,type:r.querySelector('[data-c=type]').value,value:r.querySelector('[data-c=value]').value,wd:r.querySelector('[data-c=wd]').value,level:r.querySelector('[data-c=level]').value,note:r.querySelector('[data-c=note]').value,active:r.querySelector('[data-c=act]').checked}));
-    const pick={month:$('#wsPm').value,from:$('#wsPf').value,to:$('#wsPt').value,quota:$('#wsPq').value,group:$('#wsPg').value,step:$('#wsPs').value};
-    await api('wfmCfgSave',{shifts,rules,coverage,conds,pick});toast('💾 บันทึกการตั้งค่าแล้ว');await wfLoad();renderWfm()}catch(e){toast('⚠️ '+esc(e.message));b.disabled=false}};
-}
-const WFCT={maxOffDay:'คนหยุดสูงสุดต่อวัน (คน)',maxOffMonth:'หยุดสูงสุดต่อคนต่อเดือน (วัน)',maxConsecOff:'หยุดติดกันสูงสุด (วัน)',noOffDates:'ห้ามหยุดวันที่ (เช่น 2026-12-24,2026-12-30..2027-01-02)'};
-function wfCondRow(c){const T=[['*','ทุกทีม']].concat(TEAMS.map(t=>[t.id,t.name])),W=[['*','ทุกวัน'],[1,'จ'],[2,'อ'],[3,'พ'],[4,'พฤ'],[5,'ศ'],[6,'ส'],[0,'อา']];
-  return `<div data-cr style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:5px 0"><select data-c="team">${T.map(x=>`<option value="${esc(x[0])}" ${String(c.team)===String(x[0])?'selected':''}>${esc(x[1])}</option>`).join('')}</select><select data-c="type">${Object.keys(WFCT).map(k=>`<option value="${k}" ${c.type===k?'selected':''}>${WFCT[k]}</option>`).join('')}</select><input data-c="value" value="${esc(c.value)}" style="width:150px" placeholder="ค่า"><select data-c="wd" title="ใช้กับวัน (เฉพาะ คนหยุดสูงสุดต่อวัน)">${W.map(x=>`<option value="${x[0]}" ${String(c.wd)===String(x[0])?'selected':''}>${x[1]}</option>`).join('')}</select><select data-c="level"><option value="block" ${c.level!=='warn'?'selected':''}>บล็อก</option><option value="warn" ${c.level==='warn'?'selected':''}>เตือน</option></select><input data-c="note" value="${esc(c.note||'')}" placeholder="หมายเหตุ/เหตุผล" maxlength="80" style="width:150px"><label><input type="checkbox" data-c="act" ${c.active!==false?'checked':''}> ใช้</label><button class="btn sm" data-cdel>🗑</button></div>`}
-function wfShRow(s){return `<div data-sr style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0"><input data-f="id" value="${esc(s.id)}" maxlength="6" placeholder="รหัส" style="width:64px"><input data-f="name" value="${esc(s.name)}" maxlength="40" placeholder="ชื่อกะ" style="width:130px"><input type="time" data-f="start" value="${esc(s.start)}"><span>–</span><input type="time" data-f="end" value="${esc(s.end)}"><input type="number" data-f="brk" value="${s.breakMin}" min="0" max="600" style="width:64px" title="พัก (นาที)"><span class="hint">นาที</span><input type="color" data-f="color" value="${esc(s.color)}"><label><input type="checkbox" data-f="act" ${s.active?'checked':''}> ใช้งาน</label></div>`}
-
 /* ---------- เมนู: ลำดับ/ซ่อน ตั้งโดยแอดมิน (config menuOrder) ---------- */
-const TABDEF=[['dash','📈','ยอดขาย','📈 ยอดขาย'],['prof','👤','PROFILE','👤 PROFILE'],['feed','💬','หัวข้อ','💬 หัวข้อ & Feedback'],['ins','📊','Insight','📊 Insight'],['eng','📈','Engagement','📈 Engagement (แอดมิน)'],['tips','💡','เทคนิค','💡 เทคนิคขาย'],['script','📞','สคริปต์ขาย','📞 สคริปต์ขาย'],['coach','🤝','สอนงาน','🤝 COACHING & Feedback'],['wfm','📅','ตารางงาน','📅 ตารางงาน & วันหยุด'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
+const TABDEF=[['today','☀️','วันนี้','☀️ วันนี้ของฉัน'],['appr','✅','รออนุมัติ','✅ รออนุมัติ (หัวหน้า)'],['dash','📈','ยอดขาย','📈 ยอดขาย'],['prof','👤','PROFILE','👤 PROFILE'],['feed','💬','หัวข้อ','💬 หัวข้อ & Feedback'],['ins','📊','Insight','📊 Insight'],['eng','📈','Engagement','📈 Engagement (แอดมิน)'],['tips','💡','เทคนิค','💡 เทคนิคขาย'],['script','📞','สคริปต์ขาย','📞 สคริปต์ขาย'],['coach','🤝','สอนงาน','🤝 COACHING & Feedback'],['wfm','📅','ตารางงาน','📅 ตารางงาน & วันหยุด'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
 function menuList(raw){   // คืน [{id,show}] ตามลำดับที่ตั้ง (ที่ไม่ได้ระบุต่อท้ายตามค่าเริ่มต้น)
   const L=[],seen={};String(raw==null?((D.v5&&D.v5.cfg&&D.v5.cfg.menu)||''):raw).split(/[,;\s]+/).filter(Boolean).forEach(x=>{const h=x[0]==='-',id=h?x.slice(1):x;if(seen[id]||!TABDEF.some(t=>t[0]===id))return;seen[id]=1;L.push({id,show:!(h&&id!=='dash'&&id!=='admin')})});
-  TABDEF.forEach(t=>{if(!seen[t[0]])L.push({id:t[0],show:true})});return L}
-const menuVisible=()=>menuList().filter(x=>x.show&&((x.id!=='admin'&&x.id!=='eng')||(D&&D.isAdmin))&&(x.id!=='run'||(D&&D.canSeeAll))).map(x=>TABDEF.find(t=>t[0]===x.id));
+  TABDEF.forEach(t=>{if(!seen[t[0]]){if(t[0]==='today'||t[0]==='appr')L.splice(t[0]==='today'?0:Math.min(1,L.length),0,{id:t[0],show:true});else L.push({id:t[0],show:true})}});return L}   // เมนูใหม่ “วันนี้/รออนุมัติ” อยู่หน้าสุดแม้เคยบันทึกลำดับไว้
+function grpCollapse(L){const out=[],seen={};L.forEach(t=>{if(!t)return;const g=grpOf(t[0]);if(g&&grpKids(g).length>1){if(seen[g])return;seen[g]=1;out.push([g,GROUPS[g].e,GROUPS[g].n,GROUPS[g].full])}else out.push(t)});return out}
+const menuVisible=()=>grpCollapse(menuList().filter(x=>x.show&&((x.id!=='admin'&&x.id!=='eng')||(D&&D.isAdmin))&&(x.id!=='run'||(D&&D.canSeeAll))&&(x.id!=='appr'||tdMgr())).map(x=>TABDEF.find(t=>t[0]===x.id)));
 /* เมนูแถวเดียว: ถ้าหน้าต่างแคบจนเมนูล้น → เลื่อนซ้าย/ขวาได้ (ปุ่ม ◀ ▶ · ลูกกลิ้งเมาส์ · ปัด) และเลื่อนเมนูที่เลือกให้อยู่ในจอ */
 function tabsBalance(){
   const t=$('#tabs');if(!t)return;
@@ -5628,13 +5412,17 @@ function navPad(){
 setTimeout(()=>{try{tabsBalance();navPad()}catch(e){}},300);
 function applyMenu(){
   const nav=$('#tabs');if(!nav||!D)return;const L=menuList();
-  L.forEach(x=>{const b=nav.querySelector(`[data-tab="${x.id}"]`);if(!b)return;nav.appendChild(b);if(x.id==='run')b.hidden=!x.show||!D.canSeeAll;else if(x.id==='eng')b.hidden=!x.show||!D.isAdmin;else if(x.id!=='admin')b.hidden=!x.show});
+  L.forEach(x=>{const b=nav.querySelector(`[data-tab="${x.id}"]`);if(!b)return;nav.appendChild(b);if(x.id==='run')b.hidden=!x.show||!D.canSeeAll;else if(x.id==='eng')b.hidden=!x.show||!D.isAdmin;else if(x.id==='appr')b.hidden=!x.show||!tdMgr();else if(x.id!=='admin')b.hidden=!x.show});
+  Object.keys(GROUPS).forEach(g=>{const gb=nav.querySelector(`[data-tab="${g}"]`);if(!gb)return;const ks=grpKids(g),first=L.find(x=>GROUPS[g].kids.includes(x.id)&&x.show);
+    GROUPS[g].kids.forEach(k=>{const b=nav.querySelector(`[data-tab="${k}"]`);if(b)b.hidden=true});gb.hidden=!ks.length;
+    if(ks.length===1){gb.hidden=true;const b=nav.querySelector(`[data-tab="${ks[0]}"]`);if(b)b.hidden=false}   // เหลือเมนูเดียว → แสดงเมนูเดิม
+    else if(first){const fb=nav.querySelector(`[data-tab="${first.id}"]`);if(fb)nav.insertBefore(gb,fb)}});
   tabsBalance();
 }
 function renderBnav(){
   const n=inboxUnread();
   const vis=menuVisible(),main=vis.slice(0,5),rest=vis.slice(5);
-  $('#bnav').innerHTML=main.map(([t,e,l])=>`<button data-t="${t}" class="${S.tab===t?'on':''}"><span>${e}</span>${l}${t==='svc'&&n?`<i class="bdg">${n}</i>`:''}</button>`).join('')+`<button data-t="more" class="${rest.some(r=>r[0]===S.tab)?'on':''}"><span>☰</span>เพิ่มเติม</button>`;
+  $('#bnav').innerHTML=main.map(([t,e,l])=>`<button data-t="${t}" class="${S.tab===t||grpOf(S.tab)===t?'on':''}"><span>${e}</span>${l}${t==='svc'&&n?`<i class="bdg">${n}</i>`:''}</button>`).join('')+`<button data-t="more" class="${rest.some(r=>r[0]===S.tab||r[0]===grpOf(S.tab))?'on':''}"><span>☰</span>เพิ่มเติม</button>`;
   $$('#bnav button').forEach(b=>b.onclick=()=>{
     if(b.dataset.t!=='more'){S.tab=b.dataset.t;render();scrollTo(0,0);return}
     openModal(`<h2>เมนูเพิ่มเติม</h2><div style="display:grid;gap:8px">${rest.map(r=>[r[0],r[3]]).map(([t,l])=>`<button class="btn" data-mt="${t}" style="text-align:left;padding:12px">${l}</button>`).join('')}<button class="btn" id="bmBell">🔔 แจ้งเตือน (${n})</button><button class="btn" id="bmMe">👤 โปรไฟล์ / ออกจากระบบ</button></div>`);
