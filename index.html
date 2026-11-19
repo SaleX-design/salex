@@ -320,6 +320,7 @@ th.tbxs{cursor:pointer;user-select:none}th.tbxs:hover{color:var(--text)}th[aria-
 .tdh{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px}.tdi{display:flex;gap:10px;align-items:center;padding:9px 12px;margin:6px 0;border:1px solid var(--line);border-left:4px solid var(--flat);border-radius:10px;background:var(--panel2);cursor:pointer}.tdi.down{border-left-color:var(--down)}.tdi.up{border-left-color:var(--up)}.tdi>div{flex:1;min-width:0}.tdi>b{color:var(--mute);font-size:12px;white-space:nowrap}.tdi:hover{border-color:var(--up)}
 .tdg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.tdg button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--text);font:inherit;font-size:13px;cursor:pointer}.tdg button span{font-size:22px}.tdg button:hover{border-color:var(--up)}
 #grpBar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:0 0 10px;padding:8px 12px;background:var(--panel);border:1px solid var(--line);border-radius:12px}#grpBar[hidden]{display:none}#grpBar .grpn{font-weight:700;font-size:14px}#grpBar .seg button{padding:6px 14px}
+.tdprof{margin:10px 0;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--panel2)}.tdprof:empty{display:none}
 .wflg{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:8px 0 2px;font-size:12px;color:var(--mute)}.wflg span{display:inline-flex;align-items:center;gap:5px}.wflg u{display:inline-block;width:16px;height:16px;border-radius:4px;text-decoration:none}
 .wfwrap{overflow:auto;max-height:70vh;margin-top:6px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
 .wfg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.wfgh{text-align:center;font-size:12px;font-weight:600;color:var(--mute);padding:2px 0}.wfgh.we{color:var(--pink,#ff6e9c)}
@@ -4376,7 +4377,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-19.12';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-20.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -4396,7 +4397,7 @@ function vaBar(){
 }
 async function vaSet(id){
   if(id&&!VIEWAS)VIEWAS_ADMIN={tab:S.tab};
-  VIEWAS=id;try{DO.d=null;DO.cache={};CO.d=null}catch(e){}
+  VIEWAS=id;try{DO.d=null;DO.cache={};CO.d=null;TD.prof=null;TD.do=null;TD.doAt=0}catch(e){}
   try{toast(id?'👁 กำลังโหลดมุมมองของพนักงาน…':'กลับสู่มุมมองแอดมิน…');await load();if(!id&&VIEWAS_ADMIN){S.tab=VIEWAS_ADMIN.tab;VIEWAS_ADMIN=null}render();window.scrollTo(0,0)}
   catch(e){VIEWAS='';toast('⚠️ '+esc(e.message));try{await load();render()}catch(x){}}
 }
@@ -5329,8 +5330,10 @@ async function renderToday(){
   const tm=MEM.filter(m=>AG(m)&&m.team===me.team).map(m=>({id:m.id,p:v([m.id],'m',ym,'point')})).sort((a,b)=>b.p-a.p),rk=tm.findIndex(x=>x.id===id)+1;
   const act=tdAct(),F=typeof auFocus==='function'?[...auFocus(me.team)]:[],h=new Date().getHours(),hi=h<12?'สวัสดีตอนเช้า':h<17?'สวัสดีตอนบ่าย':'สวัสดีตอนเย็น';
   const wk=agent?tdWork(TD.do,id):null,cl=D.claim||{done:true},vis=menuVisible().filter(t=>t&&t[0]!=='today');
-  let x=`<div class="panel"><div class="tdh"><div><div class="hint">${hi} 👋</div><h2 style="margin:2px 0">${esc(me.nick||me.name)} <span class="eid">${esc(id)}</span></h2><div class="hint">${dayTxt(today)} · ${esc((teamOf(me.team)||{}).name||'')}</div></div>${!cl.done?'<button class="btn primary" id="tdClaim">🎁 รับ TOKEN เข้างานวันนี้</button>':''}</div>`;
-  x+=`<div class="wfk">`;
+  let x=`<div class="panel"><div class="tdh"><div><div class="hint">${hi} 👋</div>${MEM.some(m=>m.id===id&&AG(m))?'':`<h2 style="margin:2px 0">${esc(me.nick||me.name)} <span class="eid">${esc(id)}</span></h2>`}<div class="hint">${dayTxt(today)} · ${esc((teamOf(me.team)||{}).name||'')}</div></div>${!cl.done?'<button class="btn primary" id="tdClaim">🎁 รับ TOKEN เข้างานวันนี้</button>':''}</div>`;
+  if(act.length&&!tdMgr())x+=`<div class="wfnote" style="--c:var(--down);margin:8px 0" data-tdgo="${esc(act[0].go||'')}"><div><b>📌 มี ${act.length} เรื่องรอคุณ</b><div class="hint">${esc(act[0].k==='coach'?act[0].text.replace(/^\S+\s/,''):act[0].text)}${act.length>1?' และอื่น ๆ (ดูด้านล่าง)':''}</div></div><b style="cursor:pointer">ไปจัดการ ›</b></div>`;
+  if(MEM.some(m=>m.id===id&&AG(m)))x+=`<div id="tdProf" class="tdprof">${TD.prof&&TD.prof.m===id?'':'<div class="hint">⏳ กำลังโหลดโปรไฟล์…</div>'}</div>`;
+  x+=`<h3 style="margin:14px 0 6px">📆 วันนี้</h3><div class="wfk">`;
   if(agent){x+=`<div style="--c:var(--up)"><small>⭐ POINT เดือนนี้</small><b>${fmt(pt)}</b>${dd&&prev?`<i style="color:${pt>=prev?'var(--up)':'var(--down)'}">${pt>=prev?'▲':'▼'} ${Math.abs(Math.round((pt-prev)/prev*100))}% vs ${dd} วันแรกของเดือนก่อน</i>`:''}</div>
     <div style="--c:var(--blue)"><small>🏆 อันดับในทีม (POINT เดือนนี้)</small><b>${rk?'#'+rk:'–'}</b><i>จาก ${tm.length} คน${rk>1&&tm[rk-2]?` · ห่างคนข้างหน้า ${fmt(tm[rk-2].p-pt)}`:rk===1?' · 🥇 นำอยู่!':''}</i></div>
     <div style="--c:var(--flat)"><small>📈 ยอดวันล่าสุด (${asOf?dShort(asOf):'–'})</small><b>${fmt(last)}</b><i>POINT · เดือนนี้ ${fmt(amt)} บาท</i></div>`;
@@ -5344,6 +5347,10 @@ async function renderToday(){
   el.innerHTML=x;
   $$('[data-tdgo]',el).forEach(b=>b.onclick=()=>tdGo(b.dataset.tdgo));$$('[data-tdt]',el).forEach(b=>b.onclick=()=>goTab(b.dataset.tdt));
   if($('#tdClaim'))$('#tdClaim').onclick=()=>goTab('login');
+  const pb=$('#tdProf');if(pb){   // 📇 โปรไฟล์ของฉัน (การ์ดเดียวกับเมนู PROFILE)
+    const draw=()=>{if(!$('#tdProf'))return;try{$('#tdProf').innerHTML=profileInner(TD.prof);bindProfile(TD.prof,()=>{TD.profAt=0;renderToday()})}catch(e){$('#tdProf').innerHTML=''}};
+    if(TD.prof&&TD.prof.m===id&&Date.now()-TD.profAt<300000)draw();
+    else{const tk=(TD.ptk=(TD.ptk||0)+1);api('profile',{m:id}).then(P=>{if(tk!==TD.ptk||S.tab!=='today')return;TD.prof=P;TD.profAt=Date.now();draw()}).catch(e=>{if($('#tdProf'))$('#tdProf').innerHTML=''})}}
   if(agent&&!wk&&!(TD.do&&TD.do.err)){await tdDo();if(S.tab==='today')renderToday()}
 }
 /* ✅ รออนุมัติ */
