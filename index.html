@@ -4377,7 +4377,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-20.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-20.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -5343,7 +5343,7 @@ async function renderToday(){
   x+=`</div>`;
   if(agent||!tdMgr())x+=`<h3 style="margin:14px 0 6px">📌 สิ่งที่รอฉันทำ</h3>${act.length?act.slice(0,8).map(i=>`<div class="tdi ${i.tone||''}" data-tdgo="${esc(i.go||'')}"><span>${TDIC[i.k]||'⏰'}</span><div>${esc(i.k==='coach'?i.text.replace(/^\S+\s/,''):i.text)}</div><b>›</b></div>`).join(''):'<div class="hint">ไม่มีเรื่องค้าง ✅</div>'}`;
   if(F.length)x+=`<h3 style="margin:14px 0 6px">🎯 สินค้าที่ต้องเน้นขาย</h3><div>${F.map(p=>`<span class="auf on">${esc(prodName(p))}</span>`).join(' ')}</div>`;
-  x+=`<h3 style="margin:14px 0 6px">🧭 ไปที่เมนู</h3><div class="tdg">${vis.map(t=>`<button data-tdt="${t[0]}"><span>${t[1]}</span>${esc(t[2])}</button>`).join('')}</div></div>`;
+  x+=`</div>`;   // (เอาปุ่มลัดไปเมนูออก — ซ้ำกับแถบเมนูด้านบน)
   el.innerHTML=x;
   $$('[data-tdgo]',el).forEach(b=>b.onclick=()=>tdGo(b.dataset.tdgo));$$('[data-tdt]',el).forEach(b=>b.onclick=()=>goTab(b.dataset.tdt));
   if($('#tdClaim'))$('#tdClaim').onclick=()=>goTab('login');
