@@ -307,6 +307,14 @@ button.dod{font:inherit;color:inherit;text-align:left;cursor:pointer;min-height:
 .dork{display:inline-block;margin-left:5px;font-family:var(--mono);font-size:11px;color:var(--flat)}.doh{display:inline-block;min-width:22px;padding:1px 4px;border-radius:6px;font-family:var(--mono);font-size:12px;background:color-mix(in srgb,var(--blue) 22%,transparent);color:var(--blue)}.doh.hi{background:color-mix(in srgb,var(--down) 24%,transparent);color:var(--down)}
 th.tbxs{cursor:pointer;user-select:none}th.tbxs:hover{color:var(--text)}th[aria-sort=ascending]::after{content:' ▲';color:var(--up)}th[aria-sort=descending]::after{content:' ▼';color:var(--up)}.tbxbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0;font-size:13px;color:var(--mute)}.tbxbar select{padding:4px 8px;max-width:100%}.tbxteam{display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap}.tbxbar .tbxx{margin-left:auto;border-color:color-mix(in srgb,var(--up) 50%,var(--line));color:var(--up)}
 .eid{display:inline-block;margin-left:5px;padding:0 5px;border-radius:5px;font-family:var(--mono);font-size:11px;font-weight:600;line-height:1.5;color:var(--mute);background:color-mix(in srgb,var(--mute) 14%,transparent);vertical-align:middle;white-space:nowrap}
+.auf{display:inline-block;padding:1px 7px;margin:1px 0;border-radius:999px;font-size:12px;background:color-mix(in srgb,var(--mute) 16%,transparent);white-space:nowrap}.auf.on{background:color-mix(in srgb,var(--up) 20%,transparent);color:var(--up)}.auf.off{background:color-mix(in srgb,var(--flat) 22%,transparent);color:var(--flat)}.aubar{height:5px;border-radius:3px;background:color-mix(in srgb,var(--mute) 20%,transparent);margin-top:3px;overflow:hidden}.aubar i{display:block;height:100%}
+.aumx th{font-size:11px;max-width:110px;white-space:normal;line-height:1.25}.aumx th.auon{color:var(--up)}.auc{background:color-mix(in srgb,var(--mute) var(--o),transparent)}.auc.on{background:color-mix(in srgb,var(--up) var(--o),transparent)}.auc.off{background:color-mix(in srgb,var(--flat) var(--o),transparent)}
+.aud{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:13px}.aud input[type=date]{padding:4px 8px;width:auto}.aud>span:not(.seg):not(.hint){color:var(--mute)}
+.dwt{display:block;font-family:var(--mono);font-size:11px;line-height:1.2;color:var(--mute);white-space:nowrap}.dwt1{font-family:var(--mono);font-size:11px}.wfb.dnw{--c:var(--mute);border-style:dashed;font-weight:500;opacity:.75}.doc .wfb{font-size:10px;padding:1px 3px;letter-spacing:-.2px;white-space:nowrap}.doc{min-width:84px!important;padding:2px 6px!important}.doc .wfb{font-size:11px!important;padding:1px 6px!important}.dowrap .wft td:first-child,.dowrap .wft th:first-child{max-width:none!important;overflow:visible!important;white-space:nowrap}.dowrap .wft th{min-width:84px}.dowrap .wft th:first-child{min-width:0}
+@media(min-width:701px){header .tabs{flex:0 1 auto;min-width:0;max-width:100%;overflow-x:auto;scrollbar-width:thin;scroll-behavior:auto;position:relative}header .tabs::-webkit-scrollbar{height:4px}header .tabs::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}}
+.tabarr{position:sticky;z-index:2;flex:none;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:7px;padding:4px 9px;font-size:12px;cursor:pointer;box-shadow:0 0 12px 6px var(--panel)}.tabarr.l{left:0}.tabarr.r{right:0}.tabarr:hover{border-color:var(--up);color:var(--up)}.tabs:not(.ovf) .tabarr{display:none}
+#navPad{position:fixed;right:14px;bottom:18px;z-index:45;display:flex;flex-direction:column;gap:6px}#navPad button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:color-mix(in srgb,var(--panel2) 92%,transparent);color:var(--text);font-size:14px;cursor:pointer;box-shadow:0 2px 10px #0006;backdrop-filter:blur(6px)}#navPad button:hover{border-color:var(--up);color:var(--up)}@media(max-width:700px){#navPad{bottom:84px;right:10px}#navPad button{width:36px;height:36px}}
+.tbxnav{display:inline-flex;gap:4px}.tbxnav .btn{padding:3px 10px}.tbxnav .btn:disabled{opacity:.35}
 .wflg{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:8px 0 2px;font-size:12px;color:var(--mute)}.wflg span{display:inline-flex;align-items:center;gap:5px}.wflg u{display:inline-block;width:16px;height:16px;border-radius:4px;text-decoration:none}
 .wfwrap{overflow:auto;max-height:70vh;margin-top:6px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
 .wfg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.wfgh{text-align:center;font-size:12px;font-weight:600;color:var(--mute);padding:2px 0}.wfgh.we{color:var(--pink,#ff6e9c)}
@@ -759,14 +767,14 @@ function thmApply(){
 function thmCycle(){THM.m=THM.m==='dark'?'light':THM.m==='light'?'auto':'dark';LS.set('sx_theme',THM.m);thmApply();toast(THM.m==='auto'?'🌓 โหมดอัตโนมัติ: กลางวัน (06:00–18:00) สว่าง กลางคืนมืด':THM.m==='light'?'☀️ โหมดสว่าง':'🌙 โหมดมืด')}
 /* ---- 🎉 ธีมตามเทศกาล/ฤดูกาล (เปลี่ยนอัตโนมัติตามปฏิทิน) ---- */
 const FEST_Y=[ // วันที่ไม่ตายตัว (ลอยกระทง/ตรุษจีน) — ช่วงกว้างเผื่อวันเพ็ญ/ปฏิทินคลาดเคลื่อน
- {id:'loy',from:'2026-11-22',to:'2026-11-25'},{id:'loy',from:'2027-11-12',to:'2027-11-15'},{id:'loy',from:'2028-10-31',to:'2028-11-03'},
+ {id:'loy',from:'2026-11-20',to:'2026-11-25'},{id:'loy',from:'2027-11-12',to:'2027-11-15'},{id:'loy',from:'2028-10-31',to:'2028-11-03'},
  {id:'cny',from:'2027-02-04',to:'2027-02-08'},{id:'cny',from:'2028-01-24',to:'2028-01-28'}];
 const FEST_F=[ // วันที่คงที่ (เดือน-วัน)
  {id:'songkran',a:'04-12',b:'04-16'},{id:'valentine',a:'02-12',b:'02-14'},{id:'halloween',a:'10-29',b:'10-31'},
  {id:'mother',a:'08-10',b:'08-12'},{id:'father',a:'12-03',b:'12-05'},{id:'xmas',a:'12-22',b:'12-26'},{id:'newyear',a:'12-29',b:'01-03'}];
 const FEST_S=[{id:'winter',a:'11-01',b:'02-15'},{id:'summer',a:'03-01',b:'05-15'},{id:'rainy',a:'05-16',b:'10-31'}];
 const FEST_D={
- loy:{n:'ลอยกระทง',e:'🪷',col:'#ff9f43',msg:'สุขสันต์วันลอยกระทง ขอให้ทุกคนขายดี โชคดี ลอยทุกข์ลอยโศกไปกับสายน้ำ',fx:[{e:['🏮'],m:'rise',n:9},{e:['🪷','🕯️'],m:'float',n:6}]},
+ loy:{n:'ลอยกระทง',e:'🪷',col:'#ff9f43',msg:'สุขสันต์วันลอยกระทง 🪷 ลอยความเหนื่อยไปกับสายน้ำ เหลือไว้แต่ยอดขายที่เต็มดวงเหมือนพระจันทร์',fx:[{e:['🏮'],m:'rise',n:9},{e:['🪷','🕯️'],m:'float',n:6}]},
  cny:{n:'ตรุษจีน',e:'🧧',col:'#e53935',msg:'สุขสันต์วันตรุษจีน ซินนี้ฮวดไช้ ขอให้ร่ำรวย ยอดขายปัง',fx:[{e:['🧧','🏮','✨'],m:'fall',n:14}]},
  songkran:{n:'สงกรานต์',e:'💦',col:'#29b6f6',msg:'สุขสันต์วันสงกรานต์ ขอให้ทุกคนเย็นกาย เย็นใจ เดินทางปลอดภัย',fx:[{e:['💧','💦'],m:'fall',n:18}]},
  valentine:{n:'วาเลนไทน์',e:'💖',col:'#ec407a',msg:'Happy Valentine’s Day ส่งต่อความรักให้ทีมและลูกค้า',fx:[{e:['💖','💗','💕'],m:'rise',n:14}]},
@@ -2131,11 +2139,85 @@ function prodSections(R,key,pk){
     return `<tr class="row"><td class="rk"><span class="medal">${medal(i)}</span></td><td><b>${esc(prodName(x.id))}</b></td><td><span class="role">${esc(skillOf(x.id))}</span></td><td class="num"><b>${pf(x.pv)}</b>${by==='amount'&&x.q?`<div class="hint">${fmt(x.q)} ชิ้น</div>`:''}<div class="pbar"><i style="width:${x.pv/ptop*100}%"></i></div></td><td class="num">${(x.pv/ptot*100).toFixed(1)}%</td><td class="num ${k}">${pc==null?'–':(pc>=0?'▲ +':'▼ ')+pc.toFixed(1)+'%'}</td></tr>`}).join('')}</tbody></table></div>`
     :`<div class="empty">ยังไม่มียอดขายรายสินค้าของ${rkLabel(key)} (แอดมินบันทึกที่ แอดมิน → สินค้า/Skill หรือแท็บ ProductSales ในชีต)</div>`;
   h+=`<div class="hint" style="margin-top:6px">นับเฉพาะข้อมูลของคนที่คุณมีสิทธิ์เห็น · ไม่เกี่ยวกับยอดในแท็บ Sales และไม่ทำให้ TOKEN เพิ่ม</div></div>`;
+  h+=orderAuditHTML(R,key);
   h+=prodRankHTML(R,key,by);
   h+=prodWhoHTML(key,by);
   h+=agentMixHTML(R,key);
   h+=skillTableHTML(R,key,by,pv,bl,cur);
   return h;
+}
+/* ===================================================================
+ *  🔍 ตรวจสอบการออก ORDER: ใครขายอะไร เท่าไร ตรงกับสินค้าที่กำหนดหรือไม่ (แอดมิน/Senior/Leader)
+ * =================================================================== */
+const auMgr=()=>!!(D&&(D.isAdmin||(D.me&&(D.me.role==='senior'||D.me.role==='leader'))));
+const auSetOk=()=>!!(D&&(D.isAdmin||(D.me&&D.me.role==='senior')));
+const auCfg=()=>((D.v5||{}).cfg||{});
+const auFocus=team=>{const F=auCfg().focus||{};return new Set(F[team]||F['*']||[])};
+const auEom=ym=>{const [y,m]=ym.split('-').map(Number);return ym+'-'+pad(new Date(Date.UTC(y,m,0)).getUTCDate())};
+function auRng(R,key){   // ช่วงวันที่ของส่วนตรวจสอบ (เลือกเองได้ · ค่าเริ่มต้นตามช่วงของหน้า)
+  if(!R.auF||!R.auT){if(key.length===10){R.auF=R.auT=key}else if(key.length===7){R.auF=key+'-01';R.auT=auEom(key)}else{R.auF=key+'-01-01';R.auT=key+'-12-31'}}
+  if(R.auF>R.auT)[R.auF,R.auT]=[R.auT,R.auF];const f=R.auF,t=R.auT;
+  return {f,t,has:per=>per.length===10?per>=f&&per<=t:per.length===7?(per+'-01'>=f&&auEom(per)<=t):false,lbl:f===t?dShort(f):`${dShort(f)} – ${dShort(t)}`};
+}
+function auData(key,by){
+  const A={},P={};const v=r=>by==='amount'?r.a:r.q;
+  PS.forEach(r=>{if(!key.has(r.per)||!okM(r.m))return;const x=v(r);if(!x)return;const m=memOf(r.m),F=auFocus(m.team),a=A[r.m]||(A[r.m]={id:r.m,tot:0,on:0,off:0,p:{},days:new Set(),hasF:F.size>0});
+    a.tot+=x;if(F.has(r.p))a.on+=x;else a.off+=x;a.p[r.p]=(a.p[r.p]||0)+x;if(r.per.length===10)a.days.add(r.per);P[r.p]=(P[r.p]||0)+x});
+  return {A,P};
+}
+function orderAuditHTML(R,key){   // ทุกคนเห็น (Agent ดูเป็นแนวทาง/ช่วยกันตรวจ) · กำหนดสินค้าได้เฉพาะแอดมิน/Senior
+  const rg=auRng(R,key),by=R.auBy||'q',u=x=>by==='amount'?'฿'+fmt(x):fmt(x),{A,P}=auData(rg,by),min=auCfg().focusMin||70,F=auCfg().focus||{};
+  const agents=AGM(),rows=agents.map(m=>A[m.id]||{id:m.id,tot:0,on:0,off:0,p:{},days:new Set(),hasF:auFocus(m.team).size>0}).map(a=>Object.assign(a,{pct:a.hasF&&a.tot?a.on/a.tot*100:null}));
+  rows.sort((x,y)=>(x.tot?0:1)-(y.tot?0:1)||((x.pct==null?101:x.pct)-(y.pct==null?101:y.pct))||y.off-x.off);
+  const bad=rows.filter(a=>a.tot&&a.pct!=null&&a.pct<min).length,sold=rows.filter(a=>a.tot).length;
+  const tms=[...new Set(agents.map(m=>m.team))],fTxt=tms.length===1?[...auFocus(tms[0])]:null,noF=!Object.keys(F).some(k=>(F[k]||[]).length);
+  const pids=Object.keys(P).sort((a,b)=>P[b]-P[a]),mxP=pids.slice(0,14),rest=pids.length>14;
+  let h=`<div class="panel sec" id="auBox"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:6px"><span>🔍 ตรวจสอบการออก ORDER · ${rg.lbl} <span class="hint" style="font-weight:400">(ใครขายอะไร เท่าไร ตรงกับสินค้าที่กำหนดหรือไม่)</span></span>
+    <span style="display:flex;gap:6px;flex-wrap:wrap"><span class="seg" id="auBy"><button data-v="q" class="${by==='q'?'on':''}">ชิ้น/ORDER</button><button data-v="amount" class="${by==='amount'?'on':''}">ยอดขาย</button></span><span class="seg" id="auV"><button data-v="sum" class="${R.auV!=='mx'?'on':''}">สรุปรายคน</button><button data-v="mx" class="${R.auV==='mx'?'on':''}">ตาราง คน × สินค้า</button></span>${auSetOk()?'<button class="btn sm" id="auSet">⚙️ กำหนดสินค้าที่ต้องขาย</button>':''}</span></h3>`;
+  const tdy=D.psAsOf||today,cm=tdy.slice(0,7),pm=wfMonthAdd(cm,-1),qk=[['วันนี้',tdy,tdy],['เมื่อวาน',addDays(tdy,-1),addDays(tdy,-1)],['7 วันล่าสุด',addDays(tdy,-6),tdy],['เดือนนี้',cm+'-01',auEom(cm)],['เดือนก่อน',pm+'-01',auEom(pm)]];
+  h+=`<div class="aud"><b>📅 ช่วงวันที่</b><span>จาก</span><input type="date" id="auF" value="${rg.f}" max="${today}"><span>ถึง</span><input type="date" id="auT" value="${rg.t}" max="${auEom(cm)}"><span class="seg">${qk.map(q=>`<button data-auq="${q[1]}|${q[2]}" class="${rg.f===q[1]&&rg.t===q[2]?'on':''}">${q[0]}</button>`).join('')}</span><span class="hint">ข้อมูลรายวันมีเฉพาะเดือนปัจจุบัน · เดือนก่อนหน้าดูได้ทั้งเดือน</span></div>`;
+  h+=`<div class="wfnote" style="--c:${noF?'var(--flat)':'var(--up)'}"><div>${noF?`<b>ยังไม่ได้กำหนด “สินค้าที่ต้องขาย”</b><div class="hint">${auSetOk()?'กด ⚙️ เพื่อเลือกสินค้าที่ต้องการให้ขาย (ทุกทีม หรือแยกทีม) ระบบจะคำนวณว่าแต่ละคนขายตรงเป้ากี่ %':(auMgr()?'แจ้งแอดมิน/Senior ให้กำหนดสินค้าที่ต้องขาย':'หัวหน้ายังไม่ได้กำหนดสินค้าที่ต้องขาย')} · ระหว่างนี้ดูได้ว่าใครขายอะไรบ้าง</div>`
+    :`<b>สินค้าที่ต้องขาย${fTxt?'':' (ตามทีมของแต่ละคน)'}:</b> ${fTxt?(fTxt.length?fTxt.map(p=>`<span class="auf on">${esc(prodName(p))}</span>`).join(' '):'<span class="hint">ทีมนี้ยังไม่ได้กำหนด</span>'):Object.keys(F).map(k=>`<span class="hint">${k==='*'?'ทุกทีม':esc((teamOf(k)||{}).name||k)}:</span> ${(F[k]||[]).map(p=>`<span class="auf on">${esc(prodName(p))}</span>`).join(' ')}`).join(' · ')}
+      <div class="hint">เกณฑ์: ขายตรงสินค้าที่กำหนด <b>≥ ${min}%</b> ของ${by==='amount'?'ยอดขาย':'จำนวนชิ้น'}ทั้งหมด · <b style="color:${bad?'var(--down)':'var(--up)'}">⚠️ ต่ำกว่าเกณฑ์ ${bad} คน</b> จาก ${sold} คนที่มียอด</div>`}</div></div>`;
+  if(!pids.length)return h+`<div class="empty">ยังไม่มียอดขายรายสินค้าในช่วง ${rg.lbl}${rg.f.slice(0,7)<today.slice(0,7)&&rg.f.slice(8)!=='01'?' (เดือนก่อนหน้ามีแต่ยอดรวมทั้งเดือน — เลือกช่วงให้ครอบทั้งเดือน)':''}</div></div>`;
+  if(R.auV==='mx'){
+    h+=`<div class="tblwrap"><table class="tbl aumx"><thead><tr><th>AGENT</th><th>ทีม</th>${mxP.map(p=>`<th title="${esc(prodName(p))} · ${esc(skillOf(p))}" class="${auFocus(tms.length===1?tms[0]:'*').has(p)?'auon':''}">${esc(prodName(p))}</th>`).join('')}${rest?'<th>อื่นๆ</th>':''}<th>รวม</th></tr></thead><tbody>${rows.filter(a=>a.tot).map(a=>{const m=memOf(a.id)||{},Fm=auFocus(m.team),mx=Math.max(1,...Object.values(a.p));
+      return `<tr data-aud="${esc(a.id)}" style="cursor:pointer"><td style="white-space:nowrap">${nmAv(a.id,22)}<b>${esc(m.nick||m.name)}</b></td><td class="hint" style="white-space:nowrap">${esc((teamOf(m.team)||{}).name||m.team)}</td>${mxP.map(p=>{const x=a.p[p]||0;return `<td class="num ${x?(Fm.size?(Fm.has(p)?'auc on':'auc off'):'auc'):''}" style="--o:${x?Math.round(15+60*x/mx):0}%">${x?u(x):''}</td>`}).join('')}${rest?`<td class="num">${u(pids.slice(14).reduce((t,p)=>t+(a.p[p]||0),0))||''}</td>`:''}<td class="num"><b>${u(a.tot)}</b></td></tr>`}).join('')}</tbody></table></div>
+      <div class="wflg"><span><u style="background:color-mix(in srgb,var(--up) 45%,transparent)"></u> สินค้าที่กำหนด</span><span><u style="background:color-mix(in srgb,var(--flat) 45%,transparent)"></u> สินค้านอกที่กำหนด</span><span>สีเข้ม = ขายมาก · กดแถวเพื่อดูรายวัน</span></div>`;
+  }else{
+    h+=`<div class="tblwrap"><table class="tbl"><thead><tr><th>AGENT</th><th>ทีม</th><th>ขายรวม</th><th>ตรงที่กำหนด</th><th>นอกที่กำหนด</th><th>% ตรง</th><th>ขายมากสุด</th><th>วันที่มียอด</th></tr></thead><tbody>${rows.map(a=>{const m=memOf(a.id)||{},Fm=auFocus(m.team),top=Object.keys(a.p).sort((x,y)=>a.p[y]-a.p[x]).slice(0,3),warn=a.tot&&a.pct!=null&&a.pct<min;
+      return `<tr data-aud="${esc(a.id)}" style="cursor:pointer;${a.tot?'':'opacity:.55'}"><td style="white-space:nowrap">${warn?'⚠️ ':''}${nmAv(a.id,22)}<b>${esc(m.nick||m.name)}</b></td><td class="hint" style="white-space:nowrap">${esc((teamOf(m.team)||{}).name||m.team)}</td><td class="num"><b>${a.tot?u(a.tot):'–'}</b></td><td class="num up">${a.hasF&&a.tot?u(a.on):'–'}</td><td class="num ${a.off&&a.hasF?'down':''}">${a.hasF&&a.tot?u(a.off):'–'}</td>
+        <td class="num" style="min-width:110px">${a.pct==null?'<span class="hint">–</span>':`<b style="color:${warn?'var(--down)':'var(--up)'}">${a.pct.toFixed(0)}%</b><div class="aubar"><i style="width:${a.pct.toFixed(0)}%;background:${warn?'var(--down)':'var(--up)'}"></i></div>`}</td>
+        <td>${top.map(p=>`<span class="auf ${Fm.size?(Fm.has(p)?'on':'off'):''}">${esc(prodName(p))} ×${u(a.p[p])}</span>`).join(' ')||'<span class="hint">ไม่มียอด</span>'}</td><td class="num">${a.days.size||(a.tot?'–':'')}</td></tr>`}).join('')}</tbody></table></div>
+      <div class="hint" style="margin-top:6px">เรียงคนที่ขายตรงน้อยที่สุดขึ้นก่อน · <span class="auf on">สีเขียว</span> = สินค้าที่กำหนด <span class="auf off">สีส้ม</span> = นอกที่กำหนด · กดแถวเพื่อดูการออก ORDER รายวัน · ข้อมูลรายวันมีเฉพาะเดือนปัจจุบัน (เดือนก่อนหน้าเป็นยอดรวมทั้งเดือน)</div>`;
+  }
+  return h+'</div>';
+}
+function auDetail(id,rg,by){
+  const m=memOf(id)||{},F=auFocus(m.team),u=x=>by==='amount'?'฿'+fmt(x):fmt(x),D2={};
+  PS.forEach(r=>{if(r.m!==id||!rg.has(r.per))return;const x=by==='amount'?r.a:r.q;if(!x)return;const d=D2[r.per]||(D2[r.per]={});d[r.p]=(d[r.p]||0)+x});
+  const days=Object.keys(D2).sort().reverse();
+  openModal(`<h3>🔍 การออก ORDER — ${nmAv(id,24)}<b>${esc(m.nick||m.name)}</b> <span class="hint" style="font-weight:400">· ${rg.lbl}</span></h3><div class="hint">${F.size?`สินค้าที่ต้องขาย: ${[...F].map(p=>`<span class="auf on">${esc(prodName(p))}</span>`).join(' ')}`:'ทีมนี้ยังไม่ได้กำหนดสินค้าที่ต้องขาย'}</div>
+   <div style="max-height:60vh;overflow:auto;margin-top:8px">${days.length?`<table class="tbl nosort" style="width:100%"><thead><tr><th>วันที่</th><th>สินค้าที่ขาย</th><th>รวม</th>${F.size?'<th>% ตรง</th>':''}</tr></thead><tbody>${days.map(k=>{const d=D2[k],ps=Object.keys(d).sort((a,b)=>d[b]-d[a]),t=ps.reduce((s,p)=>s+d[p],0),on=ps.filter(p=>F.has(p)).reduce((s,p)=>s+d[p],0);
+     return `<tr><td style="white-space:nowrap">${k.length===10?dShort(k)+' ('+WFDOW[U(k).getUTCDay()]+')':rkLabel(k)+' (ทั้งเดือน)'}</td><td>${ps.map(p=>`<span class="auf ${F.size?(F.has(p)?'on':'off'):''}">${esc(prodName(p))} ×${u(d[p])}</span>`).join(' ')}</td><td class="num"><b>${u(t)}</b></td>${F.size?`<td class="num" style="color:${on/t*100<(auCfg().focusMin||70)?'var(--down)':'var(--up)'}"><b>${(on/t*100).toFixed(0)}%</b></td>`:''}</tr>`}).join('')}</tbody></table>`:'<div class="empty">ไม่มียอดในช่วงนี้</div>'}</div>
+   <div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>`);
+}
+function auSetM(again){
+  const F=auCfg().focus||{},teams=TEAMS.filter(t=>MEM.some(m=>m.team===t.id&&AG(m)));let sc=S.tf&&F[S.tf]?S.tf:'*';
+  const groups={};PRODS.filter(p=>p.active===undefined||p.active===''||+p.active!==0||String(p.active)==='true').forEach(p=>{(groups[p.skill||'อื่นๆ']||(groups[p.skill||'อื่นๆ']=[])).push(p)});
+  const draw=()=>{const cur=new Set(F[sc]||(sc!=='*'?[]:[]));openModal(`<h3>⚙️ กำหนดสินค้าที่ต้องขาย</h3><div class="hint">ใช้ตรวจสอบว่าพนักงานออก ORDER ตรงกับสินค้าที่กำหนดหรือไม่ · ตั้ง “ทุกทีม” เป็นค่าหลัก แล้วตั้งแยกบางทีมได้ (ทีมที่ตั้งแยกจะใช้ของทีมนั้นแทน)</div>
+     <div class="fld"><label>ใช้กับ</label><select id="auSc"><option value="*" ${sc==='*'?'selected':''}>ทุกทีม (ค่าหลัก)</option>${teams.map(t=>`<option value="${esc(t.id)}" ${sc===t.id?'selected':''}>${esc(t.name)}${F[t.id]?' ✓ ตั้งแยกไว้':''}</option>`).join('')}</select></div>
+     <div class="fld"><label>เลือกสินค้าที่ต้องขาย <span class="hint">(${cur.size} รายการ)</span></label><input id="auQ" placeholder="🔎 ค้นหาสินค้า…" style="margin-bottom:6px"><div id="auL" style="max-height:42vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px 10px">${Object.keys(groups).sort().map(g=>`<div class="aug"><label style="font-weight:700;display:flex;gap:6px;align-items:center;margin:6px 0 2px"><input type="checkbox" data-aug="${esc(g)}" style="width:auto"> ${esc(g)}</label>${groups[g].map(p=>`<label class="aui" style="display:flex;gap:6px;align-items:center;padding:2px 0 2px 22px;font-size:13px"><input type="checkbox" data-aup="${esc(p.id)}" data-g="${esc(g)}" ${cur.has(p.id)?'checked':''} style="width:auto"> ${esc(p.name)}</label>`).join('')}</div>`).join('')}</div></div>
+     <div class="fld"><label>เกณฑ์ขายตรง (%) — ต่ำกว่านี้ขึ้น ⚠️</label><input type="number" id="auMin" min="0" max="100" value="${auCfg().focusMin||70}" style="width:110px"></div>
+     <div class="mrow">${F[sc]?'<button class="btn warn" id="auClr" style="margin-right:auto">ล้างของ'+(sc==='*'?'ทุกทีม':'ทีมนี้')+'</button>':''}<button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn primary" id="auOk">💾 บันทึก</button></div>`);
+    const sync=()=>$$('[data-aug]').forEach(g=>{const xs=$$(`[data-aup][data-g="${CSS.escape(g.dataset.aug)}"]`);g.checked=xs.length&&xs.every(x=>x.checked);g.indeterminate=!g.checked&&xs.some(x=>x.checked)});sync();
+    $$('[data-aug]').forEach(g=>g.onchange=()=>{$$(`[data-aup][data-g="${CSS.escape(g.dataset.aug)}"]`).forEach(x=>{if(!x.closest('.aui').hidden)x.checked=g.checked});sync()});$$('[data-aup]').forEach(x=>x.onchange=sync);
+    $('#auQ').oninput=e=>{const q=e.target.value.trim().toLowerCase();$$('.aui').forEach(l=>l.hidden=!!q&&!l.textContent.toLowerCase().includes(q))};
+    $('#auSc').onchange=e=>{sc=e.target.value;draw()};
+    const save=async list=>{const b=$('#auOk');b.disabled=true;try{const r=await api('focusSet',{team:sc,products:list,min:$('#auMin').value});D.v5.cfg.focus=r.focus;D.v5.cfg.focusMin=Math.max(0,Math.min(100,+$('#auMin').value||0));closeModal();toast('💾 บันทึกสินค้าที่ต้องขายแล้ว');again()}catch(e){toast('⚠️ '+esc(e.message));b.disabled=false}};
+    $('#auOk').onclick=()=>save($$('[data-aup]').filter(x=>x.checked).map(x=>x.dataset.aup));
+    if($('#auClr'))$('#auClr').onclick=()=>{if(confirm('ล้างรายการสินค้าที่ต้องขายของ'+(sc==='*'?'ทุกทีม':'ทีมนี้')+'?'))save([])}};
+  draw();
 }
 function renderProdPg(){
   const keep=S.rank;if(!S.prodPg)S.prodPg={mode:'month',anchor:'',grp:'all',pm:'amount',pby:'amount',sort:'_t',view:'person'};
@@ -2162,6 +2244,10 @@ function renderProdPg(){
     $$('#rkBy button').forEach(b=>b.onclick=()=>{R.pby=b.dataset.v;renderProdPg()});
     bindPc(R,renderProdPg);
     if($('#rkProd'))$('#rkProd').onchange=e=>{R.rkProd=e.target.value;renderProdPg()};
+    $$('#auBy button').forEach(b=>b.onclick=()=>{R.auBy=b.dataset.v;renderProdPg()});$$('#auV button').forEach(b=>b.onclick=()=>{R.auV=b.dataset.v;renderProdPg()});
+    if($('#auSet'))$('#auSet').onclick=()=>auSetM(renderProdPg);
+    $$('[data-aud]').forEach(t=>t.onclick=e=>{if(e.target.closest('.sav'))return;auDetail(t.dataset.aud,auRng(R,key),R.auBy||'q')});
+    if($('#auF')){$('#auF').onchange=e=>{if(e.target.value){R.auF=e.target.value;renderProdPg()}};$('#auT').onchange=e=>{if(e.target.value){R.auT=e.target.value;renderProdPg()}};$$('[data-auq]').forEach(b=>b.onclick=()=>{[R.auF,R.auT]=b.dataset.auq.split('|');renderProdPg()})}
     if($('#mixWho'))$('#mixWho').onchange=e=>{R.mixWho=e.target.value;renderProdPg()};
     if($('#mixWho2'))$('#mixWho2').onchange=e=>{R.mixWho2=e.target.value;renderProdPg()};
     $$('[data-mxs]').forEach(b=>b.onclick=()=>{R.mixSort=b.dataset.mxs;renderProdPg()});
@@ -4264,7 +4350,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-18.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-19.8';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -4777,7 +4863,7 @@ function wheelSVG(prizes){
 function drawGame(){
   const G=GM,w=G.wheel,pr=G.predict,b=G.boss;
   let h=`<div style="margin-bottom:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span class="tkt">🎟 ตั๋วเกม <b id="tkN">${G.tickets}</b></span><span class="hint">ได้ตั๋วจาก: กดรับ TOKEN ประจำวัน (+1/วัน) · Talk Time ผ่านเกณฑ์ (+1/วัน) · POINT ครบทุก ${fp(D.v5.cfg.ticketPer)} ในเดือน (+1)</span></div><div class="gamegrid">`;
-  h+=`<div class="panel"><h3>🎡 Daily Lucky Wheel</h3><div class="wheelbox">${wheelSVG(w.prizes)}<div class="ptr">▼</div></div>
+  h+=`<div class="panel"><h3>🎡 Daily Lucky Wheel</h3>${w.fest?`<div class="wfnote" style="--c:#ff9f43;margin:4px 0 8px"><div><b>${w.fest.e} เทศกาล${esc(w.fest.n)}: รางวัล TOKEN ×${w.fest.x}</b><div class="hint">${dShort(w.fest.from)} – ${dShort(w.fest.to)} · หมุนได้วันละ 1 ครั้งเหมือนเดิม</div></div></div>`:''}<div class="wheelbox">${wheelSVG(w.prizes)}<div class="ptr">▼</div></div>
     <div style="text-align:center"><button class="btn primary" id="wSpin" ${SPINNING||!w.freeLeft?'disabled':''}>${w.freeLeft?'🎡 หมุนวันนี้':'✅ วันนี้หมุนแล้ว · พรุ่งนี้มาใหม่'}</button><div class="hint" style="margin-top:6px">หมุนได้วันละ 1 ครั้ง · รางวัลเป็น TOKEN หรือตั๋วเกม</div><div id="wRes" style="margin-top:8px;font-weight:700"></div></div></div>`;
   h+=`<div class="panel"><h3>🔮 Sales Prediction</h3><div class="hint" style="margin-bottom:8px">ทายว่า <b>ยอด POINT รวมของบริษัทวัน ${dShort(pr.target)}</b> จะ <b>สูงกว่า</b> หรือ <b>ต่ำกว่า</b> ค่าเฉลี่ยรายวัน${pr.baseline==null?'':` (<b class="num">${f2(pr.baseline)}</b> จาก ${pr.baseDays} วันล่าสุด)`} · ใช้ 1 ตั๋ว · ทายถูกรับ <b class="up">+${pr.reward} TOKEN</b></div>
     ${pr.baseline==null?'<div class="lockmsg">ยังมีข้อมูลยอดรายวันไม่พอ (ต้องมีอย่างน้อย 3 วัน) — แอดมินบันทึกยอดสินค้าเป็นรายวันจึงจะเล่นได้</div>':pr.mine?`<div class="gapbox">✅ คุณทายว่า <b>${pr.mine.pick==='up'?'⬆ สูงกว่า':'⬇ ต่ำกว่า'}</b> — รอผลเมื่อแอดมินบันทึกยอดของวันนั้น</div>`
@@ -4958,6 +5044,7 @@ const doD=k=>k?+k.slice(8)+' '+THMON[+k.slice(5,7)-1]:'–';
 function doIdx(){const d=DO.d;d.M={};d.members.forEach(a=>d.M[a[0]]={id:a[0],nick:a[1],team:a[2],role:a[3]});d.O={};d.offs.forEach(o=>{d.O[o[1]+'|'+o[0]]=o[2]?2:1});
   d.LV={};const f=d.month+'-01',e=doDays(d.month).slice(-1)[0];(d.lv||[]).forEach(l=>{for(let k=l[1]<f?f:l[1];k<=l[2]&&k<=e;k=addDays(k,1))d.LV[l[0]+'|'+k]={t:l[3],ok:l[4],half:l[5]}})}
 const doLv=(id,k)=>DO.d.LV[id+'|'+k];
+const doWT=()=>{const w=DO.d.work||{s:'09:00',e:'18:00'},f=x=>String(x||'').replace(/^0(\d)/,'$1').replace(':','.');return [f(w.s),f(w.e)]};   // เวลาทำงาน เช่น 9.00 / 18.00
 const DOLT={annual:'พักร้อน',sick:'ลาป่วย',personal:'ลากิจ',ordain:'ลาบวช',maternity:'ลาคลอด',other:'ลา',leave:'ลา'};
 const DOB={amount:['ยอดขาย','฿'],point:['POINT','pt'],sub:['SUB','SUB']};
 const doBasisTxt=b=>{const [k,ym]=String(b||'').split(':');return DOB[k]?`${DOB[k][0]} ${ym?wfMonthTxt(ym):''}`:''};
@@ -5039,7 +5126,7 @@ function doDraw(){
     const msg=edit?'คุณเป็นหัวหน้าทีม — กดวันที่เพื่อลง/ยกเลิกวันหยุดของตัวเองได้เลย':!my.on?(c.month?`รอบที่เปิดอยู่เป็นของ ${wfMonthTxt(c.month)}`:'เดือนนี้ไม่ได้เปิดให้เลือกเอง')+' — ถ้าต้องการเปลี่ยน ใช้ปุ่มด้านล่าง':!my.open?(d.today<c.from?`จะเปิดให้เลือกวันที่ ${doD(c.from)}`:'ปิดรับแล้ว — ถ้าต้องการเปลี่ยน ใช้ปุ่มด้านล่าง'):my.locked?`⏳ ลำดับคิวของคุณ <b>#${d.gate.rank}</b> จาก ${d.gate.n} — เลือกได้ตั้งแต่ <b>${doD(d.gate.opensAt)}</b>`:`👆 <b>ถึงคิวคุณแล้ว</b> — กดวันที่อยากหยุด (กดซ้ำเพื่อยกเลิก) ระบบบันทึกให้เอง · ปิดรับ ${doD(c.to)}`;
     h+=`<div class="domy" style="--c:${my.can||edit?'var(--up)':my.locked?'var(--flat)':'var(--line)'}"><div class="domyh"><b>วันหยุดของฉัน — ${wfMonthTxt(d.month)}</b><b class="num" style="color:${my.on&&my.used>=my.quota?'var(--up)':''}">${my.on?`${my.used}/${my.quota}`:mine.length} วัน</b></div><div class="domsg">${msg}</div>
      <div class="wfg">${[1,2,3,4,5,6,0].map(x=>`<div class="wfgh ${x%6===0?'we':''}">${WFDOW[x]}</div>`).join('')}${'<div></div>'.repeat(lead)}${days.map(k=>{const o=doIsOff(d.me,k),lv=!o&&doLv(d.me,k),nw=doNonWork(k),n=doTeamN(myT,k),full0=!o&&!lv&&c.cap>0&&n>=c.cap,mr=doRankOf(myT,d.me),bmp=full0&&my.can&&d.members.some(a=>a[2]===myT&&d.O[a[0]+'|'+k]===1&&doRankOf(myT,a[0])>mr),full=full0&&!bmp,past=k<=d.today;
-       return `<button class="wfd dod ${o?(o===2?'sp':'on'):lv?(lv.ok?'lvd':'lvp'):nw?'nw':full?'full':''} ${k===d.today?'td':''} ${past&&!o?'wpast':''}" data-dok="${k}"><div class="wfdh"><b>${+k.slice(8)}</b></div><div class="dods">${o===2?'<i>⭐ </i>พิเศษ':o?'<i>✅ </i>หยุด':lv?(lv.ok?'<i>🌴 </i>':'<i>⏳ </i>')+(DOLT[lv.t]||'ลา')+(lv.ok?'':' (รอ)'):nw?'หยุดประจำ':full?'เต็ม':bmp?'<span style="color:var(--flat)">เต็ม · แทนที่ได้</span>':n?(c.cap?`${n}/${c.cap}`:`${n} คน`):''}</div></button>`}).join('')}</div>
+       return `<button class="wfd dod ${o?(o===2?'sp':'on'):lv?(lv.ok?'lvd':'lvp'):nw?'nw':full?'full':''} ${k===d.today?'td':''} ${past&&!o?'wpast':''}" data-dok="${k}"><div class="wfdh"><b>${+k.slice(8)}</b></div><div class="dods">${o===2?'<i>⭐ </i>Day Off':o?'<i>✅ </i>Day Off':lv?(lv.ok?'<i>🌴 </i>':'<i>⏳ </i>')+(DOLT[lv.t]||'ลา')+(lv.ok?'':' (รอ)'):nw?'Day Off (ประจำ)':full?'เต็ม':bmp?'<span style="color:var(--flat)">เต็ม · แทนที่ได้</span>':`<span class="dwt1">${doWT().join('–')}</span>${n?` · ${c.cap?`${n}/${c.cap}`:`${n} คน`}`:''}`}</div></button>`}).join('')}</div>
      <div class="dobtn"><button class="btn" id="doSw">🔁 แลกวันหยุดกับเพื่อน</button><button class="btn" id="doMv">📅 ย้ายวันหยุด</button><button class="btn" id="doSp">🙏 ขอวันหยุดพิเศษ</button><button class="btn" id="doVa">🌴 ลาพักร้อน${d.vacUsed?` (ใช้ไป ${d.vacUsed} วันปีนี้)`:''}</button></div></div>`}
   else if(!adm)h+=`<div class="dobtn" style="margin:4px 0 8px"><button class="btn sm" id="doVa">🌴 ขอลาพักร้อน</button></div>`;
   // ตารางของทีม / ภาพรวมทุกทีม
@@ -5051,9 +5138,9 @@ function doDraw(){
     const rk=(d.rank[T.id]||[]).map(x=>x[0]),ro={senior:0,leader:1,'':2};
     const mem=d.members.filter(a=>a[2]===T.id).sort((a,b)=>(a[0]===d.me?-1:b[0]===d.me?1:0)||(rk.length?((rk.indexOf(a[0])+1||999)-(rk.indexOf(b[0])+1||999)):0)||((ro[a[3]]??2)-(ro[b[3]]??2))||a[1].localeCompare(b[1],'th'));
     h+=`<div class="wfwrap dowrap"><table class="wft">${th}<tbody>${mem.map(a=>{const id=a[0],ed=T.can||id===d.me;let n=0;
-      return `<tr class="${id===d.me?'dome':''}"><td title="${esc(a[1])}">${nmAv(id,20)}<span class="wfnm">${esc(a[1])}</span>${a[3]?`<span class="wfrl">${a[3]==='senior'?'Senior':'Leader'}</span>`:''}${rk.length&&rk.indexOf(id)>=0?`<span class="dork">#${rk.indexOf(id)+1}</span>`:''}</td>${days.map(k=>{const o=doIsOff(id,k),lv=!o&&doLv(id,k);if(o)n++;const nw=doNonWork(k);return `<td class="doc ${nw?'we':''} ${k===d.today?'tdy':''} ${ed?'ed':''} ${k<d.today?'wpast':''}" data-m="${esc(id)}" data-k="${k}">${o?`<b class="wfb ${o===2?'sp':'on'}">${o===2?'พิเศษ':'หยุด'}</b>`:lv?`<b class="wfb lvb ${lv.ok?'':'lvq'}" title="${esc(DOLT[lv.t]||'ลา')}${lv.ok?'':' (รออนุมัติ)'}">${lv.t==='annual'?'พักร้อน':'ลา'}</b>`:''}</td>`}).join('')}<td class="wfrt"><b>${n}</b></td></tr>`}).join('')}
+      return `<tr class="${id===d.me?'dome':''}"><td title="${esc(a[1])}">${nmAv(id,20)}<span class="wfnm">${esc(a[1])}</span>${a[3]?`<span class="wfrl">${a[3]==='senior'?'Senior':'Leader'}</span>`:''}${rk.length&&rk.indexOf(id)>=0?`<span class="dork">#${rk.indexOf(id)+1}</span>`:''}</td>${days.map(k=>{const o=doIsOff(id,k),lv=!o&&doLv(id,k);if(o)n++;const nw=doNonWork(k);return `<td class="doc ${nw?'we':''} ${k===d.today?'tdy':''} ${ed?'ed':''} ${k<d.today?'wpast':''}" data-m="${esc(id)}" data-k="${k}">${o?`<b class="wfb ${o===2?'sp':'on'}" ${o===2?'title="Day Off พิเศษ (อนุมัติแล้ว)"':''}>Day Off</b>`:nw?'<b class="wfb dnw" title="วันหยุดประจำ/นักขัตฤกษ์">Day Off</b>':lv&&lv.ok&&!lv.half?'':`<span class="dwt">${doWT().join('-')}</span>`}${o?'':lv?`<b class="wfb lvb ${lv.ok?'':'lvq'}" title="${esc(DOLT[lv.t]||'ลา')}${lv.ok?'':' (รออนุมัติ)'}">${lv.t==='annual'?'พักร้อน':'ลา'}</b>`:''}</td>`}).join('')}<td class="wfrt"><b>${n}</b></td></tr>`}).join('')}
       </tbody><tfoot><tr><td><b>คนหยุด${c.cap?' / เพดาน':''}</b></td>${days.map(k=>{const n=doTeamN(T.id,k);return `<td class="wfv ${c.cap&&n>c.cap?'bad':n?'ok':'nil'}"><b>${n}</b>${c.cap?`<small>/${c.cap}</small>`:''}</td>`}).join('')}<td></td></tr></tfoot></table></div>
-      <div class="wflg"><span><b class="wfb on">หยุด</b> วันหยุดที่เลือก</span><span><b class="wfb sp">พิเศษ</b> วันหยุดพิเศษ (อนุมัติแล้ว)</span><span><b class="wfb lvb">พักร้อน</b>/<b class="wfb lvb">ลา</b> ใบลาที่อนุมัติแล้ว (นับรวมคนหยุด)</span><span><u style="background:color-mix(in srgb,var(--mute) 22%,transparent)"></u> วันหยุดประจำสัปดาห์/นักขัตฤกษ์</span>${rk.length?'<span><span class="dork">#1</span> ลำดับคิวเลือกวันหยุด</span>':''}</div>`}
+      <div class="wflg"><span><span class="dwt" style="display:inline-block">${doWT().join('-')}</span> วันทำงาน (เวลาเข้า–ออก)</span><span><b class="wfb on">Day Off</b> วันหยุดที่เลือก</span><span><b class="wfb sp">Day Off</b> วันหยุดพิเศษ (อนุมัติแล้ว)</span><span><b class="wfb dnw">Day Off</b> วันหยุดประจำ/นักขัตฤกษ์</span><span><b class="wfb lvb">พักร้อน</b>/<b class="wfb lvb">ลา</b> ใบลาที่อนุมัติแล้ว (นับรวมคนหยุด)</span><span><u style="background:color-mix(in srgb,var(--mute) 22%,transparent)"></u> วันหยุดประจำสัปดาห์/นักขัตฤกษ์</span>${rk.length?'<span><span class="dork">#1</span> ลำดับคิวเลือกวันหยุด</span>':''}</div>`}
   if(hist.length)h+=`<details class="wfmore"><summary>📜 คำขอที่ผ่านมา (${hist.length})</summary><div style="padding:6px 0">${hist.map(doReqCard).join('')}</div></details>`;
   el.innerHTML=h+'</div>';
   const w2=$('.dowrap',el);if(w2){w2.scrollLeft=sx;w2.scrollTop=sy}
@@ -5229,8 +5316,11 @@ function tbxScan(){
   $$('table').forEach(tb=>{
     if(tb.dataset.tbx||tb.closest('.nosort,#gate'))return;const body=tb.tBodies[0];if(!body)return;tb.dataset.tbx='1';
     const rows=[...body.rows];
+    {const host=tb.closest('.tblwrap,.wfwrap');if(host&&rows.length){const bar=tbxBar(tb),nv=document.createElement('span');nv.className='tbxnav';nv.innerHTML='<button type="button" class="btn sm" title="เลื่อนตารางไปทางซ้าย">◀</button><button type="button" class="btn sm" title="เลื่อนตารางไปทางขวา">▶</button>';
+      const [l,r]=nv.querySelectorAll('button');l.onclick=()=>host.scrollBy({left:-host.clientWidth*.75,behavior:'smooth'});r.onclick=()=>host.scrollBy({left:host.clientWidth*.75,behavior:'smooth'});
+      const upd=()=>{const ov=host.scrollWidth>host.clientWidth+2;nv.hidden=!ov;l.disabled=host.scrollLeft<=2;r.disabled=host.scrollLeft+host.clientWidth>=host.scrollWidth-2};host.addEventListener('scroll',upd,{passive:true});
+      if(window.ResizeObserver)new ResizeObserver(upd).observe(host);bar.appendChild(nv);setTimeout(upd,50)}}   // ⑤ ปุ่มเลื่อนตารางซ้าย/ขวา (เมื่อตารางกว้างเกินจอ)
     if(rows.length&&tbxCanX()){const x=document.createElement('button');x.className='btn sm tbxx';x.innerHTML='⬇️ Excel';x.title='ดาวน์โหลดตารางนี้เป็นไฟล์ Excel (เฉพาะแอดมิน/Senior)';x.onclick=()=>tbxExport(tb);tbxBar(tb).appendChild(x)}   // ④ ส่งออก Excel
-    if(tb.classList.contains('wft'))return;   // ตารางวันหยุด: ส่งออกได้ แต่ไม่ใช้ระบบเรียง/กรองกลาง
     rows.forEach(tr=>{if(tr.querySelector('.sav'))return;   // ③ รูปโปรไฟล์: ช่องที่ข้อความตรงกับชื่อ/ชื่อเล่นของพนักงานพอดี
       for(const td of tr.cells){const w=document.createTreeWalker(td,NodeFilter.SHOW_TEXT);let n,k=0;
         while((n=w.nextNode())&&k++<6){const id=names[n.nodeValue.replace(/\s+/g,' ').trim()];if(!id)continue;
@@ -5505,7 +5595,29 @@ function menuList(raw){   // คืน [{id,show}] ตามลำดับท�
   const L=[],seen={};String(raw==null?((D.v5&&D.v5.cfg&&D.v5.cfg.menu)||''):raw).split(/[,;\s]+/).filter(Boolean).forEach(x=>{const h=x[0]==='-',id=h?x.slice(1):x;if(seen[id]||!TABDEF.some(t=>t[0]===id))return;seen[id]=1;L.push({id,show:!(h&&id!=='dash'&&id!=='admin')})});
   TABDEF.forEach(t=>{if(!seen[t[0]])L.push({id:t[0],show:true})});return L}
 const menuVisible=()=>menuList().filter(x=>x.show&&((x.id!=='admin'&&x.id!=='eng')||(D&&D.isAdmin))&&(x.id!=='run'||(D&&D.canSeeAll))).map(x=>TABDEF.find(t=>t[0]===x.id));
-function tabsBalance(){}   // ใช้เมนูแบบเดิม (แถวเดียว) — ไม่จัดเรียงใหม่
+/* เมนูแถวเดียว: ถ้าหน้าต่างแคบจนเมนูล้น → เลื่อนซ้าย/ขวาได้ (ปุ่ม ◀ ▶ · ลูกกลิ้งเมาส์ · ปัด) และเลื่อนเมนูที่เลือกให้อยู่ในจอ */
+function tabsBalance(){
+  const t=$('#tabs');if(!t)return;
+  if(!t.dataset.nav){t.dataset.nav=1;
+    const mk=(c,txt,dir)=>{const b=document.createElement('button');b.type='button';b.className='tabarr '+c;b.textContent=txt;b.title=dir<0?'เลื่อนเมนูไปทางซ้าย':'เลื่อนเมนูไปทางขวา';b.onclick=e=>{e.stopPropagation();t.scrollBy({left:dir*Math.max(160,t.clientWidth*.7),behavior:'smooth'})};return b};
+    t.prepend(mk('l','◀',-1));t.append(mk('r','▶',1));
+    t.addEventListener('wheel',e=>{if(t.scrollWidth<=t.clientWidth+2||Math.abs(e.deltaX)>Math.abs(e.deltaY))return;t.scrollLeft+=e.deltaY;e.preventDefault()},{passive:false});
+    t.addEventListener('scroll',()=>tabsArr(),{passive:true});window.addEventListener('resize',()=>{tabsArr();navPad()})}
+  const L=t.querySelector('.tabarr.l'),R=t.querySelector('.tabarr.r');if(L&&t.firstElementChild!==L)t.prepend(L);if(R&&t.lastElementChild!==R)t.append(R);   // applyMenu ย้ายปุ่มเมนู → คงปุ่มลูกศรไว้หัว/ท้าย
+  const on=t.querySelector('.tabbtn.on');if(on&&t.scrollWidth>t.clientWidth+2){const a=on.offsetLeft,b=a+on.offsetWidth;if(a<t.scrollLeft+40||b>t.scrollLeft+t.clientWidth-40)t.scrollLeft=a-(t.clientWidth-on.offsetWidth)/2}
+  tabsArr();
+}
+function tabsArr(){try{navPad()}catch(e){}const t=$('#tabs');if(!t)return;const ov=t.scrollWidth>t.clientWidth+2;t.classList.toggle('ovf',ov);
+  const l=t.querySelector('.tabarr.l'),r=t.querySelector('.tabarr.r');if(l)l.hidden=!ov||t.scrollLeft<=2;if(r)r.hidden=!ov||t.scrollLeft+t.clientWidth>=t.scrollWidth-2}
+/* ปุ่มเลื่อนหน้า ขึ้น/ลง (ลอยมุมขวาล่าง) — กด = เลื่อน 1 หน้าจอ · ดับเบิลคลิก = ไปบนสุด/ล่างสุด */
+function navPad(){
+  let p=$('#navPad');if(!p){p=document.createElement('div');p.id='navPad';p.innerHTML='<button type="button" data-np="-1" title="เลื่อนขึ้น (ดับเบิลคลิก = บนสุด)">▲</button><button type="button" data-np="1" title="เลื่อนลง (ดับเบิลคลิก = ล่างสุด)">▼</button>';document.body.appendChild(p);
+    p.querySelectorAll('button').forEach(b=>{const d=+b.dataset.np;b.onclick=()=>window.scrollBy({top:d*window.innerHeight*.8,behavior:'smooth'});b.ondblclick=()=>window.scrollTo({top:d<0?0:document.documentElement.scrollHeight,behavior:'smooth'})});
+    window.addEventListener('scroll',()=>{clearTimeout(navPad.t);navPad.t=setTimeout(navPad,60)},{passive:true})}
+  const y=window.scrollY,max=document.documentElement.scrollHeight-window.innerHeight;
+  p.querySelector('[data-np="-1"]').hidden=y<80;p.querySelector('[data-np="1"]').hidden=y>=max-80;p.hidden=max<120;
+}
+setTimeout(()=>{try{tabsBalance();navPad()}catch(e){}},300);
 function applyMenu(){
   const nav=$('#tabs');if(!nav||!D)return;const L=menuList();
   L.forEach(x=>{const b=nav.querySelector(`[data-tab="${x.id}"]`);if(!b)return;nav.appendChild(b);if(x.id==='run')b.hidden=!x.show||!D.canSeeAll;else if(x.id==='eng')b.hidden=!x.show||!D.isAdmin;else if(x.id!=='admin')b.hidden=!x.show});
