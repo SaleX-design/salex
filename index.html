@@ -2136,7 +2136,7 @@ function bindPc(R,again){
   if($('#pcChips'))$('#pcChips').onclick=e=>{const c=e.target.closest('[data-pcx]');if(!c)return;if(c.dataset.pcx==='all')C.cmp=[];else C.cmp.splice(+c.dataset.pcx,1);again()};
   $$b('#pcMet',v=>C.met=v);$$b('#pcType',v=>C.type=v);
   $$b('#pcMode',v=>{C.mode=v;C.range=v==='day'?'1M':v==='month'?'1Y':'ALL';C.count=null});
-  $$b('#pcRange',v=>{if(v==='custom'){C.range='custom';const f=buildPeriods(C.mode,C.anchor,C.count||DEFN[C.mode])[0];C.from=f.lv==='d'?f.key:f.lv==='m'?f.key+'-01':f.key+'-01-01'}else{C.range=v;C.mode=RANGES[v].m;C.count=RANGES[v].n}});
+  $$b('#pcRange',v=>{if(v==='custom'){C.range='custom';const t=[D&&D.asOf,D&&D.psAsOf].filter(Boolean).sort().pop()||today,e=t<today?t:today;C.from=e.slice(0,8)+'01';C.anchor=e;C.mode='day';C.count=Math.max(2,+e.slice(8))}else{C.range=v;C.mode=RANGES[v].m;C.count=RANGES[v].n}});
   if($('#pcAnchor'))$('#pcAnchor').onchange=e=>{if(e.target.value){C.anchor=e.target.value>today?today:e.target.value;again()}};
   const cu=()=>{let f=$('#pcFrom').value,t=$('#pcTo').value;if(!f||!t)return;if(t>today)t=today;if(f>t)f=t;const d=Math.round((U(t)-U(f))/864e5)+1;C.from=f;C.anchor=t;C.range='custom';
     if(d<=120){C.mode='day';C.count=Math.max(2,d)}else{const m=(+t.slice(0,4)-+f.slice(0,4))*12+(+t.slice(5,7)-+f.slice(5,7))+1;if(m<=48){C.mode='month';C.count=Math.max(2,m)}else{C.mode='year';C.count=Math.max(2,+t.slice(0,4)-+f.slice(0,4)+1)}}again()};
@@ -4377,7 +4377,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-20.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-20.3';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -4475,7 +4475,8 @@ function render(){
 /* ---------- events ---------- */
 $$('.tabbtn').forEach(b=>b.onclick=()=>{S.tab=b.dataset.tab;render();scrollTo(0,0)});
 $$('#modeSeg button').forEach(b=>b.onclick=()=>{S.mode=b.dataset.m;S.count=null;S.range=null;S.ctype='bar';render()});
-$$('#rangeSeg button').forEach(b=>b.onclick=()=>{const k=b.dataset.r;if(k==='custom'){S.range='custom'}else{S.mode=RANGES[k].m;S.count=RANGES[k].n;S.range=k}render()});
+$$('#rangeSeg button').forEach(b=>b.onclick=()=>{const k=b.dataset.r;if(k==='custom'){   // กำหนดเอง = วันที่ 1 ของเดือน → วันล่าสุดที่มีข้อมูล
+    const t=(D&&D.asOf&&D.asOf<today?D.asOf:today);$('#cFrom').value=t.slice(0,8)+'01';$('#cTo').value=t;applyCustom();return}else{S.mode=RANGES[k].m;S.count=RANGES[k].n;S.range=k}render()});
 $('#cFrom').onchange=applyCustom;$('#cTo').onchange=applyCustom;
 $('#maChk').onchange=e=>{S.ma=e.target.checked;render()};$('#emaChk').onchange=e=>{S.ema=e.target.checked;render()};
 $$('#metricSeg button').forEach(b=>b.onclick=()=>{S.metric=b.dataset.t;S.ctype='bar';render()});
@@ -5332,7 +5333,6 @@ async function renderToday(){
   const wk=agent?tdWork(TD.do,id):null,cl=D.claim||{done:true},vis=menuVisible().filter(t=>t&&t[0]!=='today');
   let x=`<div class="panel"><div class="tdh"><div><div class="hint">${hi} 👋</div>${MEM.some(m=>m.id===id&&AG(m))?'':`<h2 style="margin:2px 0">${esc(me.nick||me.name)} <span class="eid">${esc(id)}</span></h2>`}<div class="hint">${dayTxt(today)} · ${esc((teamOf(me.team)||{}).name||'')}</div></div>${!cl.done?'<button class="btn primary" id="tdClaim">🎁 รับ TOKEN เข้างานวันนี้</button>':''}</div>`;
   if(act.length&&!tdMgr())x+=`<div class="wfnote" style="--c:var(--down);margin:8px 0" data-tdgo="${esc(act[0].go||'')}"><div><b>📌 มี ${act.length} เรื่องรอคุณ</b><div class="hint">${esc(act[0].k==='coach'?act[0].text.replace(/^\S+\s/,''):act[0].text)}${act.length>1?' และอื่น ๆ (ดูด้านล่าง)':''}</div></div><b style="cursor:pointer">ไปจัดการ ›</b></div>`;
-  if(MEM.some(m=>m.id===id&&AG(m)))x+=`<div id="tdProf" class="tdprof">${TD.prof&&TD.prof.m===id?'':'<div class="hint">⏳ กำลังโหลดโปรไฟล์…</div>'}</div>`;
   x+=`<h3 style="margin:14px 0 6px">📆 วันนี้</h3><div class="wfk">`;
   if(agent){x+=`<div style="--c:var(--up)"><small>⭐ POINT เดือนนี้</small><b>${fmt(pt)}</b>${dd&&prev?`<i style="color:${pt>=prev?'var(--up)':'var(--down)'}">${pt>=prev?'▲':'▼'} ${Math.abs(Math.round((pt-prev)/prev*100))}% vs ${dd} วันแรกของเดือนก่อน</i>`:''}</div>
     <div style="--c:var(--blue)"><small>🏆 อันดับในทีม (POINT เดือนนี้)</small><b>${rk?'#'+rk:'–'}</b><i>จาก ${tm.length} คน${rk>1&&tm[rk-2]?` · ห่างคนข้างหน้า ${fmt(tm[rk-2].p-pt)}`:rk===1?' · 🥇 นำอยู่!':''}</i></div>
@@ -5343,6 +5343,7 @@ async function renderToday(){
   x+=`</div>`;
   if(agent||!tdMgr())x+=`<h3 style="margin:14px 0 6px">📌 สิ่งที่รอฉันทำ</h3>${act.length?act.slice(0,8).map(i=>`<div class="tdi ${i.tone||''}" data-tdgo="${esc(i.go||'')}"><span>${TDIC[i.k]||'⏰'}</span><div>${esc(i.k==='coach'?i.text.replace(/^\S+\s/,''):i.text)}</div><b>›</b></div>`).join(''):'<div class="hint">ไม่มีเรื่องค้าง ✅</div>'}`;
   if(F.length)x+=`<h3 style="margin:14px 0 6px">🎯 สินค้าที่ต้องเน้นขาย</h3><div>${F.map(p=>`<span class="auf on">${esc(prodName(p))}</span>`).join(' ')}</div>`;
+  if(MEM.some(m=>m.id===id&&AG(m)))x+=`<h3 style="margin:16px 0 6px">📇 โปรไฟล์ของฉัน</h3><div id="tdProf" class="tdprof">${TD.prof&&TD.prof.m===id?'':'<div class="hint">⏳ กำลังโหลดโปรไฟล์…</div>'}</div>`;   // โปรไฟล์อยู่ถัดจาก "วันนี้"
   x+=`</div>`;   // (เอาปุ่มลัดไปเมนูออก — ซ้ำกับแถบเมนูด้านบน)
   el.innerHTML=x;
   $$('[data-tdgo]',el).forEach(b=>b.onclick=()=>tdGo(b.dataset.tdgo));$$('[data-tdt]',el).forEach(b=>b.onclick=()=>goTab(b.dataset.tdt));
