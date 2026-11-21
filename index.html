@@ -1578,7 +1578,7 @@ function impBuild(daily,look){
   const dh=H(daily[0]),need=['SL_PARTNER_CODE','CAMPAIGN_NAME','NET_RC'];for(const k of need)if(dh[k]==null)throw new Error('ไฟล์ Daily ไม่มีคอลัมน์ '+k+' (เลือกชีตให้ถูก เช่น Upsell)');
   if(dh.DIFF_RC==null&&daily.slice(1).some(r=>r&&String(r[dh.UPSELL_TYPE]||'').trim().toUpperCase()==='VAS'))throw new Error('ไฟล์นี้ไม่มีคอลัมน์ "Diff RC" แต่มีสินค้า VAS — ระบบต้องใช้ Diff RC เป็นยอดของ VAS จึงยังไม่นำเข้าเพื่อกันยอดผิด (ตรวจว่าเลือกไฟล์/ชีตถูกต้อง และมีหัวคอลัมน์ Diff RC)');
   const dcol=dh.INTRACN_DT_CMPLET!=null?dh.INTRACN_DT_CMPLET:dh.INTRACN_DT;
-  const agg={},info={total:0,mapped:0,noDate:0,unm:{},types:{},vasBlank:0,vasBlankNet:0,vasN:0,vasEq:0};
+  const agg={},info={total:0,mapped:0,noDate:0,unm:{},types:{},vasBlank:0,vasBlankNet:0,vasN:0,vasEq:0,dayN:{},dayVas:{}};
   for(let i=1;i<daily.length;i++){const r=daily[i];if(!r||!r.length)continue;const code=xKey(r[dh.SL_PARTNER_CODE]);if(!code&&!r[dh.CAMPAIGN_NAME])continue;info.total++;
     const emp=mp[code];if(!emp){info.unm[code]=(info.unm[code]||0)+1;continue}
     let d=xDate(r[dcol]);if(!d&&dh.INTRACN_DT!=null)d=xDate(r[dh.INTRACN_DT]);if(!d){info.noDate++;continue}
@@ -1586,9 +1586,26 @@ function impBuild(daily,look){
     if(ty==='VAS'){info.vasN++;if(xNum(r[dh.DIFF_RC])===xNum(r[dh.NET_RC])&&r[dh.DIFF_RC]!=='')info.vasEq++}
     if(ty==='VAS'&&(r[dh.DIFF_RC]===''||r[dh.DIFF_RC]==null)){info.vasBlank++;info.vasBlankNet+=xNum(r[dh.NET_RC])}
     const p=String(r[dh.CAMPAIGN_NAME]||'').trim()||String(r[dh.PROD_OFR_NM]||'').trim()||'(ไม่ระบุแคมเปญ)';
-    const k=d+'|'+emp+'|'+p,o=agg[k]||(agg[k]={d,m:emp,p,q:0,a:0});o.q+=1;o.a+=a;info.mapped++;info.types[ty||'?']=(info.types[ty||'?']||0)+1}
+    const k=d+'|'+emp+'|'+p,o=agg[k]||(agg[k]={d,m:emp,p,q:0,a:0});o.q+=1;o.a+=a;info.mapped++;info.types[ty||'?']=(info.types[ty||'?']||0)+1;info.dayN[d]=(info.dayN[d]||0)+1;if(ty==='VAS')info.dayVas[d]=(info.dayVas[d]||0)+1}
   const rows=Object.keys(agg).map(k=>{const o=agg[k];o.a=Math.round(o.a*100)/100;return o});
   return {rows,info,lookN:Object.keys(mp).length}}
+/* 🛡 ตัวกันพลาดการนำเข้า: สถิติชีต · ยอดลดผิดปกติ · วันที่ไม่มี VAS */
+function impSheetStat(rows){const h=(rows[0]||[]).map(x=>String(x==null?'':x).trim().toUpperCase().replace(/[\s.]+/g,'_')),ti=h.indexOf('UPSELL_TYPE'),ci=h.indexOf('SL_PARTNER_CODE'),ni=h.indexOf('NET_RC');
+  const st={ok:ci>=0&&ni>=0&&h.indexOf('CAMPAIGN_NAME')>=0,n:0,vas:0,types:{}};if(!st.ok)return st;
+  for(let i=1;i<rows.length;i++){const r=rows[i];if(!r||!r.length||!xKey(r[ci]))continue;st.n++;const t=ti>=0?String(r[ti]||'').trim().toUpperCase()||'?':'?';st.types[t]=(st.types[t]||0)+1;if(t==='VAS')st.vas++}return st}
+function impSheetLbl(s){const t=IMP.stat&&IMP.stat[s.name];return esc(s.name)+(s.hidden?' (ซ่อน)':'')+(t?(t.ok?` — ${fmt(t.n)} แถว${t.vas?' · มี VAS':' · ไม่มี VAS'}`:' — ไม่ใช่ชีตข้อมูลขาย'):'')}
+function impRisk(){const pv=IMP.prev,inf=IMP.info||{},c=pv&&pv.cmp,R={drop:[],noVas:[],betterSheet:null};
+  if(c&&c.hadOld)R.drop=c.days.filter(x=>x.oa>1000&&x.na<x.oa*0.5);
+  const anyVas=Object.keys(inf.dayVas||{}).length>0;
+  R.noVas=Object.keys(inf.dayN||{}).filter(d=>(inf.dayN[d]||0)>=5&&!(inf.dayVas||{})[d]).sort();
+  if(!anyVas)R.noVas=[];   // ถ้าทั้งไฟล์ไม่มี VAS เลย ใช้คำเตือนเรื่องชีตแทน
+  const st=IMP.stat||{},cur=st[IMP.sheet];if(cur&&!cur.vas){const b=Object.keys(st).filter(k=>k!==IMP.sheet&&st[k].ok&&st[k].vas).sort((a,b)=>st[b].n-st[a].n)[0];if(b)R.betterSheet=b}
+  R.block=R.drop.length>=3||!!R.betterSheet;return R}
+function impRiskHTML(){const R=impRisk(),st=IMP.stat||{};let h='';
+  if(R.betterSheet){const a=st[IMP.sheet]||{},b=st[R.betterSheet];h+=`<div class="err" style="margin-top:8px;font-weight:700;padding:10px;border:2px solid var(--down);border-radius:10px">⛔ ชีต "${esc(IMP.sheet)}" ไม่มีสินค้า VAS เลย (มีแค่ ${Object.keys(a.types||{}).map(esc).join(', ')||'–'} · ${fmt(a.n||0)} แถว)<br>ชีต "<b>${esc(R.betterSheet)}</b>" มีข้อมูลครบกว่า (${fmt(b.n)} แถว · VAS ${fmt(b.vas)} แถว) — น่าจะเลือกชีตผิด <button class="btn primary" id="impUseBetter" style="margin-left:6px">เปลี่ยนไปใช้ชีต ${esc(R.betterSheet)}</button></div>`}
+  if(R.drop.length)h+=`<div class="err" style="margin-top:8px;font-weight:700;padding:10px;border:2px solid var(--down);border-radius:10px">⛔ ยอดลดลงเกินครึ่งจากข้อมูลเดิม ${R.drop.length} วัน: ${R.drop.slice(0,8).map(x=>esc(dShort(x.k))+' (฿'+fmt(x.oa)+' → ฿'+fmt(x.na)+')').join(' · ')}${R.drop.length>8?' …':''}<br>ปกติยอดย้อนหลังไม่ควรหายมากขนาดนี้ — ตรวจว่าเลือกไฟล์/ชีตถูก และไฟล์มีสินค้าครบทุกประเภท${R.drop.length>=3?' <b>(ต้องยืนยันพิเศษก่อนนำเข้า)</b>':''}</div>`;
+  if(R.noVas.length)h+=`<div class="err" style="margin-top:8px">⚠️ วันที่ไม่มี VAS ในไฟล์: <b>${R.noVas.map(d=>esc(dShort(d))).join(', ')}</b> — มักเป็นเพราะต้นทางยังส่งข้อมูล VAS ของวันนั้นไม่ครบ ยอดวันนั้นจะต่ำกว่าจริงจนกว่าจะนำเข้าไฟล์รอบถัดไป</div>`;
+  return h}
 function impCmpHTML(c){
   if(!c)return '';const sg=v=>(v>0?'+':v<0?'−':'')+fmt(Math.abs(v)),cl=v=>v>0?'up':v<0?'down':'flat';
   if(!c.hadOld)return `<div class="panel" style="margin-top:10px;padding:10px"><b>📊 เทียบกับข้อมูลเดิม</b><div class="hint">เดือนนี้ยังไม่มีข้อมูลรายวันในระบบ — นี่คือการนำเข้าครั้งแรกของเดือน ยอดรวม ${fmt(c.nw.q)} ชิ้น · ฿${fmt(c.nw.a)}</div></div>`;
@@ -1603,7 +1620,7 @@ function impCmpHTML(c){
     <div style="display:flex;gap:12px;flex-wrap:wrap">${tb('🛍 สินค้าที่ยอดเพิ่มมากสุด',c.products.up)}${tb('🛍 สินค้าที่ยอดลดลง',c.products.down)}</div></div>`}
 async function admImport(body){
   clearInterval(LIVE_T);const pv=IMP.prev;
-  const sheetSel=IMP.sheets?`<select id="impSheet">${IMP.sheets.filter(s=>true).map(s=>`<option value="${esc(s.name)}" ${IMP.sheet===s.name?'selected':''}>${esc(s.name)}${s.hidden?' (ซ่อน)':''}</option>`).join('')}</select>`:'';
+  const sheetSel=IMP.sheets?`<select id="impSheet">${IMP.sheets.filter(s=>true).map(s=>`<option value="${esc(s.name)}" ${IMP.sheet===s.name?'selected':''}>${impSheetLbl(s)}</option>`).join('')}</select>`:'';
   body.innerHTML=`<div class="panel sec"><h3>📥 นำเข้ายอดขายอัตโนมัติ (Daily TOL_UPSELL + V_LOOK_UP_AGENT)</h3>
     <div class="hint" style="margin-bottom:10px">ระบบทำ V_LOOK_UP แทนคุณ: รหัส Agent (SL_PARTNER_CODE) → รหัสพนักงาน (EMP.ID) · รวมยอดเป็น <b>วัน × พนักงาน × แคมเปญ</b> · ยอดเงิน = Diff RC ของ VAS / NET_RC ของสินค้าอื่น · วันที่ = INTRACN_DT_CMPLET แล้วบันทึกลงทั้ง <b>ProductSales</b> และ <b>SalesDaily</b> ให้ในครั้งเดียว<br>ไฟล์ถูกอ่านในเครื่องคุณ — ส่งขึ้นระบบเฉพาะตัวเลขที่รวมแล้ว</div>
     <div class="rule" style="gap:10px;flex-wrap:wrap;align-items:center"><label class="btn" style="cursor:pointer">① เลือกไฟล์ Daily TOL_UPSELL (.xlsx)<input type="file" id="impF1" accept=".xlsx" hidden></label><span class="hint">${esc(IMP.dailyName||'ยังไม่ได้เลือก')}</span>${sheetSel?'<span class="hint">ชีต:</span>'+sheetSel:''}<span class="hint">นำเข้าเข้าเดือน:</span><select id="impYm">${Array.from({length:12},(_,i)=>addMonths(today.slice(0,7),-i)).map(m=>`<option value="${m}" ${(IMP.ym||today.slice(0,7))===m?'selected':''}>${ymLabel(m)}</option>`).join('')}</select></div>
@@ -1612,7 +1629,7 @@ async function admImport(body){
     <div id="impOut"></div>`;
   const out=$('#impOut');
   if(pv){const s=pv.sum,inf=IMP.info;
-    out.innerHTML=`<div class="panel sec"><h3>📋 สรุปก่อนนำเข้า ${pv.committed?'· ✅ นำเข้าแล้ว':''}</h3>
+    out.innerHTML=`<div class="panel sec"><h3>📋 สรุปก่อนนำเข้า ${pv.committed?'· ✅ นำเข้าแล้ว':''}</h3>${pv.committed?'':impRiskHTML()}
       <div class="stats" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
         <div class="stat"><small>ช่วงวันที่</small><b class="flat">${esc(dShort(s.from))} – ${esc(dShort(s.to))}</b></div><div class="stat"><small>จำนวนวัน</small><b class="flat">${s.days}</b></div>
         <div class="stat"><small>พนักงาน</small><b class="flat">${s.members}</b></div><div class="stat"><small>จำนวนชิ้น (SUB)</small><b class="flat">${fmt(s.q)}</b></div><div class="stat"><small>ยอดรวม</small><b class="flat">฿${fmt(s.a)}</b></div></div>
@@ -1626,12 +1643,17 @@ async function admImport(body){
       ${pv.badProducts.length?`<div class="err" style="margin-top:8px">⚠️ มี ${pv.badProducts.length} แคมเปญที่ยังไม่อยู่ในชีต Products (POINT จะคิด Factor = 1 จนกว่าจะเพิ่ม): ${pv.badProducts.slice(0,10).map(x=>esc(x.p)+' ('+fmt(x.n)+' ชิ้น)').join(' · ')}</div>`:''}
       ${pv.committed?'':`<div style="margin-top:12px"><button class="btn primary" id="impCommit" ${IMP.busy?'disabled':''}>✅ ยืนยันนำเข้า ${s.psRows} แถว</button> <span class="hint">ตรวจดูตัวเลขข้างบนก่อนกดยืนยัน</span></div>`}</div>`}
   const run=async(fn)=>{IMP.busy=true;IMP.msg='กำลังประมวลผล…';admImport(body);try{await fn();IMP.msg=''}catch(e){IMP.msg='⚠️ '+e.message}IMP.busy=false;admImport(body)};
-  $('#impF1').onchange=async e=>{const f=e.target.files[0];if(!f)return;IMP.dailyName=f.name;IMP.prev=null;await run(async()=>{const x=await xlsxOpen(f);IMP.xl=x;IMP.sheets=x.sheets;IMP.sheet=(x.sheets.find(s=>/^upsell$/i.test(s.name))||x.sheets.find(s=>!s.hidden)||x.sheets[0]).name;IMP.buf=true})};
+  $('#impF1').onchange=async e=>{const f=e.target.files[0];if(!f)return;IMP.dailyName=f.name;IMP.prev=null;await run(async()=>{const x=await xlsxOpen(f);IMP.xl=x;IMP.sheets=x.sheets;IMP.cache={};IMP.stat={};
+    for(const s of x.sheets){try{const d=await x.load(s.name);IMP.cache[s.name]=d;IMP.stat[s.name]=impSheetStat(d)}catch(e){IMP.stat[s.name]={ok:false,n:0,vas:0,types:{}}}}
+    const ok=x.sheets.filter(s=>IMP.stat[s.name].ok&&IMP.stat[s.name].n);   // เลือกชีตที่มี VAS และแถวมากสุดให้อัตโนมัติ
+    const best=ok.slice().sort((a,b)=>(!!IMP.stat[b.name].vas-!!IMP.stat[a.name].vas)||(IMP.stat[b.name].n-IMP.stat[a.name].n))[0];
+    IMP.sheet=(best||x.sheets.find(s=>/^upsell$/i.test(s.name))||x.sheets.find(s=>!s.hidden)||x.sheets[0]).name;IMP.buf=true})};
   if($('#impYm'))$('#impYm').onchange=e=>{IMP.ym=e.target.value===today.slice(0,7)?'':e.target.value;IMP.prev=null;admImport(body)};
   if($('#impSheet'))$('#impSheet').onchange=e=>{IMP.sheet=e.target.value;IMP.prev=null;admImport(body)};
   $('#impF2').onchange=async e=>{const f=e.target.files[0];if(!f)return;IMP.lookName=f.name;IMP.prev=null;await run(async()=>{const x=await xlsxOpen(f);IMP.lk=await x.load(x.sheets[0].name);if(!IMP.lk.length)throw new Error('ไฟล์ V_LOOK_UP ว่าง')})};
-  $('#impGo').onclick=()=>run(async()=>{const d=await IMP.xl.load(IMP.sheet),R=impBuild(d,IMP.lk);if(!R.rows.length)throw new Error('ไม่พบแถวที่จับคู่พนักงานได้ — ตรวจว่าเลือกชีตถูก และ CODE ในไฟล์ V_LOOK_UP ตรงกับ SL_PARTNER_CODE');IMP.rows=R.rows;IMP.info=R.info;IMP.prev=await api('importPreview',{rows:R.rows,ym:IMP.ym})});
-  if($('#impCommit'))$('#impCommit').onclick=()=>{if(IMP.info&&IMP.info.vasN>=50&&IMP.info.vasEq/IMP.info.vasN>0.9&&!confirm('⚠️ Diff RC ของ VAS ดูเหมือนยังไม่ได้คำนวณ (เท่ากับ NET_RC เกือบทั้งหมด)\nยอดจะสูงเกินจริง — ยังต้องการนำเข้าต่อหรือไม่?'))return;if(!confirm('ยืนยันนำเข้า? ข้อมูลรายวันของเดือน '+((IMP.prev&&IMP.prev.sum&&IMP.prev.sum.ym)||IMP.ym||today.slice(0,7))+' จะถูกแทนที่ด้วยไฟล์นี้ (เดือนอื่นไม่ถูกแตะ)'))return;run(async()=>{IMP.prev=await api('importCommit',{rows:IMP.rows,ym:IMP.ym});ADM.psales=null;await load();toast('✅ นำเข้าสำเร็จ')})};
+  $('#impGo').onclick=()=>run(async()=>{const d=(IMP.cache&&IMP.cache[IMP.sheet])||await IMP.xl.load(IMP.sheet),R=impBuild(d,IMP.lk);if(!R.rows.length)throw new Error('ไม่พบแถวที่จับคู่พนักงานได้ — ตรวจว่าเลือกชีตถูก และ CODE ในไฟล์ V_LOOK_UP ตรงกับ SL_PARTNER_CODE');IMP.rows=R.rows;IMP.info=R.info;IMP.prev=await api('importPreview',{rows:R.rows,ym:IMP.ym})});
+  if($('#impUseBetter'))$('#impUseBetter').onclick=()=>{IMP.sheet=impRisk().betterSheet;IMP.prev=null;$('#impGo').disabled=false;$('#impGo').click()};
+  if($('#impCommit'))$('#impCommit').onclick=()=>{const RK=impRisk();if(RK.block){const w=(RK.betterSheet?'ชีตที่เลือกไม่มี VAS (ชีต '+RK.betterSheet+' มีข้อมูลครบกว่า)\n':'')+(RK.drop.length?'ยอดลดลงเกินครึ่ง '+RK.drop.length+' วัน\n':'');if(prompt('⛔ ตรวจพบความเสี่ยง:\n'+w+'\nถ้าแน่ใจว่าถูกต้อง พิมพ์คำว่า ยืนยัน แล้วกด OK')!=='ยืนยัน'){toast('ยกเลิกการนำเข้า');return}}if(IMP.info&&IMP.info.vasN>=50&&IMP.info.vasEq/IMP.info.vasN>0.9&&!confirm('⚠️ Diff RC ของ VAS ดูเหมือนยังไม่ได้คำนวณ (เท่ากับ NET_RC เกือบทั้งหมด)\nยอดจะสูงเกินจริง — ยังต้องการนำเข้าต่อหรือไม่?'))return;if(!confirm('ยืนยันนำเข้า? ข้อมูลรายวันของเดือน '+((IMP.prev&&IMP.prev.sum&&IMP.prev.sum.ym)||IMP.ym||today.slice(0,7))+' จะถูกแทนที่ด้วยไฟล์นี้ (เดือนอื่นไม่ถูกแตะ)'))return;run(async()=>{IMP.prev=await api('importCommit',{rows:IMP.rows,ym:IMP.ym});ADM.psales=null;await load();toast('✅ นำเข้าสำเร็จ')})};
 }
 /* ---- 🗓 ประวัติเข้าใช้งานย้อนหลัง 30 วัน (เฉพาะแอดมิน) ---- */
 const PL={d:null,view:'day',q:'',open:{}};
@@ -4377,7 +4399,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-20.3';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-22.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
