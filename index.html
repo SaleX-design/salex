@@ -886,12 +886,15 @@ function confetti(){
 
 /* ---------- API ---------- */
 let VIEWAS='',VIEWAS_ADMIN=null;   // 👁 ดูในฐานะ (แอดมิน) — ทุกคำขอส่ง _as ไปให้หลังบ้านใช้สิทธิ์ของคนนั้น
+const APIT=[];   // ⏱ เวลาตอบของแต่ละคำขอจากเครื่องนี้ (80 ครั้งล่าสุด)
 async function api(action,payload,noAuth){
   if(!API_URL)throw Object.assign(new Error('ยังไม่ได้ตั้งค่า URL เชื่อมต่อ'),{code:'NOURL'});
   let j;
   try{
+    const t0=performance.now();
     const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action,token:TOKEN},VIEWAS&&!noAuth?{_as:VIEWAS}:{},payload||{}))});
     j=await r.json();
+    try{APIT.push({a:action,ms:Math.round(performance.now()-t0),at:Date.now()});if(APIT.length>80)APIT.shift()}catch(x){}
   }catch(e){throw Object.assign(new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ — ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'),{code:'NET'})}
   if(!j.ok){
     if(j.code==='AUTH'&&!noAuth){TOKEN='';LS.del('sb_token');D=null;showGate()}
@@ -4399,7 +4402,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-22.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-22.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -4433,12 +4436,28 @@ function vaPick(){
   $$('[data-va]').forEach(b=>b.onclick=()=>{closeModal();vaSet(b.dataset.va)});setTimeout(()=>$('#vaQ').focus(),50);
 }
 /* 🩺 ตรวจสุขภาพระบบ */
+const PERF_NM={bootstrap:'โหลดหน้าแรก/ข้อมูลหลัก',pulse:'เช็กแจ้งเตือน (ทุก 45 วิ)',menuPing:'บันทึกการเปิดเมนู',profile:'โปรไฟล์',doLoad:'ตารางงาน/วันหยุด',login:'เข้าสู่ระบบ'};
+function perfHTML(p){
+  if(!p)return '<div class="hint">ยังไม่มีสถิติความเร็วหลังบ้าน (ต้องอัปเดต Code.gs เวอร์ชันนี้ก่อน แล้วรอให้มีการใช้งานสักพัก)</div>';
+  const s=ms=>(ms/1000).toFixed(1)+' วิ',c=ms=>ms>6000?'down':ms>3000?'flat':'up',nm=a=>{const m=/^(\w+)(?:\((.+)\))?$/.exec(a)||[0,a];return esc(PERF_NM[m[1]]||m[1])+(m[2]?` <span class="role">${esc(m[2])}</span>`:'')};
+  const bs=p.acts.filter(x=>/^bootstrap/.test(x.a)),bsN=bs.reduce((n,x)=>n+x.n,0),hitN=bs.filter(x=>/แคช/.test(x.a)).reduce((n,x)=>n+x.n,0);
+  const me=APIT.length?APIT.reduce((n,x)=>n+x.ms,0)/APIT.length:0;
+  return `${p.bsBig?`<div class="wfnote" style="--c:var(--down)"><div>⛔ <b>ข้อมูลหลักใหญ่เกินกว่าจะเก็บในแคช</b> — ทุกครั้งที่เข้าระบบต้องคำนวณใหม่หมด จึงช้า<div class="hint">วิธีแก้: ลดข้อมูลย้อนหลังในชีต Sales/SalesDaily/ProductSales (เก็บแยกไฟล์) หรือแจ้งผู้พัฒนาให้แบ่งการโหลด</div></div></div>`:''}
+   <div class="stats" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
+    <div class="stat"><small>คำขอ 24 ชม.</small><b class="flat">${fmt(p.hours.reduce((n,h)=>n+h.n,0))}</b></div>
+    <div class="stat"><small>หน้าแรกใช้แคชได้</small><b class="${bsN&&hitN/bsN<0.5?'down':'up'}">${bsN?Math.round(hitN/bsN*100)+'%':'–'}</b><small>${fmt(hitN)}/${fmt(bsN)} ครั้ง</small></div>
+    <div class="stat"><small>ช้าเกิน 8 วิ</small><b class="${p.acts.some(x=>x.slow)?'down':'up'}">${fmt(p.acts.reduce((n,x)=>n+x.slow,0))} ครั้ง</b></div>
+    <div class="stat"><small>เครื่องนี้ (เฉลี่ย)</small><b class="${c(me)}">${APIT.length?s(me):'–'}</b><small>${APIT.length} คำขอล่าสุด</small></div></div>
+   <div class="tblwrap"><table class="tbl"><thead><tr><th>งานหลังบ้าน</th><th>จำนวนครั้ง</th><th>เฉลี่ย</th><th>ช้าสุด</th><th>เกิน 8 วิ</th><th>ผิดพลาด</th></tr></thead><tbody>${p.acts.slice(0,15).map(x=>`<tr><td>${nm(x.a)}</td><td class="num">${fmt(x.n)}</td><td class="num ${c(x.avg)}">${s(x.avg)}</td><td class="num ${c(x.max)}">${s(x.max)}</td><td class="num ${x.slow?'down':''}">${x.slow||''}</td><td class="num ${x.err?'down':''}">${x.err||''}</td></tr>`).join('')||'<tr><td colspan="6" class="hint">ยังไม่มีข้อมูล</td></tr>'}</tbody></table></div>
+   <details class="wfmore"><summary>รายชั่วโมง</summary><div class="tblwrap"><table class="tbl"><thead><tr><th>ชั่วโมง</th><th>คำขอ</th><th>เฉลี่ย</th><th>เกิน 8 วิ</th></tr></thead><tbody>${p.hours.map(h=>`<tr><td>${esc(h.h.slice(6,8)+'/'+h.h.slice(4,6)+' '+h.h.slice(8)+':00')}</td><td class="num">${fmt(h.n)}</td><td class="num ${c(h.avg)}">${s(h.avg)}</td><td class="num ${h.slow?'down':''}">${h.slow||''}</td></tr>`).join('')}</tbody></table></div></details>
+   <div class="hint">เวลาเป็นเวลาที่ Apps Script ใช้ประมวลผลจริง (ไม่รวมเวลาเน็ต) · Google Apps Script ปกติตอบ 1–3 วินาที</div>`}
 async function admHealth(body,fresh){
   if(!ADM.health||fresh){body.innerHTML='<div class="panel"><div class="empty">⏳ กำลังตรวจทุกชีต… (อาจใช้เวลา 10–40 วินาที)</div></div>';try{ADM.health=await api('healthCheck')}catch(e){body.innerHTML=`<div class="panel"><div class="err">${esc(e.message)}</div></div>`;return}}
   const r=ADM.health,ic={bad:'⛔',warn:'⚠️',info:'ℹ️'},col={bad:'var(--down)',warn:'var(--flat)',info:'var(--blue)'},conv=r.issues.some(i=>i.lv==='bad'&&/แปลงข้อความ/.test(i.msg));
   const tot=r.sheets.reduce((n,x)=>n+(x.rows||0),0);
   body.innerHTML=`<div class="panel"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:6px"><span>🩺 สุขภาพระบบ <span class="hint" style="font-weight:400">ตรวจล่าสุด ${new Date(r.ts).toLocaleString('th-TH')}</span></span><span style="display:flex;gap:6px">${conv?'<button class="btn sm primary" id="hcFix">🛠 ซ่อมอัตโนมัติ</button>':''}<button class="btn sm" id="hcRe">🔄 ตรวจใหม่</button></span></h3>
    <div class="wfnote" style="--c:${r.ok?'var(--up)':'var(--down)'}"><div><b>${r.ok?'✅ ไม่พบปัญหาร้ายแรง':'⛔ พบปัญหาที่ควรแก้'}</b><div class="hint">${r.issues.filter(i=>i.lv==='bad').length} ร้ายแรง · ${r.issues.filter(i=>i.lv==='warn').length} ควรตรวจ · ${r.issues.filter(i=>i.lv==='info').length} แจ้งให้ทราบ · ข้อมูลทั้งหมด ${fmt(tot)} แถวใน ${r.sheets.filter(x=>!x.missing).length} ชีต</div></div></div>
+   <details class="wfmore" open><summary>⏱ ความเร็วระบบ (24 ชม. ล่าสุด)</summary>${perfHTML(r.perf)}</details>
    ${r.issues.length?r.issues.map(i=>`<div class="wfnote" style="--c:${col[i.lv]}"><div>${ic[i.lv]} <b>${esc(i.area)}</b> — ${esc(i.msg)}${i.fix?`<div class="hint">วิธีแก้: ${esc(i.fix)}</div>`:''}</div></div>`).join(''):'<div class="empty">ไม่มีรายการที่ต้องแก้ 🎉</div>'}
    <details class="wfmore"><summary>📊 ขนาดแต่ละชีต</summary><div class="tblwrap"><table class="tbl"><thead><tr><th>ชีต</th><th>จำนวนแถว</th><th>ค่าที่ถูกแปลง</th></tr></thead><tbody>${r.sheets.filter(x=>!x.missing).sort((a,b)=>b.rows-a.rows).map(x=>`<tr><td>${esc(x.name)}</td><td class="num">${fmt(x.rows)}</td><td class="num ${x.conv?'down':''}">${x.conv||''}</td></tr>`).join('')}</tbody></table></div></details>
    <div class="hint" style="margin-top:8px">“ซ่อมอัตโนมัติ” จะแปลงค่าที่ Google Sheets เปลี่ยนเป็นวันที่/เวลาเอง กลับเป็นข้อความเดิม (เช่น 2026-11-18, 09:00) และตั้งคอลัมน์เหล่านั้นเป็นรูปแบบข้อความ เพื่อไม่ให้เกิดซ้ำ — แนะนำให้ทำสำเนาไฟล์ชีตไว้ก่อน (ไฟล์ → ทำสำเนา)</div></div>`;
