@@ -3763,7 +3763,7 @@ function renderScript(){
   L.sort((a,b)=>(!!a.product===!!b.product?0:a.product?-1:1));
   let h='';
   if(T.needSetup)h+='<div class="panel"><div class="empty">⚠️ ยังไม่มีชีต Scripts — ให้แอดมินรันฟังก์ชัน <b>setup</b> ใน Apps Script หนึ่งครั้ง แล้วรีเฟรชหน้านี้</div></div>';
-  h+=`<div class="panel sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="scP" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--text);font-size:16px"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${scOpts(SC.prod)}</select><input id="scQ" type="search" placeholder="🔎 ค้นหาสคริปต์…" value="${esc(SC.q)}" style="flex:1;min-width:160px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--text)"><button class="btn" id="scHl" title="เปิด/ปิดการไฮไลต์ตัวเลขและคำสำคัญ">🖍 ไฮไลต์: ${document.body.classList.contains('nohl')?'ปิด':'เปิด'}</button>${adm?'<button class="btn primary" id="scAdd">➕ เพิ่มสคริปต์</button><button class="btn" id="scAddT">🏷 เพิ่มชนิดสินค้า</button><button class="btn" id="scAud" title="ตรวจคำผิด/คำเสี่ยง/ข้อเสนอแนะ แล้วแจ้งแอดมิน">🔍 ตรวจสคริปต์</button>':'<button class="btn" id="scSug" title="แจ้งข้อความที่ควรแก้ หรือเสนอสคริปต์ที่ควรเพิ่ม">💡 แจ้ง/เสนอสคริปต์</button>'}</div></div>`;
+  h+=`<div class="panel sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="scP" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--text);font-size:16px"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${scOpts(SC.prod)}</select><input id="scQ" type="search" placeholder="🔎 ค้นหาสคริปต์…" value="${esc(SC.q)}" style="flex:1;min-width:160px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--text)"><button class="btn" id="scHl" title="เปิด/ปิดการไฮไลต์ตัวเลขและคำสำคัญ">🖍 ไฮไลต์: ${document.body.classList.contains('nohl')?'ปิด':'เปิด'}</button>${adm?'<button class="btn primary" id="scAdd">➕ เพิ่มสคริปต์</button><button class="btn" id="scAddT">🏷 เพิ่มชนิดสินค้า</button><button class="btn" id="scAud" title="ตรวจคำผิด/คำเสี่ยง/ข้อเสนอแนะ แล้วแจ้งแอดมิน">🔍 ตรวจสคริปต์</button><button class="btn" id="scAuto" title="แก้คำผิด + ไฮไลต์ประโยคสำคัญให้ทุกสคริปต์ (ดูตัวอย่างก่อนยืนยัน)">🪄 จัดการอัตโนมัติ</button>':'<button class="btn" id="scSug" title="แจ้งข้อความที่ควรแก้ หรือเสนอสคริปต์ที่ควรเพิ่ม">💡 แจ้ง/เสนอสคริปต์</button>'}</div></div>`;
   if(SC.prod)h+=scInfoCard(SC.prod,adm,false);
   h+='<div class="mrow" id="scBar" style="justify-content:flex-start;position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;display:flex;gap:6px;flex-wrap:wrap">'+T.stages.map((s,i)=>`<button class="btn sm" data-scgo="${s.id}" style="border:2px solid ${SCCOL[s.id]};background:color-mix(in srgb,${SCCOL[s.id]} 18%,var(--panel2))">${i+1}. ${s.e} ${esc(s.name)}</button>`).join('')+'</div>';
   T.stages.forEach((s,i)=>{
@@ -3777,6 +3777,7 @@ function renderScript(){
   if($('#scAdd'))$('#scAdd').onclick=()=>scriptModal({product:SC.prod});
   if($('#scAddT'))$('#scAddT').onclick=()=>typeModal();
   if($('#scAud'))$('#scAud').onclick=()=>{S.adm='scr';goTab('admin')};
+  if($('#scAuto'))$('#scAuto').onclick=()=>scAutoM('both');
   if($('#scSug'))$('#scSug').onclick=()=>scReportDlg({kind:'suggest'});
 }
 
@@ -3793,6 +3794,26 @@ function scReportDlg(o){
 const SCSEV={err:['🔴','ควรแก้','down'],warn:['🟠','ควรตรวจ','flat'],info:['🔵','ข้อเสนอแนะ','']};
 function scIssueRows(L,onItem){
   return L.map((i,n)=>`<tr data-ai="${n}"><td style="white-space:nowrap" class="${SCSEV[i.sev][2]}">${SCSEV[i.sev][0]} ${SCSEV[i.sev][1]}</td><td>${i.id?`<b>${esc(i.title)}</b><div class="hint">${esc(i.productName||'')} · ${esc((SC.d.stages.find(s=>s.id===i.stage)||{}).name||i.stage)}</div>`:`<span class="hint">${esc(i.productName||'ทั่วไป')} · ${esc((SC.d.stages.find(s=>s.id===i.stage)||{}).name||i.stage||'')}</span>`}</td><td>${esc(i.msg)}${i.hit&&i.id?` <code style="background:var(--panel2);padding:1px 6px;border-radius:6px">${esc(i.hit)}</code>`:''}${i.from&&i.to!==''&&i.from!==i.to?`<div class="hint">แนะนำ: “${esc(i.from)}” → “${esc(i.to)}”</div>`:''}</td><td style="white-space:nowrap">${i.id?`<button class="btn sm" data-aedit="${n}">✏️ แก้</button> `:i.rule==='gap-stage'||i.rule==='gap-object'?`<button class="btn sm" data-aadd="${n}">➕ เพิ่มสคริปต์</button> `:''}${i.id&&i.from&&i.to!==''&&i.from!==i.to&&i.rule!=='space'?`<button class="btn sm primary" data-afix="${n}" title="แทนที่คำนี้ในสคริปต์ให้เลย">⚡ แก้ให้</button> `:''}<button class="btn sm" data-aign="${n}" title="ไม่ต้องเตือนข้อนี้อีก (กรณีที่ถูกต้องอยู่แล้ว)">🙈 ข้าม</button></td></tr>`).join('');
+}
+/* 🪄 จัดการสคริปต์อัตโนมัติ: แสดงตัวอย่างก่อน → เลือก → ยืนยันครั้งเดียว */
+async function scAutoM(mode){
+  openModal(`<h2>🪄 จัดการสคริปต์อัตโนมัติ</h2><div class="seg" id="saMode" style="margin:4px 0 8px">${[['both','แก้คำผิด + ไฮไลต์'],['fix','แก้คำผิดอย่างเดียว'],['hl','ไฮไลต์อย่างเดียว']].map(x=>`<button data-sam="${x[0]}" class="${mode===x[0]?'on':''}">${x[1]}</button>`).join('')}</div><div id="saBody"><div class="empty">⏳ กำลังวิเคราะห์ทุกสคริปต์…</div></div>`);
+  $$('[data-sam]').forEach(b=>b.onclick=()=>scAutoM(b.dataset.sam));
+  let r;try{r=await api('scriptAutoPlan',{mode})}catch(e){$('#saBody').innerHTML=`<div class="err">${esc(e.message)}</div>`;return}
+  const L=r.items,box=$('#saBody');if(!box)return;
+  if(!L.length){box.innerHTML='<div class="empty">✅ ไม่มีอะไรต้องแก้ — ทุกสคริปต์เรียบร้อยแล้ว</div><div class="mrow"><button class="btn" onclick="closeModal()">ปิด</button></div>';return}
+  const nF=L.reduce((n,x)=>n+x.ch.filter(c=>c.k==='fix').length,0),nM=L.reduce((n,x)=>n+x.ch.filter(c=>c.k==='must').length,0),nH=L.reduce((n,x)=>n+x.ch.filter(c=>c.k==='hl').length,0);
+  const pn=x=>esc(x.product?scPName(x.product):'ทั่วไป')+' · '+esc(((SC.d&&SC.d.stages)||[]).find(s=>s.id===x.stage)?.name||x.stage||'');
+  box.innerHTML=`<div class="hint" style="margin-bottom:6px">พบ <b>${L.length}</b> สคริปต์ · แก้คำผิด ${nF} จุด · ⚠️ ห้ามลืมแจ้ง ${nM} ประโยค · 🖍 จุดเด่น ${nH} ประโยค — ติ๊กออกสคริปต์ที่ไม่ต้องการ แล้วกดยืนยัน<br>สคริปต์ที่แอดมินไฮไลต์เองไว้แล้ว ระบบจะแก้แค่คำผิด ไม่ไฮไลต์ซ้ำ</div>
+   <label style="display:flex;gap:6px;align-items:center;margin:4px 0"><input type="checkbox" id="saAll" checked> เลือกทั้งหมด</label>
+   <div style="max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:8px">${L.map((x,i)=>`<div class="panel" style="padding:10px;margin:0"><label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer"><input type="checkbox" data-sai="${i}" checked style="margin-top:4px"><div style="min-width:0;flex:1"><b>${esc(x.nTitle)}</b> <span class="hint">${pn(x)}</span>
+     ${x.ch.filter(c=>c.k==='fix').length?`<div style="margin:4px 0;display:flex;flex-wrap:wrap;gap:4px">${x.ch.filter(c=>c.k==='fix').map(c=>`<span class="role" style="text-transform:none"><s class="down">${esc(c.from)}</s> → <b class="up">${esc(c.to)}</b></span>`).join('')}</div>`:''}
+     ${x.ch.some(c=>c.k!=='fix')?`<details><summary class="hint">ดูผลไฮไลต์ (${x.ch.filter(c=>c.k!=='fix').length} ประโยค)</summary><div class="scbody" style="white-space:pre-wrap;margin-top:6px;line-height:1.7">${scFmt(x.nBody)}</div></details>`:''}</div></label></div>`).join('')}</div>
+   <div class="mrow"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn primary" id="saGo">✅ ยืนยัน (${L.length} สคริปต์)</button></div>`;
+  const cnt=()=>{const n=$$('[data-sai]').filter(c=>c.checked).length;$('#saGo').textContent=`✅ ยืนยัน (${n} สคริปต์)`;$('#saGo').disabled=!n};
+  $$('[data-sai]').forEach(c=>c.onchange=cnt);$('#saAll').onchange=e=>{$$('[data-sai]').forEach(c=>c.checked=e.target.checked);cnt()};
+  $('#saGo').onclick=async()=>{const ids=$$('[data-sai]').filter(c=>c.checked).map(c=>L[+c.dataset.sai].id);const b=$('#saGo');b.disabled=true;b.textContent='กำลังบันทึก…';
+    try{const x=await api('scriptAutoApply',{mode,ids});closeModal();toast(`🪄 จัดการแล้ว ${x.n} สคริปต์`,true);await ensureScripts(true);render()}catch(e){toast('⚠️ '+e.message);b.disabled=false;cnt()}};
 }
 async function scAuditView(box){
   box.innerHTML='<div class="hint">กำลังตรวจสคริปต์…</div>';
@@ -3832,12 +3853,19 @@ function scriptModal(x){
    <div class="row2"><div class="fld"><label>สินค้า</label><select id="smP"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${po(x.product)}</select></div>
    <div class="fld"><label>ขั้นตอน</label><select id="smS">${T.stages.map(s=>`<option value="${s.id}" ${x.stage===s.id?'selected':''}>${s.e} ${esc(s.name)}</option>`).join('')}</select></div></div>
    <div class="fld"><label>หัวข้อ</label><input id="smT" maxlength="120" value="${esc(x.title||'')}" placeholder="เช่น ลูกค้าบอกว่า “แพงไป”"></div>
-   <div class="fld"><label>เนื้อหาสคริปต์ (พนักงานอ่านตามได้เลย)</label><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0"><button type="button" class="btn sm" data-hlm="**">🖍 ไฮไลต์จุดเด่น</button><button type="button" class="btn sm" data-hlm="!!">⚠️ ห้ามลืมแจ้งลูกค้า</button><button type="button" class="btn sm" data-hlm="x">ล้างไฮไลต์</button></div><textarea id="smB" rows="8" maxlength="3000">${esc(x.body||'')}</textarea><div class="hint">ลากเลือกข้อความ แล้วกดปุ่มด้านบน · หรือพิมพ์ <b>**ข้อความ**</b> = จุดเด่น · <b>!!ข้อความ!!</b> = ห้ามลืมแจ้ง · ตัวเลขราคา/ระยะเวลา/คำว่า ฟรี, VAT, ผูกสัญญา ฯลฯ ไฮไลต์ให้อัตโนมัติ</div></div>
+   <div class="fld"><label>เนื้อหาสคริปต์ (พนักงานอ่านตามได้เลย)</label><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0"><button type="button" class="btn sm" data-hlm="**">🖍 ไฮไลต์จุดเด่น</button><button type="button" class="btn sm" data-hlm="!!">⚠️ ห้ามลืมแจ้งลูกค้า</button><button type="button" class="btn sm" data-hlm="x">ล้างไฮไลต์</button><button type="button" class="btn sm primary" data-sma="fix" title="แก้คำสะกดผิดที่รู้คำถูกแน่นอน">🪄 แก้คำผิด</button><button type="button" class="btn sm primary" data-sma="hl" title="ทำเครื่องหมายประโยคเงื่อนไข (ห้ามลืมแจ้ง) และจุดขาย ให้อัตโนมัติ">🪄 ไฮไลต์อัตโนมัติ</button></div><textarea id="smB" rows="8" maxlength="3000">${esc(x.body||'')}</textarea><div class="hint">ลากเลือกข้อความ แล้วกดปุ่มด้านบน · หรือพิมพ์ <b>**ข้อความ**</b> = จุดเด่น · <b>!!ข้อความ!!</b> = ห้ามลืมแจ้ง · ตัวเลขราคา/ระยะเวลา/คำว่า ฟรี, VAT, ผูกสัญญา ฯลฯ ไฮไลต์ให้อัตโนมัติ</div></div>
    <div class="fld"><label>ลิงก์ไฟล์เสียง (ไม่บังคับ) — Google Drive (แชร์แบบ "ทุกคนที่มีลิงก์") หรือลิงก์ไฟล์ .mp3/.m4a ที่ขึ้นต้นด้วย https://</label><input id="smU" maxlength="600" value="${esc(x.audio||'')}" placeholder="https://drive.google.com/file/d/…"></div>
    <div class="row2"><div class="fld"><label>Second Offer: เสนอสินค้านี้แทน (เฉพาะขั้นตอน Second Offer)</label><select id="smA"><option value="">— ไม่ระบุ —</option>${po(x.alt)}</select></div>
    <div class="fld"><label>ลำดับ (เลขน้อยขึ้นก่อน)</label><input id="smO" type="number" min="0" value="${esc(x.order||'')}" placeholder="เว้นว่าง = ต่อท้าย"></div></div>
    <div class="mrow" style="justify-content:flex-start"><button type="button" class="btn" id="smChkB">🔍 ตรวจคำผิด/คำเสี่ยง</button></div><div id="smChk"></div>
    <div id="smE" class="err"></div><div class="mrow"><button class="btn primary" id="smGo">${edit?'บันทึก':'เพิ่ม'}</button><button class="btn" onclick="closeModal()">ยกเลิก</button></div>`);
+  $$('#mbox [data-sma]').forEach(b=>b.onclick=async()=>{const m=b.dataset.sma;b.disabled=true;
+    try{const r=await api('scriptAutoPlan',{draft:1,mode:m,title:$('#smT').value,body:$('#smB').value});
+      if(r.skip&&m==='hl'){toast('ℹ️ '+r.skip+' — กด “ล้างไฮไลต์” ก่อน ถ้าต้องการให้ระบบไฮไลต์ใหม่ทั้งหมด');return}
+      if(!r.ch.length){toast(m==='fix'?'✅ ไม่พบคำผิดที่ระบบรู้จัก':'ไม่พบประโยคเงื่อนไข/จุดขายที่ชัดเจน');return}
+      $('#smT').value=r.title;$('#smB').value=r.body;
+      toast('🪄 '+(m==='fix'?'แก้ '+r.ch.length+' จุด: '+r.ch.slice(0,4).map(c=>c.from+'→'+c.to).join(', '):'ไฮไลต์ '+r.ch.length+' ประโยค')+' — ตรวจแล้วกดบันทึก',true)}
+    catch(e){toast('⚠️ '+e.message)}finally{b.disabled=false}});
   $$('#mbox [data-hlm]').forEach(b=>b.onclick=()=>{const ta=$('#smB'),a=ta.selectionStart,z=ta.selectionEnd,m=b.dataset.hlm;let v=ta.value;if(m==='x'){const seg=v.slice(a,z||v.length).replace(/\*\*|!!/g,'');const from=z===a?0:a,to=z===a?v.length:z;ta.value=v.slice(0,from)+seg+v.slice(to);return}if(z<=a){toast('ลากเลือกข้อความก่อน');return}ta.value=v.slice(0,a)+m+v.slice(a,z)+m+v.slice(z);ta.focus();ta.setSelectionRange(a,z+m.length*2)});
   $('#smChkB').onclick=scDraftCheck;
   $('#smGo').onclick=async()=>{$('#smGo').disabled=true;try{const sv=await api('scriptSave',{id:x.id||'',product:$('#smP').value,stage:$('#smS').value,title:$('#smT').value,body:$('#smB').value,alt:$('#smA').value,audio:$('#smU').value,order:$('#smO').value});closeModal();const wn=(sv&&sv.issues)||[];toast(wn.length?'✅ บันทึกแล้ว แต่พบ '+wn.length+' จุดที่ควรตรวจ — กด ✏️ แล้วกด “🔍 ตรวจ” ดูรายละเอียด':'✅ บันทึกสคริปต์แล้ว');await ensureScripts(true);if(S.tab==='admin')render()}catch(e){$('#smE').textContent=e.message;$('#smGo').disabled=false}};
@@ -4402,7 +4430,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-22.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-22.3';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
