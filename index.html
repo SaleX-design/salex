@@ -3611,7 +3611,7 @@ function renderTips(){
   h+=L.length?L.map(t=>tipCard(t,all.indexOf(t),false)).join(''):'<div class="panel"><div class="empty">ไม่พบเทคนิคที่ตรงกับที่ค้นหา</div></div>';
   h+=`<div class="hint" style="text-align:center;margin:10px">เทคนิคเขียนโดย Senior/แอดมิน · ใช้เป็นแนวทาง ปรับให้เข้ากับลูกค้าและสไตล์ของตัวเอง</div>`;
   const keepQ=document.activeElement&&document.activeElement.id==='tpQ';
-  el.innerHTML=h;
+  el.innerHTML=(D&&!D.isAdmin?scrChipBox():'')+h;if(D&&!D.isAdmin){if(SCRT)scrChip();else if(!VIEWAS)setTimeout(pulseTick,1500)};
   const qi=$('#tpQ');qi.oninput=e=>{TP.q=e.target.value;clearTimeout(TP.tm);TP.tm=setTimeout(()=>{renderTips();const n=$('#tpQ');if(n){n.focus();n.setSelectionRange(n.value.length,n.value.length)}},250)};
   if(keepQ){qi.focus();qi.setSelectionRange(qi.value.length,qi.value.length)}
   if($('#tpP'))$('#tpP').onchange=e=>{TP.prod=e.target.value;renderTips()};
@@ -3768,7 +3768,7 @@ function renderScript(){
   L.sort((a,b)=>(!!a.product===!!b.product?0:a.product?-1:1));
   let h='';
   if(T.needSetup)h+='<div class="panel"><div class="empty">⚠️ ยังไม่มีชีต Scripts — ให้แอดมินรันฟังก์ชัน <b>setup</b> ใน Apps Script หนึ่งครั้ง แล้วรีเฟรชหน้านี้</div></div>';
-  if(!adm)h+=`<div id="scrChip" class="panel sec" style="padding:8px 12px;font-size:calc(14px*var(--fz,1))" ${SCRT?'':'hidden'}></div>`;
+  if(!adm)h+=scrChipBox();
   h+=`<div class="panel sec"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="scP" style="background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--text);font-size:calc(16px*var(--fz,1))"><option value="">— ทุกสินค้า (ทั่วไป) —</option>${scOpts(SC.prod)}</select><input id="scQ" type="search" placeholder="🔎 ค้นหาสคริปต์…" value="${esc(SC.q)}" style="flex:1;min-width:160px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--text)"><button class="btn" id="scHl" title="เปิด/ปิดการไฮไลต์ตัวเลขและคำสำคัญ">🖍 ไฮไลต์: ${document.body.classList.contains('nohl')?'ปิด':'เปิด'}</button>${adm?'<button class="btn primary" id="scAdd">➕ เพิ่มสคริปต์</button><button class="btn" id="scAddT">🏷 เพิ่มชนิดสินค้า</button><button class="btn" id="scAud" title="ตรวจคำผิด/คำเสี่ยง/ข้อเสนอแนะ แล้วแจ้งแอดมิน">🔍 ตรวจสคริปต์</button><button class="btn" id="scAuto" title="แก้คำผิด + ไฮไลต์ประโยคสำคัญให้ทุกสคริปต์ (ดูตัวอย่างก่อนยืนยัน)">🪄 จัดการอัตโนมัติ</button>':'<button class="btn" id="scSug" title="แจ้งข้อความที่ควรแก้ หรือเสนอสคริปต์ที่ควรเพิ่ม">💡 แจ้ง/เสนอสคริปต์</button>'}</div></div>`;
   if(SC.prod)h+=scInfoCard(SC.prod,adm,false);
   h+='<div class="mrow" id="scBar" style="justify-content:flex-start;position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;display:flex;gap:6px;flex-wrap:wrap">'+T.stages.map((s,i)=>`<button class="btn sm" data-scgo="${s.id}" style="border:2px solid ${SCCOL[s.id]};background:color-mix(in srgb,${SCCOL[s.id]} 18%,var(--panel2))">${i+1}. ${s.e} ${esc(s.name)}</button>`).join('')+'</div>';
@@ -4436,7 +4436,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-23.3';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-23.4';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -5572,15 +5572,17 @@ function admOps(el){
    ===================================================================== */
 let LASTINB=null,LASTFULL=Date.now(),LASTACT=Date.now(),SCRT=null;
 ['pointerdown','pointermove','keydown','wheel','touchstart','scroll'].forEach(ev=>addEventListener(ev,()=>{LASTACT=Date.now()},{passive:true,capture:true}));
-const scrActive=()=>S.tab==='script'&&!document.hidden&&Date.now()-LASTACT<600000&&!VIEWAS;   // ⏱ หน้าสคริปต์อยู่บนจอ + ใช้งานภายใน 10 นาที
-function scrChip(){const el=$('#scrChip');if(!el||!SCRT)return;const f=x=>Math.floor(x/3600)+':'+String(Math.floor(x%3600/60)).padStart(2,'0'),pc=Math.min(100,Math.round(SCRT.s/SCRT.need*100));
-  el.hidden=false;el.innerHTML=SCRT.g?`✅ วันนี้ใช้สคริปต์ครบ ${f(SCRT.need)} ชม. — ได้ +${SCRT.tok} TOKEN แล้ว`:`⏱ วันนี้ใช้สคริปต์ <b>${f(SCRT.s)}</b> / ${f(SCRT.need)} ชม. → ครบรับ <b>+${SCRT.tok} TOKEN</b> <span style="display:inline-block;width:90px;height:6px;border-radius:9px;background:var(--panel2);vertical-align:middle;margin-left:6px;overflow:hidden"><span style="display:block;height:100%;width:${pc}%;background:var(--up)"></span></span>`}
+const scrActive=()=>(S.tab==='script'||S.tab==='tips')&&!document.hidden&&Date.now()-LASTACT<600000&&!VIEWAS;   // ⏱ หน้าสคริปต์อยู่บนจอ + ใช้งานภายใน 10 นาที
+const scrChipBox=()=>`<div data-scrchip class="panel sec" style="padding:8px 12px;font-size:calc(14px*var(--fz,1))" ${SCRT?'':'hidden'}></div>`;
+function scrChip(){if(!SCRT)return;$$('[data-scrchip]').forEach(el=>{const f=x=>Math.floor(x/3600)+':'+String(Math.floor(x%3600/60)).padStart(2,'0'),pc=Math.min(100,Math.round(SCRT.s/SCRT.need*100));
+  el.hidden=false;el.innerHTML=SCRT.g?`✅ วันนี้ใช้สคริปต์/เทคนิคขายครบ ${f(SCRT.need)} ชม. — ได้ +${SCRT.tok} TOKEN แล้ว`:`⏱ วันนี้ใช้สคริปต์ + เทคนิคขาย <b>${f(SCRT.s)}</b> / ${f(SCRT.need)} ชม. → ครบรับ <b>+${SCRT.tok} TOKEN</b> <span style="display:inline-block;width:90px;height:6px;border-radius:9px;background:var(--panel2);vertical-align:middle;margin-left:6px;overflow:hidden"><span style="display:block;height:100%;width:${pc}%;background:var(--up)"></span></span>`})}
+
 async function pulseTick(){
   if(!TOKEN||!D||document.hidden)return;
-  const busy=!$('#modal').hidden;if(busy&&S.tab!=='script')return;   // เปิดหน้าต่างอยู่: ยังนับเวลาสคริปต์ แต่ไม่โหลดข้อมูลใหม่ (ไม่ให้หน้าต่างหาย)
+  const busy=!$('#modal').hidden;if(busy&&S.tab!=='script'&&S.tab!=='tips')return;   // เปิดหน้าต่างอยู่: ยังนับเวลาสคริปต์ แต่ไม่โหลดข้อมูลใหม่ (ไม่ให้หน้าต่างหาย)
   try{
     const p=await api('pulse',VIEWAS?{}:{scr:scrActive()?1:0});
-    if(p.scr){SCRT=p.scr;scrChip();if(p.scr.now){toast(`🎉 ใช้เมนูสคริปต์ครบ ${Math.round(p.scr.need/3600)} ชม. วันนี้ — ได้รับ +${p.scr.tok} TOKEN`,true);if(!busy){LASTFULL=Date.now();await refresh(false)}}}
+    if(p.scr){SCRT=p.scr;scrChip();if(p.scr.now){toast(`🎉 ใช้เมนูสคริปต์/เทคนิคขายครบ ${Math.round(p.scr.need/3600)} ชม. วันนี้ — ได้รับ +${p.scr.tok} TOKEN`,true);if(!busy){LASTFULL=Date.now();await refresh(false)}}}
     if(busy)return;
     const ids=(D.broadcasts||[]).map(b=>b.id).join(','),pids=(p.broadcasts||[]).map(b=>b.id).join(','),newsTs=(D.news&&D.news[0]&&D.news[0].ts)||0;
     const changed=(LASTINB!==null&&p.inb!==LASTINB)||pids!==ids||p.news!==newsTs;
