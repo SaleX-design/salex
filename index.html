@@ -4459,7 +4459,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-24.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-24.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
@@ -4514,11 +4514,14 @@ async function admHealth(body,fresh){
   const tot=r.sheets.reduce((n,x)=>n+(x.rows||0),0);
   body.innerHTML=`<div class="panel"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:6px"><span>🩺 สุขภาพระบบ <span class="hint" style="font-weight:400">ตรวจล่าสุด ${new Date(r.ts).toLocaleString('th-TH')}</span></span><span style="display:flex;gap:6px">${conv?'<button class="btn sm primary" id="hcFix">🛠 ซ่อมอัตโนมัติ</button>':''}<button class="btn sm" id="hcRe">🔄 ตรวจใหม่</button></span></h3>
    <div class="wfnote" style="--c:${r.ok?'var(--up)':'var(--down)'}"><div><b>${r.ok?'✅ ไม่พบปัญหาร้ายแรง':'⛔ พบปัญหาที่ควรแก้'}</b><div class="hint">${r.issues.filter(i=>i.lv==='bad').length} ร้ายแรง · ${r.issues.filter(i=>i.lv==='warn').length} ควรตรวจ · ${r.issues.filter(i=>i.lv==='info').length} แจ้งให้ทราบ · ข้อมูลทั้งหมด ${fmt(tot)} แถวใน ${r.sheets.filter(x=>!x.missing).length} ชีต</div></div></div>
+   ${(r.bloat||[]).length?`<div class="wfnote" style="--c:var(--down)"><div>🧹 <b>ชีตมีแถวว่างจำนวนมาก — ทำให้ระบบอ่านข้อมูลช้า</b><div class="hint">${r.bloat.map(b=>`${esc(b.sheet)}: ข้อมูล ${fmt(b.rows)} แถว · แถวว่างแทรกกลาง <b>${fmt(b.gaps)}</b> · แถวว่างท้ายชีต ${fmt(b.extra)}`).join('<br>')}</div><div style="margin-top:6px"><button class="btn sm primary" id="hcCompact">🧹 จัดชีตให้กระชับ</button> <span class="hint">ลบเฉพาะแถวที่ว่างทั้งแถว · ข้อมูลไม่หาย · ใช้เวลา 1–4 นาที</span></div></div></div>`:''}
    <details class="wfmore" open><summary>⏱ ความเร็วระบบ (24 ชม. ล่าสุด)</summary>${perfHTML(r.perf)}</details>
    ${r.issues.length?r.issues.map(i=>`<div class="wfnote" style="--c:${col[i.lv]}"><div>${ic[i.lv]} <b>${esc(i.area)}</b> — ${esc(i.msg)}${i.fix?`<div class="hint">วิธีแก้: ${esc(i.fix)}</div>`:''}</div></div>`).join(''):'<div class="empty">ไม่มีรายการที่ต้องแก้ 🎉</div>'}
    <details class="wfmore"><summary>📊 ขนาดแต่ละชีต</summary><div class="tblwrap"><table class="tbl"><thead><tr><th>ชีต</th><th>จำนวนแถว</th><th>ค่าที่ถูกแปลง</th></tr></thead><tbody>${r.sheets.filter(x=>!x.missing).sort((a,b)=>b.rows-a.rows).map(x=>`<tr><td>${esc(x.name)}</td><td class="num">${fmt(x.rows)}</td><td class="num ${x.conv?'down':''}">${x.conv||''}</td></tr>`).join('')}</tbody></table></div></details>
    <div class="hint" style="margin-top:8px">“ซ่อมอัตโนมัติ” จะแปลงค่าที่ Google Sheets เปลี่ยนเป็นวันที่/เวลาเอง กลับเป็นข้อความเดิม (เช่น 2026-11-18, 09:00) และตั้งคอลัมน์เหล่านั้นเป็นรูปแบบข้อความ เพื่อไม่ให้เกิดซ้ำ — แนะนำให้ทำสำเนาไฟล์ชีตไว้ก่อน (ไฟล์ → ทำสำเนา)</div></div>`;
   $('#hcRe').onclick=()=>admHealth(body,true);
+  if($('#hcCompact'))$('#hcCompact').onclick=async()=>{if(!confirm('จัดชีตให้กระชับ: ลบแถวที่ว่างทั้งแถวในชีตข้อมูลของระบบ\nข้อมูลจริงไม่หาย แต่แนะนำให้ “ทำสำเนาไฟล์ Google Sheets” ไว้ก่อน\n\nเริ่มเลยไหม?'))return;const b=$('#hcCompact');b.disabled=true;b.textContent='⏳ กำลังจัดชีต… (อย่าปิดหน้านี้)';
+    try{const x=await api('sheetCompact');toast(x.list.length?'🧹 เสร็จใน '+x.sec+' วิ: '+x.list.map(l=>l.skip?l.sheet+' ('+l.skip+')':l.sheet+' ลบแถวว่าง '+fmt(l.gaps+l.cut)).join(' · '):'ไม่มีแถวว่างที่ต้องลบ',true);admHealth(body,true)}catch(e){toast('⚠️ '+esc(e.message));b.disabled=false;b.textContent='🧹 จัดชีตให้กระชับ'}};
   if($('#hcFix'))$('#hcFix').onclick=async()=>{if(!confirm('ซ่อมค่าที่ถูกแปลงในทุกชีตเลยหรือไม่?\n(แนะนำให้ทำสำเนาไฟล์ชีตไว้ก่อน)'))return;const b=$('#hcFix');b.disabled=true;b.textContent='กำลังซ่อม…';
     try{const x=await api('healthFix');toast(x.fixed.length?`🛠 ซ่อมแล้ว: ${x.fixed.join(', ')}`:'ตั้งรูปแบบข้อความเรียบร้อย',true);admHealth(body,true)}catch(e){toast('⚠️ '+esc(e.message));b.disabled=false;b.textContent='🛠 ซ่อมอัตโนมัติ'}};
 }
@@ -5440,17 +5443,46 @@ async function renderToday(){
   if(tdMgr())x+=`<div data-tdgo="appr" style="--c:${act.length?'var(--down)':'var(--up)'};cursor:pointer"><small>✅ รออนุมัติ / รอดำเนินการ</small><b>${act.length}</b><i>${act.length?'กดเพื่อจัดการ ›':'ไม่มีเรื่องค้าง 🎉'}</i></div>`;
   x+=`</div>`;
   if(agent||!tdMgr())x+=`<h3 style="margin:14px 0 6px">📌 สิ่งที่รอฉันทำ</h3>${act.length?act.slice(0,8).map(i=>`<div class="tdi ${i.tone||''}" data-tdgo="${esc(i.go||'')}"><span>${TDIC[i.k]||'⏰'}</span><div>${esc(i.k==='coach'?i.text.replace(/^\S+\s/,''):i.text)}</div><b>›</b></div>`).join(''):'<div class="hint">ไม่มีเรื่องค้าง ✅</div>'}`;
+  if(tdMgr())x+=`<h3 style="margin:16px 0 6px">👥 ลูกทีมของฉันวันนี้</h3><div id="tdTeam">${TD.team?tdTeamHTML(TD.team):'<div class="hint">⏳ กำลังโหลด…</div>'}</div>`;
   if(F.length)x+=`<h3 style="margin:14px 0 6px">🎯 สินค้าที่ต้องเน้นขาย</h3><div>${F.map(p=>`<span class="auf on">${esc(prodName(p))}</span>`).join(' ')}</div>`;
   if(MEM.some(m=>m.id===id&&AG(m)))x+=`<h3 style="margin:16px 0 6px">📇 โปรไฟล์ของฉัน</h3><div id="tdProf" class="tdprof">${TD.prof&&TD.prof.m===id?'':'<div class="hint">⏳ กำลังโหลดโปรไฟล์…</div>'}</div>`;   // โปรไฟล์อยู่ถัดจาก "วันนี้"
+  if(!tdMgr()&&!menuList().find(t=>t.id==='feed'&&t.show))x+=`<div style="margin-top:14px;text-align:right"><button class="btn sm" id="tdFb">💬 ส่งความคิดเห็น/ปัญหาถึงแอดมิน</button></div>`;
   x+=`</div>`;   // (เอาปุ่มลัดไปเมนูออก — ซ้ำกับแถบเมนูด้านบน)
   el.innerHTML=x;
   $$('[data-tdgo]',el).forEach(b=>b.onclick=()=>tdGo(b.dataset.tdgo));$$('[data-tdt]',el).forEach(b=>b.onclick=()=>goTab(b.dataset.tdt));
   if($('#tdClaim'))$('#tdClaim').onclick=()=>goTab('login');
+  if($('#tdFb'))$('#tdFb').onclick=tdFbM;
+  if(tdMgr()){tdTeamBind();if(!TD.team||Date.now()-TD.teamAt>120000){const tk=(TD.ttk=(TD.ttk||0)+1);api('teamPulse',{}).then(r=>{if(tk!==TD.ttk)return;TD.team=r;TD.teamAt=Date.now();const b=$('#tdTeam');if(b&&S.tab==='today'){b.innerHTML=tdTeamHTML(r);tdTeamBind()}}).catch(e=>{const b=$('#tdTeam');if(b)b.innerHTML=`<div class="hint">โหลดข้อมูลลูกทีมไม่สำเร็จ: ${esc(e.message)}</div>`})}}
   const pb=$('#tdProf');if(pb){   // 📇 โปรไฟล์ของฉัน (การ์ดเดียวกับเมนู PROFILE)
     const draw=()=>{if(!$('#tdProf'))return;try{$('#tdProf').innerHTML=profileInner(TD.prof);bindProfile(TD.prof,()=>{TD.profAt=0;renderToday()})}catch(e){$('#tdProf').innerHTML=''}};
     if(TD.prof&&TD.prof.m===id&&Date.now()-TD.profAt<300000)draw();
     else{const tk=(TD.ptk=(TD.ptk||0)+1);api('profile',{m:id}).then(P=>{if(tk!==TD.ptk||S.tab!=='today')return;TD.prof=P;TD.profAt=Date.now();draw()}).catch(e=>{if($('#tdProf'))$('#tdProf').innerHTML=''})}}
   if(agent&&!wk&&!(TD.do&&TD.do.err)){await tdDo();if(S.tab==='today')renderToday()}
+}
+/* 👥 ลูกทีมของฉัน (หัวหน้า): เข้าวันนี้กี่คน · ใครหายไป · เข้ากี่วันใน 7 วัน */
+function tdTeamHTML(r){
+  if(!r||!r.list)return '';if(!r.total)return '<div class="hint">ไม่พบลูกทีมในขอบเขตของคุณ</div>';
+  const tn=t=>(teamOf(t)||{}).name||t||'',gone=r.list.filter(x=>x.gap>=2),low=r.list.filter(x=>x.gap<2&&x.d7<=2),all=TD.teamAll;
+  const chip=x=>`<span class="role" style="text-transform:none;margin:2px" title="${esc(tn(x.team))} · เข้า ${x.d7}/7 วัน · ล่าสุด ${x.last?dShort(x.last):'ไม่เคย'}">${esc(x.name)} <b class="${x.gap>=3?'down':'flat'}">${x.gap>=99?'ไม่เคยเข้า':x.gap+' วัน'}</b></span>`;
+  return `<div class="wfk"><div style="--c:${r.today/r.total>=.7?'var(--up)':'var(--flat)'}"><small>✅ เข้าระบบวันนี้</small><b>${r.today}/${r.total}</b><i>${Math.round(r.today/r.total*100)}% ของลูกทีม</i></div>
+    <div style="--c:var(--blue)"><small>🟢 ออนไลน์ตอนนี้</small><b>${r.online}</b><i>ใช้งานใน 3 นาทีล่าสุด</i></div>
+    <div style="--c:${gone.length?'var(--down)':'var(--up)'}"><small>😴 ไม่เข้า 2 วันขึ้นไป</small><b>${gone.length}</b><i>${gone.length?'ควรทักเป็นรายคน':'ทุกคนเข้าสม่ำเสมอ 👍'}</i></div></div>
+   ${gone.length?`<div class="wfnote" style="--c:var(--down);margin-top:8px"><div style="min-width:0;flex:1"><b>😴 ไม่ได้เข้าระบบ</b> <span class="hint">(จำนวนวันที่หายไป)</span><div style="margin-top:4px;display:flex;flex-wrap:wrap">${gone.map(chip).join('')}</div></div></div>`:''}
+   ${low.length?`<div class="wfnote" style="--c:var(--flat);margin-top:6px"><div style="min-width:0;flex:1"><b>🌱 เข้าน้อย (≤2 วันใน 7 วัน)</b><div style="margin-top:4px;display:flex;flex-wrap:wrap">${low.map(x=>`<span class="role" style="text-transform:none;margin:2px">${esc(x.name)} <b>${x.d7}/7</b></span>`).join('')}</div></div></div>`:''}
+   <div style="margin-top:6px"><button class="btn sm" id="tdTmAll">${all?'ซ่อนรายชื่อ':'ดูลูกทีมทั้งหมด ('+r.total+' คน)'}</button></div>
+   ${all?`<div class="tblwrap" style="margin-top:6px;max-height:420px;overflow:auto"><table class="tbl"><thead><tr><th>ชื่อ</th><th>ทีม</th><th>วันนี้</th><th>เข้าเมื่อ</th><th>เข้า 7 วัน</th><th>ล่าสุด</th></tr></thead><tbody>${r.list.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(tn(x.team))}</td><td>${x.on?'🟢 ออนไลน์':x.today?'✅':'—'}</td><td class="num">${esc(x.first||'')}</td><td class="num">${x.d7}/7</td><td class="num">${x.last?dShort(x.last):'ไม่เคย'}</td></tr>`).join('')}</tbody></table></div>`:''}
+   <div class="hint" style="margin-top:4px">นับจากการเข้าใช้ SALE X (ไม่รวมคนที่เป็นหัวหน้า) · อัปเดตทุก ~2 นาที</div>`}
+function tdTeamBind(){const b=$('#tdTmAll');if(b)b.onclick=()=>{TD.teamAll=!TD.teamAll;const t=$('#tdTeam');if(t){t.innerHTML=tdTeamHTML(TD.team);tdTeamBind()}}}
+/* 💬 ส่งความคิดเห็นแบบเร็ว (สำหรับ Agent เมื่อเมนูหัวข้อ & Feedback ถูกซ่อน) */
+function tdFbM(){
+  openModal(`<h2>💬 ส่งความคิดเห็นถึงแอดมิน</h2><div class="hint" style="margin-bottom:8px">ปัญหาที่เจอ ข้อเสนอแนะ หรืออยากให้ SALE X มีอะไร · อ่านได้เฉพาะแอดมิน</div>
+   <div class="fld"><label>หัวข้อ</label><select id="qfC">${FBC.map(c=>`<option>${esc(c)}</option>`).join('')}</select></div>
+   <div class="fld"><label>ข้อความ</label><textarea id="qfT" rows="4" maxlength="1000" placeholder="พิมพ์ได้เลย…"></textarea></div>
+   <label class="chk"><input type="checkbox" id="qfA"> 🕶 ส่งแบบไม่ระบุชื่อ</label><div class="err" id="qfE"></div>
+   <div class="mrow"><button class="btn" onclick="closeModal()">ยกเลิก</button><button class="btn primary" id="qfGo">📨 ส่ง</button></div>`);
+  const rid='fb'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+  $('#qfGo').onclick=async()=>{const t=$('#qfT').value.trim();if(t.length<5){$('#qfE').textContent='พิมพ์อย่างน้อย 5 ตัวอักษร';return}$('#qfGo').disabled=true;
+    try{await api('feedbackAdd',{cat:$('#qfC').value,message:t,anon:$('#qfA').checked,reqId:rid});closeModal();toast('✅ ส่งแล้ว ขอบคุณครับ',true)}catch(e){$('#qfE').textContent=e.message;$('#qfGo').disabled=false}};
 }
 /* ✅ รออนุมัติ */
 async function renderAppr(force){
@@ -5490,7 +5522,9 @@ function refreshInboxSoon(){try{if(D)D.inbox=(D.inbox||[]).filter(i=>i.k!=='wfm'
 const TABDEF=[['today','☀️','วันนี้','☀️ วันนี้ของฉัน'],['appr','✅','รออนุมัติ','✅ รออนุมัติ (หัวหน้า)'],['dash','📈','ยอดขาย','📈 ยอดขาย'],['prof','👤','PROFILE','👤 PROFILE'],['feed','💬','หัวข้อ','💬 หัวข้อ & Feedback'],['ins','📊','Insight','📊 Insight'],['eng','📈','Engagement','📈 Engagement (แอดมิน)'],['tips','💡','เทคนิค','💡 เทคนิคขาย'],['script','📞','สคริปต์ขาย','📞 สคริปต์ขาย'],['coach','🤝','สอนงาน','🤝 COACHING & Feedback'],['wfm','📅','ตารางงาน','📅 ตารางงาน & วันหยุด'],['run','🚀','Run Rate','🚀 Run Rate'],['rank','🏆','อันดับ','🏆 อันดับ & TOP SALE'],['talk','⏱','Talk','⏱ Talk Time'],['svc','🗂','ลา/ร้องเรียน','🗂 ลา/ร้องเรียน'],['game','🎮','เกม','🎮 เกม'],['prod','🛍','สินค้า','🛍 สินค้า'],['com','💸','คอม','💸 คอม'],['road','🎁','รางวัล','🎁 ROAD MAP & รางวัล'],['login','🔥','LOGIN','🔥 LOGIN'],['admin','🛠','แอดมิน','🛠 แอดมิน']];
 function menuList(raw){   // คืน [{id,show}] ตามลำดับที่ตั้ง (ที่ไม่ได้ระบุต่อท้ายตามค่าเริ่มต้น)
   const L=[],seen={};String(raw==null?((D.v5&&D.v5.cfg&&D.v5.cfg.menu)||''):raw).split(/[,;\s]+/).filter(Boolean).forEach(x=>{const h=x[0]==='-',id=h?x.slice(1):x;if(seen[id]||!TABDEF.some(t=>t[0]===id))return;seen[id]=1;L.push({id,show:!(h&&id!=='dash'&&id!=='admin')})});
-  TABDEF.forEach(t=>{if(!seen[t[0]]){if(t[0]==='today'||t[0]==='appr')L.splice(t[0]==='today'?0:Math.min(1,L.length),0,{id:t[0],show:true});else L.push({id:t[0],show:true})}});return L}   // เมนูใหม่ “วันนี้/รออนุมัติ” อยู่หน้าสุดแม้เคยบันทึกลำดับไว้
+  TABDEF.forEach(t=>{if(!seen[t[0]]){if(t[0]==='today'||t[0]==='appr')L.splice(t[0]==='today'?0:Math.min(1,L.length),0,{id:t[0],show:true});else L.push({id:t[0],show:true})}});
+  if(raw==null&&D&&!tdMgr()){const hid=String((D.v5&&D.v5.cfg&&D.v5.cfg.agentHide)??'ins,svc,feed').split(/[,;\s]+/).filter(Boolean);L.forEach(x=>{if(hid.includes(x.id))x.show=false})}   // เมนูที่ Agent ใช้น้อย → ซ่อนเฉพาะ Agent (Config: menuAgentHide)
+  return L}   // เมนูใหม่ “วันนี้/รออนุมัติ” อยู่หน้าสุดแม้เคยบันทึกลำดับไว้
 function grpCollapse(L){const out=[],seen={};L.forEach(t=>{if(!t)return;const g=grpOf(t[0]);if(g&&grpKids(g).length>1){if(seen[g])return;seen[g]=1;out.push([g,GROUPS[g].e,GROUPS[g].n,GROUPS[g].full])}else out.push(t)});return out}
 const menuVisible=()=>grpCollapse(menuList().filter(x=>x.show&&((x.id!=='admin'&&x.id!=='eng')||(D&&D.isAdmin))&&(x.id!=='run'||(D&&D.canSeeAll))&&(x.id!=='appr'||tdMgr())).map(x=>TABDEF.find(t=>t[0]===x.id)));
 /* เมนูแถวเดียว: ถ้าหน้าต่างแคบจนเมนูล้น → เลื่อนซ้าย/ขวาได้ (ปุ่ม ◀ ▶ · ลูกกลิ้งเมาส์ · ปัด) และเลื่อนเมนูที่เลือกให้อยู่ในจอ */
