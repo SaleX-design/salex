@@ -692,6 +692,7 @@ body.nohl .hlw::before{content:""}
 <!-- ROADMAP / REWARDS -->
 <section id="tab-road" hidden>
   <div class="roadtop" id="roadTop"></div>
+  <div id="tokHold"></div>
   <div class="panel sec"><h3>🗺️ ROAD MAP — เส้นทางสะสมรางวัล (Season <span id="seasonY"></span>)</h3><div id="road"></div>
     <div class="hint" style="margin-top:6px">แตะที่รางวัลเพื่อดูรายละเอียด/แลก · เส้นทางเดินหน้าตาม TOKEN ที่สะสมทั้งหมด (การแลกไม่ทำให้เส้นทางถอยหลัง)</div></div>
   <div class="panel sec"><h3>🎁 ของรางวัลทั้งหมด</h3><div class="rwgrid" id="rwGrid"></div></div>
@@ -1399,7 +1400,29 @@ const REWARDS=()=>D.rewards;
 function stockTxt(r){return r.remaining===null?'ไม่จำกัดจำนวน':r.remaining<=0?'<b class="down">หมดแล้ว</b>':`เหลือ <b class="${r.remaining<=3?'down':'flat'} num">${r.remaining}</b> ชิ้น`}
 function limitTxt(r){return r.perPerson>0?`คนละ ${r.perPerson} ชิ้น (แลกแล้ว ${r.mine})`:'แลกได้ไม่จำกัดต่อคน'}
 function canRedeem(r){return D.wallet.balance>=r.cost&&(r.remaining===null||r.remaining>0)&&(r.perPerson===0||r.mine<r.perPerson)}
+/* 💰 RANKING อันดับการถือครอง TOKEN (คงเหลือ = สะสม − แลกไปแล้ว) */
+const TH={all:0,team:''};
+async function renderTokHold(){
+  const el=$('#tokHold');if(!el||!D)return;
+  const d=await ensureTkb();if(S.tab!=='road'){return}
+  if(!d||d.err||d.off){el.innerHTML='';return}
+  let L=d.hold;if(!L&&d.list)L=d.list.slice().sort((a,b)=>b.balance-a.balance||b.earned-a.earned||a.name.localeCompare(b.name)).map((x,i)=>({r:i+1,id:x.id,name:x.name,team:x.team,balance:x.balance,earned:x.earned,spent:x.spent}));
+  if(!L){el.innerHTML='';return}
+  const myId=D.me&&String(D.me.id),me=L.find(x=>x.id===myId),tn=t=>(teamOf(t)||{}).name||t||'–';
+  const F=TH.team?L.filter(x=>x.team===TH.team):L,show=TH.all||TH.team?F:F.slice(0,10),mx=Math.max(1,...F.map(x=>x.balance));
+  const teams=[...new Set(L.map(x=>x.team).filter(Boolean))];
+  el.innerHTML=`<div class="panel sec"><h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>💰 RANKING อันดับการถือครอง TOKEN <span class="hint" style="font-weight:400">· คงเหลือ ณ ตอนนี้ (${fmt(L.length)} คน)</span></span>
+     <span style="display:flex;gap:6px;flex-wrap:wrap"><select id="thTeam" class="btn sm"><option value="">ทุกทีม</option>${teams.map(t=>`<option value="${esc(t)}" ${TH.team===t?'selected':''}>${esc(tn(t))}</option>`).join('')}</select>${TH.team?'':`<button class="btn sm" id="thAll">${TH.all?'ดูแค่ TOP 10':'ดูทั้งหมด'}</button>`}</span></h3>
+   ${me?`<div class="panel" style="margin:0 0 8px;background:color-mix(in srgb,#f0b90b 12%,var(--panel2))">📍 คุณถือครองอันดับ <b>${me.r}</b> จาก ${L.length} คน · คงเหลือ <b class="num">${fmt(me.balance)}</b> TOKEN${me.r>1?` · ตามอันดับ ${me.r-1} อยู่ <b>${fmt(Math.max(0,L[me.r-2].balance-me.balance))}</b> TOKEN`:' · 👑 ถือมากที่สุด!'}</div>`:''}
+   <div class="tblwrap" style="${TH.all||TH.team?'max-height:520px;overflow:auto':''}"><table class="tbl"><thead><tr><th>#</th><th>ชื่อ</th><th>ทีม</th><th>คงเหลือ ⭐</th><th>สะสมทั้งหมด</th><th>แลกไปแล้ว</th></tr></thead><tbody>
+   ${show.map(x=>`<tr style="${x.id===myId?'background:color-mix(in srgb,#f0b90b 14%,transparent)':''}"><td class="num">${['🥇','🥈','🥉'][x.r-1]||x.r}</td><td>${esc(x.name)}</td><td>${esc(tn(x.team))}</td><td class="num"><b>${fmt(x.balance)}</b> <span style="display:inline-block;width:70px;height:6px;border-radius:9px;background:var(--panel2);vertical-align:middle;overflow:hidden"><span style="display:block;height:100%;width:${Math.round(x.balance/mx*100)}%;background:#f0b90b"></span></span></td><td class="num">${fmt(x.earned)}</td><td class="num">${fmt(x.spent)}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">ไม่มีข้อมูล</td></tr>'}
+   </tbody></table></div>
+   <div class="hint" style="margin-top:6px">เรียงตาม TOKEN คงเหลือ (สะสม − แลกของรางวัลไปแล้ว) · # = อันดับรวมทุกทีม · อัปเดตทุก ~3 นาที</div></div>`;
+  const ts=$('#thTeam');if(ts)ts.onchange=e=>{TH.team=e.target.value;renderTokHold()};
+  const ta=$('#thAll');if(ta)ta.onclick=()=>{TH.all=!TH.all;renderTokHold()};
+}
 function renderRoad(){
+  renderTokHold();
   const w=D.wallet,RW=REWARDS(),earned=w.earned,m=D.me;
   $('#seasonY').textContent=D.season+543;
   const nextI=RW.findIndex(r=>earned<r.cost),nxt=nextI>=0?RW[nextI]:null,prevTh=nextI>0?RW[nextI-1].cost:0;
@@ -4436,7 +4459,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-23.4';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-24.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
