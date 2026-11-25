@@ -731,7 +731,7 @@ body.nohl .hlw::before{content:""}
 <section id="tab-prof" hidden><div id="profBody"></div></section>
 <section id="tab-ins" hidden><div id="insBody"></div></section>
 <section id="tab-eng" hidden><div id="engBody"></div></section>
-<section id="tab-run" hidden><div class="rkctl" id="runCtl"></div><div id="runBody"></div></section>
+<section id="tab-run" hidden><div class="rkctl" id="runCtl"></div><div id="gcmpBox"></div><div id="runBody"></div></section>
 <section id="tab-talk" hidden><div class="rkctl" id="tkCtl"></div><div id="tkBody"></div></section>
 <!-- LEAVE / COMPLAINTS -->
 <section id="tab-svc" hidden><div class="seg" id="svcSeg" style="margin-bottom:10px"></div><div id="svcBody"></div></section>
@@ -4235,12 +4235,76 @@ function renderRun(){
    ${sens.map((r,i)=>`<tr><td class="num hint">${i+1}</td><td><b>${esc(r.name)}</b><div class="hint">${esc(r.x.teams.map(t=>teamOf(t).name).join(', '))}</div></td><td class="r num">${r.n}</td><td class="r num">${f2(r.sp)}</td><td class="r num">${fp(r.rp)}</td><td class="r num">${fp(r.avg)}</td><td class="r num">${fb(r.aq)}</td><td class="r num">${fb(r.tm)}</td><td class="r num">${fb(r.ex)}</td><td class="r num">${fb(r.now)}</td><td class="r num up"><b>${fb(r.run)}</b></td></tr>`).join('')}</tbody></table></div>
    <div class="hint" style="margin-top:6px">คิดตามตารางเกณฑ์ N-5 · Collab/Biz แอดมินกรอกที่ชีต SeniorKpi · รายละเอียดรายคนดูได้ที่แท็บ 💸 คอม</div>`:'<div class="empty">ไม่พบ Senior ในทีมที่เลือก (ตรวจ role = senior ในชีต Members)</div>'}</div>`;
   $('#runBody').innerHTML=h;
+  renderGcmp();
   if($('#rnOnly'))$('#rnOnly').onchange=e=>{C.only=e.target.checked;renderRun()};
   phLoad([...rowsAll.map(r=>r.m.id),...ents.filter(e=>e.id).map(e=>e.id)]);
   $$('[data-ak]').forEach(t=>t.onclick=()=>{const k=t.dataset.ak;if((C.ak||'ramt')===k)C.ad=(C.ad||'desc')==='desc'?'asc':'desc';else{C.ak=k;C.ad=(k==='name'||k==='team')?'asc':'desc'}renderRun()});
   $$('[data-sk2]').forEach(t=>t.onclick=()=>{const k=t.dataset.sk2;if((C.sk||'run')===k)C.sd=(C.sd||'desc')==='desc'?'asc':'desc';else{C.sk=k;C.sd=k==='name'?'asc':'desc'}renderRun()});
 }
 
+/* ---- 📈 เปรียบเทียบพัฒนาการ (เมนู Run Rate): รายวัน/เดือน/ปี · ยอดขาย/POINT/SUB · AGENT/TEAM · จำนวน + % ---- */
+const GC={lv:'m',view:'agent',met:'all',eq:true,a:null,b:null,sk:null,sd:'desc'};
+function gcDefault(){const end=(D.asOf&&D.asOf<today?D.asOf:today);
+  if(GC.lv==='d'){GC.a=end;GC.b=addDays(end,-1)}else if(GC.lv==='m'){GC.a=end.slice(0,7);GC.b=addMonths(GC.a,-1)}else{GC.a=end.slice(0,4);GC.b=String(+GC.a-1)}}
+function gcRanges(){   // คืนช่วงวันที่ของ A/B (+ ตัดให้เท่ากันถ้าเลือก)
+  const end=(D.asOf&&D.asOf<today?D.asOf:today);let A,B,note='';
+  if(GC.lv==='d'){A=[GC.a,GC.a];B=[GC.b,GC.b]}
+  else if(GC.lv==='m'){A=[GC.a+'-01',monthEnd(GC.a)];B=[GC.b+'-01',monthEnd(GC.b)];
+    if(GC.eq&&A[1]>end&&A[0]<=end){const n=+end.slice(8);A[1]=end;const bl=+monthEnd(GC.b).slice(8);B[1]=GC.b+'-'+pad(Math.min(n,bl));note=`เทียบช่วงเท่ากัน: วันที่ 1–${n} ของทั้งสองเดือน`}}
+  else{A=[GC.a+'-01-01',GC.a+'-12-31'];B=[GC.b+'-01-01',GC.b+'-12-31'];
+    if(GC.eq&&A[1]>end&&A[0]<=end){A[1]=end;B[1]=GC.b+end.slice(4);note=`เทียบช่วงเท่ากัน: 1 ม.ค. – ${dShort(end).replace(/ \d+$/,'')} ของทั้งสองปี`}}
+  return {A,B,note}}
+function gcSum(id,met,f,t){   // รวมค่าในช่วง [f,t] — เดือนเต็มใช้ยอดรายเดือน, เดือนไม่เต็มใช้รายวัน
+  if(met==='point'&&D.pointSource!=='sales'){const k=1-DFP()/100;let s=0,any=false;(PSBY[id]||[]).forEach(r=>{const p=r.per;if(p.length>=10){if(p>=f&&p<=t){s+=PTV(r);any=true}}else if(p.length===7&&f<=p+'-01'&&t>=monthEnd(p)){s+=PTV(r);any=true}});return any?s*k:null}
+  const b=DB[id]&&DB[id][met];if(!b)return null;let s=0,any=false,ym=f.slice(0,7);const last=t.slice(0,7),lim=(met==='prod'?D.psAsOf:D.asOf)||'';
+  while(ym<=last){const ms=ym+'-01',me=monthEnd(ym);
+    if(f<=ms&&t>=me){if(b.MO[ym]!==undefined){s+=b.MO[ym];any=true}}
+    else if(b.dm[ym]){const a=f>ms?f:ms,z=t<me?t:me;for(let d=a;d<=z&&d<=lim;d=addDays(d,1)){if(b.D[d]){s+=b.D[d]}any=true}}
+    ym=addMonths(ym,1)}
+  return any?s:null}
+function gcLbl(k){return GC.lv==='d'?dShort(k):GC.lv==='m'?`${THMON[+k.slice(5)-1]} ${+k.slice(0,4)+543}`:`ปี ${+k+543}`}
+function renderGcmp(){
+  const box=$('#gcmpBox');if(!box||!D)return;if(!GC.a)gcDefault();
+  const {A,B,note}=gcRanges(),mets=GC.met==='all'?['amount','point','sub']:[GC.met];
+  const NM={amount:'💰 ยอดขาย',point:'⭐ POINT',sub:'👥 SUB'},F={amount:x=>'฿'+fmt(Math.round(x)),point:x=>(+x).toLocaleString('en-US',{maximumFractionDigits:2}),sub:x=>fmt(x)};
+  const pc=(a,b)=>b?((a-b)/Math.abs(b)*100):(a?null:0),sg=x=>x>0?'+':'';
+  const dl=(met,a,b)=>{if(a==null&&b==null)return '<span class="hint">–</span>';const d=(a||0)-(b||0),p=pc(a||0,b||0),c=d>0?'up':d<0?'down':'flat';return `<span class="${c}"><b>${sg(d)}${F[met](d)}</b>${p==null?' <span class="hint">(ใหม่)</span>':` · ${sg(p)}${p.toFixed(1)}%`}</span>`};
+  // แถวข้อมูล
+  let ents;
+  if(GC.view==='agent')ents=AGM().map(m=>({id:m.id,ids:[m.id],name:m.nick||m.name,team:teamOf(m.team).name,n:1}));
+  else{const g={};MEM.filter(AG).forEach(m=>{if(S.tf&&m.team!==S.tf)return;(g[m.team]||(g[m.team]={id:'t:'+m.team,ids:[],name:teamOf(m.team).name,team:'',n:0})).ids.push(m.id)});ents=Object.values(g);ents.forEach(e=>e.n=e.ids.length)}
+  const rows=ents.map(e=>{const r={e};['amount','point','sub'].forEach(met=>{if(!mets.includes(met))return;let a=null,b=null;e.ids.forEach(i=>{const x=gcSum(i,met,A[0],A[1]),y=gcSum(i,met,B[0],B[1]);if(x!=null)a=(a||0)+x;if(y!=null)b=(b||0)+y});r[met]={a,b,d:(a||0)-(b||0),p:pc(a||0,b||0)}});return r}).filter(r=>mets.some(m=>r[m].a!=null||r[m].b!=null));
+  const sk=GC.sk||(mets[0]+'.d'),[skm,skf]=sk.split('.');rows.sort((x,y)=>{const u=x[skm]?x[skm][skf]:0,v=y[skm]?y[skm][skf]:0;return GC.sd==='desc'?(v??-1e18)-(u??-1e18):(u??1e18)-(v??1e18)});
+  const tot={};mets.forEach(met=>{const a=rows.reduce((s,r)=>s+(r[met].a||0),0),b=rows.reduce((s,r)=>s+(r[met].b||0),0);tot[met]={a,b,up:rows.filter(r=>r[met].d>0).length,dn:rows.filter(r=>r[met].d<0).length}});
+  const segB=(id,opts,cur)=>`<div class="seg" id="${id}">${opts.map(([v,l])=>`<button data-v="${v}" class="${cur===v?'on':''}">${l}</button>`).join('')}</div>`;
+  const inp=(id,v)=>GC.lv==='d'?`<input type="date" id="${id}" value="${v}" max="${today}">`:GC.lv==='m'?`<input type="month" id="${id}" value="${v}" max="${today.slice(0,7)}">`:`<select id="${id}">${Array.from({length:6},(_,i)=>String(+today.slice(0,4)-i)).map(y=>`<option value="${y}" ${y===v?'selected':''}>${+y+543}</option>`).join('')}</select>`;
+  const SH=(k,l)=>`<th class="r sortable" data-gk="${k}" style="cursor:pointer">${l}${sk===k?(GC.sd==='desc'?' ▼':' ▲'):''}</th>`;
+  const one=mets.length===1;
+  let h=`<div class="panel sec"><h3>📈 เปรียบเทียบพัฒนาการ · ${esc(gcLbl(GC.a))} เทียบกับ ${esc(gcLbl(GC.b))}</h3>
+   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+    ${segB('gcLv',[['d','รายวัน'],['m','รายเดือน'],['y','รายปี']],GC.lv)}
+    <span>ช่วงนี้ ${inp('gcA',GC.a)}</span><span>เทียบกับ ${inp('gcB',GC.b)}</span>
+    ${GC.lv!=='d'?`<label class="chk" title="ถ้าช่วงล่าสุดยังไม่จบ จะตัดช่วงที่เทียบให้มีจำนวนวันเท่ากัน"><input type="checkbox" id="gcEq" ${GC.eq?'checked':''}> เทียบช่วงวันเท่ากัน</label>`:''}</div>
+   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+    ${segB('gcView',[['agent','👤 AGENT'],['team','👥 TEAM']],GC.view)}
+    ${segB('gcMet',[['all','ทั้ง 3'],['amount','ยอดขาย'],['point','POINT'],['sub','SUB']],GC.met)}
+    <span class="hint">${note?'📏 '+note+' · ':''}กรองทีมได้จากตัวเลือกทีมด้านบน</span></div>
+   <div class="wfk">${mets.map(met=>{const t=tot[met],d=t.a-t.b,p=pc(t.a,t.b);return `<div style="--c:${d>0?'var(--up)':d<0?'var(--down)':'var(--flat)'}"><small>${NM[met]} รวม</small><b>${F[met](t.a)}</b><i style="display:block">เดิม ${F[met](t.b)} → <span class="${d>0?'up':d<0?'down':'flat'}" style="font-weight:700">${sg(d)}${F[met](d)}${p==null?' (ใหม่)':' · '+sg(p)+p.toFixed(1)+'%'}</span></i><i style="display:block">ดีขึ้น <span class="up" style="font-weight:700">${t.up}</span> · ลดลง <span class="down" style="font-weight:700">${t.dn}</span> ${GC.view==='agent'?'คน':'ทีม'}</i></div>`}).join('')}</div>
+   <div class="tblwrap" style="margin-top:8px;max-height:560px;overflow:auto"><table class="tbl"><thead><tr><th>#</th><th>${GC.view==='agent'?'ชื่อ':'ทีม'}</th>${GC.view==='agent'?'<th>ทีม</th>':'<th class="r">Agent</th>'}
+    ${mets.map(met=>one?`${SH(met+'.b',esc(gcLbl(GC.b)))}${SH(met+'.a',esc(gcLbl(GC.a)))}${SH(met+'.d','± จำนวน')}${SH(met+'.p','± %')}`:`${SH(met+'.a',NM[met]+' ช่วงนี้')}${SH(met+'.d',NM[met].split(' ')[0]+' ± (จำนวน · %)')}`).join('')}</tr></thead><tbody>
+    ${rows.map((r,i)=>`<tr><td class="num hint">${i+1}</td><td style="white-space:nowrap">${GC.view==='agent'?phAv(r.e.id,r.e.name,24)+' ':''}${esc(r.e.name)}</td>${GC.view==='agent'?`<td class="hint">${esc(r.e.team)}</td>`:`<td class="r num">${r.e.n}</td>`}
+     ${mets.map(met=>{const x=r[met];if(one){const c=x.d>0?'up':x.d<0?'down':'flat';return `<td class="r num">${x.b==null?'–':F[met](x.b)}</td><td class="r num"><b>${x.a==null?'–':F[met](x.a)}</b></td><td class="r num ${c}">${sg(x.d)}${F[met](x.d)}</td><td class="r num ${c}">${x.p==null?'ใหม่':sg(x.p)+x.p.toFixed(1)+'%'}</td>`}return `<td class="r num">${x.a==null?'–':F[met](x.a)}</td><td class="r num">${dl(met,x.a,x.b)}</td>`}).join('')}</tr>`).join('')||'<tr><td colspan="12" class="empty">ไม่มีข้อมูลในช่วงที่เลือก</td></tr>'}
+   </tbody></table></div>
+   <div class="hint" style="margin-top:6px">± = ช่วงนี้ − ช่วงที่เทียบ · % = เทียบกับช่วงที่เทียบ · “ใหม่” = ช่วงที่เทียบไม่มียอด · ทีม = ยอดรวมทั้งทีม · POINT ${DFP()>0?'หัก DIFF '+DFP()+'% แล้ว (ไม่รวมค่าปรับรายเดือน)':'ไม่หัก DIFF'} · แตะหัวคอลัมน์เพื่อเรียง</div></div>`;
+  box.innerHTML=h;
+  if(GC.view==='agent')phLoad(rows.map(r=>r.e.id));
+  $$('#gcLv button').forEach(b=>b.onclick=()=>{GC.lv=b.dataset.v;GC.sk=null;gcDefault();renderGcmp()});
+  $$('#gcView button').forEach(b=>b.onclick=()=>{GC.view=b.dataset.v;renderGcmp()});
+  $$('#gcMet button').forEach(b=>b.onclick=()=>{GC.met=b.dataset.v;GC.sk=null;renderGcmp()});
+  const ch=(id,k)=>{const e=$('#'+id);if(e)e.onchange=()=>{if(e.value){GC[k]=e.value;renderGcmp()}}};ch('gcA','a');ch('gcB','b');
+  if($('#gcEq'))$('#gcEq').onchange=e=>{GC.eq=e.target.checked;renderGcmp()};
+  $$('[data-gk]').forEach(t=>t.onclick=()=>{const k=t.dataset.gk;if((GC.sk||(mets[0]+'.d'))===k)GC.sd=GC.sd==='desc'?'asc':'desc';else{GC.sk=k;GC.sd='desc'}renderGcmp()});
+}
 /* ---- ⚖️ เปรียบเทียบในเมนูอันดับ & TOP SALE ---- */
 const spAll=met=>{const ym=S.spot.ym,pym=S.spot.pym,n=S.spot.n,o={};
   MEM.filter(AG).forEach(m=>{const b=DB[m.id]&&DB[m.id][met];if(!b)return;let c=0,p=0;for(let d=1;d<=n;d++){c+=b.D[ym+'-'+pad(d)]||0;p+=b.D[pym+'-'+pad(d)]||0}o[m.id]={c,p,m:met==='point'?monthPoint(m.id,ym):c,i:c-p}});return o};
@@ -4460,7 +4524,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-24.3';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-25.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
