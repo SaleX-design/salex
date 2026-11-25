@@ -666,6 +666,7 @@ body.nohl .hlw::before{content:""}
     <div class="ma-row" id="maRow"></div>
     <div class="hint" style="margin-top:6px" id="drillHint">💡 แตะที่แท่ง/จุดของปี → ดูรายเดือน, ของเดือน → ดูรายวัน</div>
   </div>
+  <div class="panel" id="dataTblPanel"></div>
   <div class="grid1">
       <div class="panel" id="notePanel">
         <h3>ℹ️ เกี่ยวกับข้อมูล</h3>
@@ -1278,6 +1279,28 @@ function renderDashMix(){
   el.querySelectorAll('[data-dms]').forEach(x=>x.onclick=()=>{S.dmSort=x.dataset.dms;renderDashMix()});
   if($('#dmWho2'))$('#dmWho2').onchange=e=>{S.dmWho2=e.target.value;renderDashMix()};
 }
+/* 📋 ตารางข้อมูลประกอบกราฟ (เมนูยอดขาย): ตามช่วง/ตัวชี้วัด/ผู้ที่เลือกบนกราฟ · ใหม่→เก่า */
+function renderDataTbl(sers,MAA,EMA,single,partial){
+  const el=$('#dataTblPanel');if(!el)return;const P=S.periods,N=P.length,open=LS.get('sx_dtbl')!=='0';
+  const ml=(METRIC[S.metric]&&METRIC[S.metric].label)||'ค่า',f=v=>v==null?'<span class="hint">–</span>':(MU()||'')+fv(v),sg=x=>x>0?'+':'';
+  const pcs=(v,pv)=>{if(v==null||pv==null)return '<td class="r num hint">–</td><td class="r num hint">–</td>';const d=v-pv,c=d>0?'up':d<0?'down':'flat';return `<td class="r num ${c}">${d<0?'-':d>0?'+':''}${(MU()||'')}${fv(Math.abs(d))}</td><td class="r num ${c}">${pv?sg(d)+(d/Math.abs(pv)*100).toFixed(1)+'%':'ใหม่'}</td>`};
+  let head='',rows='',foot='';
+  if(single){const v=sers[0].vals,known=v.filter(x=>x!=null),sum=known.reduce((a,b)=>a+b,0);let cum=0;const cumA=v.map(x=>(cum+=x||0));
+    const maCols=[...(S.ma?MAL.map(n=>['MA'+n,MAA[n]]):[]),...(S.ema?MAL.map(n=>['EMA'+n,EMA[n]]):[])];
+    head=`<th>ช่วง</th><th class="r">${esc(ml)}</th><th class="r">± จากช่วงก่อน</th><th class="r">± %</th><th class="r">สะสม</th>${maCols.map(c=>`<th class="r">${c[0]}</th>`).join('')}`;
+    for(let i=N-1;i>=0;i--){const pv=i?v[i-1]:null;rows+=`<tr><td style="white-space:nowrap">${esc(P[i].full)}${i===N-1&&partial?' <span class="hint">(ยังไม่จบ)</span>':''}</td><td class="r num"><b>${f(v[i])}</b></td>${pcs(v[i],pv)}<td class="r num">${f(cumA[i])}</td>${maCols.map(c=>`<td class="r num">${f(c[1][i]==null?null:c[1][i])}</td>`).join('')}</tr>`}
+    const hi=known.length?Math.max(...known):null,lo=known.length?Math.min(...known):null,hiP=P[v.indexOf(hi)],loP=P[v.indexOf(lo)];
+    foot=`<div class="wfk" style="margin-bottom:8px"><div style="--c:var(--blue)"><small>รวมทั้งช่วง</small><b>${f(sum)}</b><i>${known.length}/${N} ช่วงที่มีข้อมูล</i></div><div style="--c:var(--flat)"><small>เฉลี่ยต่อช่วง</small><b>${f(known.length?sum/known.length:null)}</b><i>เฉพาะช่วงที่มีข้อมูล</i></div><div style="--c:var(--up)"><small>สูงสุด</small><b>${f(hi)}</b><i>${hiP?esc(hiP.full):''}</i></div><div style="--c:var(--down)"><small>ต่ำสุด</small><b>${f(lo)}</b><i>${loP?esc(loP.full):''}</i></div></div>`}
+  else{const tot=P.map((_,i)=>{let t=null;sers.forEach(x=>{if(x.vals[i]!=null)t=(t||0)+x.vals[i]});return t});
+    head=`<th>ช่วง</th>${sers.map(x=>`<th class="r"><span style="color:${x.color}">■</span> ${esc(x.name)}</th>`).join('')}<th class="r">รวม</th>`;
+    for(let i=N-1;i>=0;i--)rows+=`<tr><td style="white-space:nowrap">${esc(P[i].full)}${i===N-1&&partial?' <span class="hint">(ยังไม่จบ)</span>':''}</td>${sers.map(x=>`<td class="r num">${f(x.vals[i])}</td>`).join('')}<td class="r num"><b>${f(tot[i])}</b></td></tr>`;
+    const sums=sers.map(x=>x.vals.reduce((a,b)=>a+(b||0),0)),all=sums.reduce((a,b)=>a+b,0);
+    rows+=`<tr style="border-top:2px solid var(--line)"><td><b>รวมทั้งช่วง</b></td>${sums.map(v=>`<td class="r num"><b>${f(v)}</b>${all?`<div class="hint">${(v/all*100).toFixed(1)}%</div>`:''}</td>`).join('')}<td class="r num"><b>${f(all)}</b></td></tr>`}
+  el.innerHTML=`<h3 style="justify-content:space-between;flex-wrap:wrap;gap:8px"><span>📋 ตารางข้อมูลประกอบกราฟ · ${esc(ml)} · ${esc(P[0].full)} – ${esc(P[N-1].full)} <span class="hint" style="font-weight:400">(${N} ช่วง${single?' · '+esc(sers[0].name):' · '+sers.length+' รายการ'})</span></span><button class="btn sm" id="dtTgl">${open?'ซ่อนตาราง':'แสดงตาราง'}</button></h3>
+   ${open?`${foot}<style>.dtbl th.r,.dtbl td.r{text-align:right}</style><div class="tblwrap" style="max-height:460px;overflow:auto"><table class="tbl dtbl"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>
+   <div class="hint" style="margin-top:6px">ข้อมูลชุดเดียวกับกราฟด้านบน — เปลี่ยนช่วง/ตัวชี้วัด/ชื่อ ตารางเปลี่ยนตาม · เรียงจากช่วงล่าสุด · ± = เทียบกับช่วงก่อนหน้า · “–” = ไม่มีข้อมูล${single&&(S.ma||S.ema)?' · MA/EMA ตามที่เปิดไว้บนกราฟ':''}</div>`:''}`;
+  $('#dtTgl').onclick=()=>{LS.set('sx_dtbl',open?'0':'1');renderDataTbl(sers,MAA,EMA,single,partial)};
+}
 function renderChart(){
   const si=scopeInfo(),P=S.periods;let sers;
   if(S.cmp&&S.cmp.length){sers=[scopeVal()].concat(S.cmp).map((k,i)=>{const o=scopeFromKey(k)||{name:si.name,ids:si.ids};return {name:o.name,color:palC(i),ids:o.ids}})}
@@ -1347,6 +1370,7 @@ function renderChart(){
   $('#maRow').innerHTML=maHtml;
   const extraHint=(ct==='candle'?'<span class="hint">🕯 เขียว = เพิ่มจากช่วงก่อนหน้า · แดง = ลดลง</span>':'')+(S.ctype==='candle'&&!single?'<span class="hint">แท่งเทียนใช้กับเส้นเดียว (ตอนนี้แสดงเป็นเส้นเทียบกัน)</span>':'');
   $('#legend').innerHTML=extraHint+(partial?`<span class="hint">┄ ช่วงล่าสุดยังไม่ครบงวด</span>`:'')+(anyNull?`<span class="hint">ช่องว่าง = ยังไม่มีข้อมูลในระดับนี้</span>`:'')+sers.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('');
+  renderDataTbl(sers,MAA,EMA,single,partial);
   const hit=$('#hit'),xh=$('#xh'),tip=$('#tip');
   const at=e=>{const r=el.querySelector('svg').getBoundingClientRect(),sc=W/r.width,mx2=(e.clientX-r.left)*sc;return{i:Math.max(0,Math.min(N-1,Math.floor((mx2-pl)/step))),px:e.clientX-r.left,py:e.clientY-r.top}};
   const show=e=>{
@@ -4524,7 +4548,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-25.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-25.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
