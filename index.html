@@ -4499,6 +4499,10 @@ function admProducts(el){
 
 /* ---------- render ---------- */
 let LASTTAB='';
+/* 🎨 Color scale แบบ Excel 3 สี: แดง = ต่ำสุด/ไม่มียอด · เหลือง = กลาง (มัธยฐานของคนที่มียอด) · เขียว = สูงสุด */
+function csScale(vals){const nz=vals.filter(v=>v>0).sort((a,b)=>a-b);if(!nz.length)return ()=>'';const lo=nz[0],hi=nz[nz.length-1],md=nz[Math.floor((nz.length-1)/2)];
+  return v=>{let h;if(!(v>0))h=0;else if(hi===lo)h=120;else if(v<=md)h=md===lo?60:8+(v-lo)/(md-lo)*52;else h=60+(v-md)/(hi-md)*60;
+    return `background:hsla(${Math.round(h)},75%,45%,${v>0?.30:.22});`}}
 function prodRankHTML(R,key,by){
   const P={},T={};
   PS.forEach(r=>{if(!r.per.startsWith(key)||!okM(r.m))return;const pr=P[r.p]||(P[r.p]={}),m=pr[r.m]||(pr[r.m]={q:0,a:0,pt:0});m.q+=r.q;m.a+=r.a;m.pt+=PTV(r);T[r.p]=(T[r.p]||0)+(by==='amount'?r.a:by==='point'?PTV(r):r.q)});
@@ -4510,8 +4514,10 @@ function prodRankHTML(R,key,by){
   const pid=R.rkProd,sold=Object.keys(P[pid]).map(id=>({id,...P[pid][id],v:val(P[pid][id])})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v),tot=sold.reduce((t,x)=>t+x.v,0),top=Math.max(1,...sold.map(x=>x.v));
   const got=new Set(sold.map(x=>x.id)),rows=sold.concat(MEM.filter(m=>!got.has(m.id)&&okM(m.id)&&m.role!=='admin'&&m.role!=='manager').map(m=>({id:m.id,q:0,a:0,pt:0,v:0})).sort((x,y)=>String((memOf(x.id)||{}).nick||'').localeCompare(String((memOf(y.id)||{}).nick||''),'th')));   // แสดงทุกคน — คนที่ยังไม่มียอดอยู่ท้ายตาราง
   h+=`<div class="rule" style="margin:8px 0;align-items:center;gap:8px;flex-wrap:wrap"><select id="rkProd" style="max-width:100%">${pids.map(p=>`<option value="${esc(p)}" ${p===pid?'selected':''}>${esc(prodName(p))} · ${esc(skillOf(p))} (${fm(T[p])})</option>`).join('')}</select><span class="hint">ขายได้ <b>${sold.length}</b> จาก ${rows.length} คน · รวม <b>${fm(tot)}</b> · กดหัวคอลัมน์เพื่อเรียง</span></div>`;
+  const cA=csScale(rows.map(x=>x.a)),cQ=csScale(rows.map(x=>x.q)),cP=csScale(rows.map(x=>x.pt));
+  h+=`<div class="hint" style="margin:-2px 0 6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">🎨 สีในช่องตัวเลข: <span style="display:inline-block;width:120px;height:10px;border-radius:9px;background:linear-gradient(90deg,hsl(0,75%,45%),hsl(60,75%,45%),hsl(120,75%,45%))"></span> แดง = ต่ำสุด/ไม่มียอด · เหลือง = กลาง · เขียว = สูงสุด (แยกคิดแต่ละคอลัมน์)</div>`;
   h+=`<div class="tblwrap"><table class="tbl"><thead><tr><th>#</th><th>AGENT</th><th>ทีม</th><th>ยอดขาย</th><th>ชิ้น</th><th>POINT</th><th>สัดส่วน</th></tr></thead><tbody>${rows.map((x,i)=>{const m=memOf(x.id)||{},t=TEAMS.find(q=>q.id===m.team)||{};
-    return `<tr class="row" ${x.v>0?'':'style="opacity:.6"'}><td class="rk"><span class="medal">${x.v>0?medal(i):'–'}</span></td><td><span style="display:inline-flex;align-items:center;gap:6px">${nmAv(x.id,26)}<b>${esc(m.nick||m.name||x.id)}</b></span>${m.name&&m.nick&&m.name!==m.nick?`<div class="hint">${esc(m.name)}</div>`:''}</td><td>${esc(t.name||'')}</td><td class="num">${by==='amount'?'<b>':''}฿${fmt(x.a)}${by==='amount'?'</b>':''}</td><td class="num">${by!=='amount'&&by!=='point'?'<b>':''}${fmt(x.q)}${by!=='amount'&&by!=='point'?'</b>':''}</td><td class="num">${by==='point'?'<b>':''}${fmt(x.pt)}${by==='point'?'</b>':''}</td><td><div class="pbar"><i style="width:${x.v/top*100}%"></i></div><span class="hint">${(x.v/tot*100).toFixed(1)}%</span></td></tr>`}).join('')}</tbody></table></div>`;
+    return `<tr class="row"><td class="rk"><span class="medal">${x.v>0?medal(i):'–'}</span></td><td><span style="display:inline-flex;align-items:center;gap:6px">${nmAv(x.id,26)}<b>${esc(m.nick||m.name||x.id)}</b></span>${m.name&&m.nick&&m.name!==m.nick?`<div class="hint">${esc(m.name)}</div>`:''}</td><td>${esc(t.name||'')}</td><td class="num" style="${cA(x.a)}">${by==='amount'?'<b>':''}฿${fmt(x.a)}${by==='amount'?'</b>':''}</td><td class="num" style="${cQ(x.q)}">${by!=='amount'&&by!=='point'?'<b>':''}${fmt(x.q)}${by!=='amount'&&by!=='point'?'</b>':''}</td><td class="num" style="${cP(x.pt)}">${by==='point'?'<b>':''}${fmt(x.pt)}${by==='point'?'</b>':''}</td><td><div class="pbar"><i style="width:${x.v/top*100}%"></i></div><span class="hint">${(x.v/tot*100).toFixed(1)}%</span></td></tr>`}).join('')}</tbody></table></div>`;
   return h+`<div class="hint" style="margin-top:6px">แสดงเฉพาะคนที่คุณมีสิทธิ์เห็น · เลือกดูทีละสินค้าได้จากช่องด้านบน</div></div>`;
 }
 function prodWhoHTML(key,by){
@@ -4548,7 +4554,7 @@ function prodCtlSync(){
   $('#prodSel').value=S.pf||'all';
   $$('#prodMeas button').forEach(b=>b.classList.toggle('on',b.dataset.q===(S.pmeas||'q')));
 }
-const FE_BUILD='2026-11-25.2';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
+const FE_BUILD='2026-11-26.1';   // เปลี่ยนเลขนี้ทุกครั้งที่แก้หน้าเว็บ (ต้องตรงกับ BUILD ใน Code.gs ถ้าแก้ทั้งสองฝั่ง)
 function renderVer(){
   const el=$('#verTag');if(!el||!D)return;const be=D.build||'เก่า (ยังไม่ได้อัปเดตหลังบ้าน)',ok=D.build===FE_BUILD;
   el.innerHTML=`SALE X · หน้าเว็บ <b>${esc(FE_BUILD)}</b> · หลังบ้าน <b>${esc(be)}</b>${ok?' ✅':D.isAdmin?` <span style="color:var(--flat)">⚠️ เลขเวอร์ชันไม่ตรงกัน — ตรวจว่าอัปเดตครบทั้งหน้าเว็บและ Apps Script (Deploy เวอร์ชันใหม่) แล้วหรือยัง</span>`:''}`}
